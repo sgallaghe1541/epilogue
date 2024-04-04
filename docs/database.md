@@ -8,6 +8,9 @@
 Tables related to daily reporting tools for the foremen.
 
 ### Foremen
+|   | Column Name | Type |
+|---|:------------|:-----------|
+|   | Id          |            |
 
 ### Timesheet Header
 

@@ -1,7 +1,7 @@
-#Epilogue
+# Epilogue
 All the tools to make Viewpoint useful... Hopefully.
 
-#To Do
+# To Do
 - [ ] DB schema and scripts
 - [ ] Connect to Viewpoint
 - [ ] Define users

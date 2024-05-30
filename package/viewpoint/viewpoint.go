@@ -3,7 +3,6 @@ package viewpoint
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -14,7 +13,7 @@ func ConnectToViewpoint() (*sql.DB, error) {
 
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		return nil, err
 	}
 
 	vpServer := os.Getenv("VP_SERVER")
@@ -28,5 +27,10 @@ func ConnectToViewpoint() (*sql.DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("viewpoint connection failed: %s", err.Error())
 	}
+
+	if err = conn.Ping(); err != nil {
+		return nil, err
+	}
+
 	return conn, nil
 }

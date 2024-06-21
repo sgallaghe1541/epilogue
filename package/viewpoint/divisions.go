@@ -1,8 +1,8 @@
 package viewpoint
 
 type Division struct {
-	JobCostDepts []string
-	PayrollDepts []string
+	JobCostDepts []string `db:"jobcostdepts"`
+	PayrollDepts []string `db:"payrolldepts"`
 }
 
 var Grading = Division{

@@ -7,17 +7,17 @@ dev/templ:
 # run air to detect any go file changes to re-build and re-run the server.
 dev/server:
 	go run github.com/cosmtrek/air@v1.51.0 \
-	--build.cmd "go build -C cmd -o ../temp/bin/main" \
-	--build.bin "./temp/bin/main" \
+	--build.cmd "go build -C cmd -o ../tmp/main" \
+	--build.bin "tmp/main" \
 	--build.delay "100" \
 	--build.exclude_dir "node_modules" \
 	--build.include_ext "go" \
-	--build.stop_on_error "false" \
+	--build.stop_on_error false \
 	--misc.clean_on_exit true
 
 # run tailwindcss to generate the styles.css bundle in watch mode.
 dev/tailwind:
-	npx tailwindcss -i ./input.css -o ./assets/styles.css --minify --watch
+	npx tailwindcss -i ./static/css/input.css -o ./static/css/styles.css --minify --watch
 
 # watch for any js or css change in the static/ folder, then reload the browser via templ proxy.
 dev/sync_assets:

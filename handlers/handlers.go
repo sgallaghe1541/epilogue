@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/sgallaghe1541/epilogue/internal/views/layouts"
 	"github.com/sgallaghe1541/epilogue/package/viewpoint"
+	"github.com/sgallaghe1541/epilogue/views/layouts"
 )
 
 func DivisionJobs(w http.ResponseWriter, r *http.Request) {

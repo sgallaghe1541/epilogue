@@ -1,8 +1,10 @@
 package viewpoint
 
+import "database/sql"
+
 const (
 	AllJobHours = `
-		SELECT CONCAT(TRIM(PRTH.Job), ' - ', JCJM.Description) AS Job, 
+		SELECT CONCAT(TRIM(PRTH.Job), ' - ', JCJM.Description) AS job, 
 			CONCAT(REPLACE(PRTH.Phase, ' ',''), ' - ', JCJP.Description) AS Phase, 
 			CONVERT(varchar,PRTH.PostDate,1) AS Date, PRTH.Employee, CONCAT(PREH.FirstName, ' ', PREH.LastName) AS Name, 
 			CONCAT(PRTH.EarnCode, ' - ', PREC.Description) AS EarnCode, 
@@ -18,12 +20,17 @@ const (
 		AND PRTH.PREndDate = ?
 		AND PRTH.Hours <> 0
 	`
-	JobList = `
-		SELECT JCJM.Job AS Job, JCJM.Description AS Description
+	JobListQuery = `
+		SELECT Job AS job, Description AS description
 		FROM JCJM 
-		JOIN JCCM ON JCJM.JCCo = JCCM.JCCo AND JCJM.Contract = JCCM.Contract
-		WHERE JCJM.JCCo=1
-		AND JCCM.Department IN(:jobcostdepts)
-		AND JCJM.JobStatus=1
+		WHERE JCCo=1 
+		AND Job LIKE :jobending 
+		AND JobStatus=1 
+		AND udFMTS='Y'
 	`
 )
+
+type Job struct {
+	Job         string         `db:"job"`
+	Description sql.NullString `db:"description"`
+}

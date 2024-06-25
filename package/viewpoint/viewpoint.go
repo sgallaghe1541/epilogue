@@ -1,15 +1,15 @@
 package viewpoint
 
 import (
-	"database/sql"
 	"fmt"
 	"os"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
 	_ "github.com/microsoft/go-mssqldb"
 )
 
-func ConnectToViewpoint() (*sql.DB, error) {
+func ConnectToViewpoint() (*sqlx.DB, error) {
 
 	err := godotenv.Load()
 	if err != nil {
@@ -23,7 +23,7 @@ func ConnectToViewpoint() (*sql.DB, error) {
 	vpPort := os.Getenv("VP_PORT")
 	connString := fmt.Sprintf("server=%s;database=%s;user id=%s;password=%s;port=%s", vpServer, vpDB, vpUser, vpPass, vpPort)
 
-	conn, err := sql.Open("mssql", connString)
+	conn, err := sqlx.Open("mssql", connString)
 	if err != nil {
 		return nil, fmt.Errorf("viewpoint connection failed: %s", err.Error())
 	}

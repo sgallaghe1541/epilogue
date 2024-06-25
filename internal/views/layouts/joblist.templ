@@ -1,0 +1,14 @@
+package layouts
+
+import(
+    "github.com/sgallaghe1541/epilogue/package/viewpoint"
+    "github.com/sgallaghe1541/epilogue/internal/views/components"
+)
+
+templ JobList(jobs []viewpoint.Job) {
+    @Base(){
+        for _, job := range jobs {
+            @components.JobLink(job.Job , job.Description.String)
+        }
+    }
+}

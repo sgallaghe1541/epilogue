@@ -1,18 +1,13 @@
 package main
 
 import (
-	"database/sql"
 	"log/slog"
 	"net/http"
 	"os"
 
+	"github.com/sgallaghe1541/epilogue/app"
 	"github.com/sgallaghe1541/epilogue/package/viewpoint"
 )
-
-type application struct {
-	logger    *slog.Logger
-	viewpoint *sql.DB
-}
 
 func main() {
 	addr := ":4000"
@@ -28,14 +23,14 @@ func main() {
 
 	defer vp.Close()
 
-	app := &application{
-		logger:    logger,
-		viewpoint: vp,
+	server := &app.Epilogue{
+		Logger:    logger,
+		Viewpoint: vp,
 	}
 
-	app.logger.Info("starting server")
+	server.Logger.Info("starting server")
 
-	err = http.ListenAndServe(addr, app.routes())
-	app.logger.Error(err.Error())
+	err = http.ListenAndServe(addr, server.Routes())
+	server.Logger.Error(err.Error())
 	os.Exit(1)
 }

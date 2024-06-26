@@ -5,3 +5,22 @@ templ JobLink(num, description string) {
     <a href="/">{ num } -- { description }</a>
     </div>
 }
+
+templ JobTotalHoursTable() {
+    <div>
+        <table>
+            <tr>
+                <th>Job</th>
+                <th>Hours</th>
+            </tr>
+            { children... }
+        </table>
+    </div>
+}
+
+templ JobTotalHoursRow(job, hours string) {
+    <tr>
+        <td>{ job }</td>
+        <td>{ hours }</td>
+    </tr>
+}

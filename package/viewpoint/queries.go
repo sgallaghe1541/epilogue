@@ -28,9 +28,26 @@ const (
 		AND JobStatus=1 
 		AND udFMTS='Y'
 	`
+	JobHours = `
+		SELECT CONCAT(TRIM(PRTH.Job), ' - ', JCJM.Description) AS job, SUM(PRTH.Hours) AS hours
+		FROM PRTH
+		LEFT JOIN JCJM ON PRTH.PRCo = JCJM.JCCo AND PRTH.Job = JCJM.Job
+		WHERE PRTH.PRCo = 1 
+		AND PRTH.PRGroup <> 2
+		AND PRTH.PRDept IN (:payrolldepts)
+		AND PRTH.PREndDate = '06/15/2024'
+		AND PRTH.Hours <> 0
+		GROUP BY PRTH.Job, JCJM.Description
+		ORDER BY PRTH.Job, JCJM.Description
+	`
 )
 
 type Job struct {
 	Job         string         `db:"job"`
 	Description sql.NullString `db:"description"`
+}
+
+type JobTotalHours struct {
+	Job   string  `db:"job"`
+	Hours float32 `db:"hours"`
 }

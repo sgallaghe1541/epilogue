@@ -8,5 +8,5 @@ import (
 )
 
 func HandleHome(w http.ResponseWriter, r *http.Request) {
-	layouts.Landing().Render(context.Background(), w)
+	layouts.Home().Render(context.Background(), w)
 }

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/jmoiron/sqlx"
@@ -9,7 +10,7 @@ import (
 	"github.com/sgallaghe1541/epilogue/views/layouts"
 )
 
-func DivisionJobs(w http.ResponseWriter, r *http.Request) {
+func HandleAllJobHours(w http.ResponseWriter, r *http.Request) {
 	division := r.URL.Path
 	vpconn := r.Context().Value("vp").(*sqlx.DB)
 
@@ -22,21 +23,24 @@ func DivisionJobs(w http.ResponseWriter, r *http.Request) {
 		//need to handle bad path
 	}
 
-	divisionJobs := []viewpoint.Job{}
-	query, args, err := viewpoint.BuildInQuery(viewpoint.JobListQuery, vpDiv)
+	jobHours := []viewpoint.JobTotalHours{}
+	query, args, err := viewpoint.BuildInQuery(viewpoint.JobHours, vpDiv)
 	if err != nil {
+		fmt.Print(err.Error())
 	}
 
 	rows, err := vpconn.Queryx(query, args...)
 
 	if err != nil {
+		fmt.Print(err.Error())
 	}
 
 	defer rows.Close()
 
-	err = sqlx.StructScan(rows, &divisionJobs)
+	err = sqlx.StructScan(rows, &jobHours)
 	if err != nil {
+		fmt.Print(err.Error())
 	}
 
-	layouts.JobList(divisionJobs).Render(context.Background(), w)
+	layouts.DivisionLanding(jobHours).Render(context.Background(), w)
 }

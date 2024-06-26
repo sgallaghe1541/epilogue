@@ -19,7 +19,7 @@ func (app *Epilogue) Routes() *chi.Mux {
 
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.VPConnection(app.Viewpoint))
-		r.Get("/grading", handlers.DivisionJobs)
+		r.Get("/grading", handlers.HandleAllJobHours)
 	})
 	return r
 }

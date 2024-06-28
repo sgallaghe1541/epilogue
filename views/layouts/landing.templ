@@ -1,24 +1,20 @@
 package layouts
 
 import(
-    "fmt"
-
     "github.com/sgallaghe1541/epilogue/package/viewpoint"
     "github.com/sgallaghe1541/epilogue/views/components"
 )
 
-templ DivisionLanding(jobs []viewpoint.JobTotalHours) {
+templ DivisionLanding(dates [3]string, jobs []viewpoint.JobTotalHours) {
     @Base() {
-        @components.JobTotalHoursTable() {
-            for _, job := range jobs {
-                @components.JobTotalHoursRow(job.Job, fmt.Sprintf("%.2f", job.Hours))
-            }
-        }
+        @components.HoursByJob(dates, jobs)
     }
 }
 
 templ Home() {
     @Base() {
-        <a href="/grading">Grading</a>
+        <a href="/vp/grading">Grading</a>
+        <a href="/vp/paving">Paving</a>
+        <a href="/vp/bridge">Bridge</a>
     }
 }

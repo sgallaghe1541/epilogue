@@ -6,7 +6,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func BuildInQuery(querystring string, div Division) (string, []interface{}, error) {
+func BuildInQuery(querystring string, div QueryArgs) (string, []interface{}, error) {
 	query, args, err := sqlx.Named(querystring, div)
 	if err != nil {
 		return "", nil, fmt.Errorf("failed to prep named query: %s", err)

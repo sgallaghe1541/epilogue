@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"time"
 )
 
 type APIError struct {
@@ -46,4 +47,9 @@ func writeJSON(w http.ResponseWriter, status int, v any) error {
 	w.WriteHeader(status)
 	w.Header().Set("Content-Type", "application/json")
 	return json.NewEncoder(w).Encode(v)
+}
+
+func queryDateStringtoHTMLDateString(date string) string {
+	datetime, _ := time.Parse("01/02/2006", date)
+	return datetime.Format("2006-01-02")
 }

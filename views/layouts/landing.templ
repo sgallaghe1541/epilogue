@@ -5,9 +5,9 @@ import(
     "github.com/sgallaghe1541/epilogue/views/components"
 )
 
-templ DivisionLanding(dates [3]string, jobs []viewpoint.JobTotalHours) {
+templ DivisionLanding(division string, dates [3]string, jobs []viewpoint.JobTotalHours) {
     @Base() {
-        @components.HoursByJob(dates, jobs)
+        @components.JobHoursTable(division, dates, jobs)
     }
 }
 

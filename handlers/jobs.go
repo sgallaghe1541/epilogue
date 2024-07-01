@@ -28,7 +28,12 @@ func HandleAllJobHours(w http.ResponseWriter, r *http.Request) {
 		//need to handle bad path
 	}
 
-	vpDiv.WEDate = r.URL.Query().Get("wedate")
+	if r.URL.Query().Get("wedate") == "" {
+		vpDiv.WEDate = "06/15/2024"
+	} else {
+		vpDiv.WEDate = r.URL.Query().Get("wedate")
+	}
+
 	jobHours := []viewpoint.JobTotalHours{}
 	query, args, err := viewpoint.BuildInQuery(viewpoint.JobHours, vpDiv)
 	if err != nil {
@@ -51,7 +56,8 @@ func HandleAllJobHours(w http.ResponseWriter, r *http.Request) {
 	dates := getDates(vpDiv.WEDate)
 
 	w.Header().Set("Content-Type", "text/html")
-	layouts.DivisionLanding(dates, jobHours).Render(context.Background(), w)
+	w.Header().Set("HX-Push-Url", r.URL.String())
+	layouts.DivisionLanding(division, dates, jobHours).Render(context.Background(), w)
 }
 
 func getDates(d string) [3]string {

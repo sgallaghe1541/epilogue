@@ -6,51 +6,35 @@ import (
     "github.com/sgallaghe1541/epilogue/package/viewpoint"
 )
 
-templ JobLink(num, description string) {
-    <div>
-    <a href="/">{ num } -- { description }</a>
-    </div>
-}
 
-templ JobTotalHoursTable() {
-    <div>
+templ JobHoursTable(division string, dates [3]string, jobs []viewpoint.JobTotalHours) {
+    @Hours(division, dates) {
         <table>
             <tr>
                 <th>Job</th>
                 <th>Description</th>
                 <th>Hours</th>
             </tr>
-            { children... }
+            for _, job := range jobs {
+                <tr>
+                    <td>{ job.Job.String }</td>
+                    <td>{ job.Description.String }</td>
+                    <td>{ fmt.Sprintf("%.2f", job.Hours) }</td>
+                </tr>
+            }
         </table>
-    </div>
+    }
 }
 
-templ jobTotalHoursRow(jobnum, description, hours string) {
-    <tr>
-        <td>{ jobnum }</td>
-        <td>{ description }</td>
-        <td>{ hours }</td>
-    </tr>
-}
-
-templ HoursByJob(dates [3]string, jobs []viewpoint.JobTotalHours) {
+templ Hours(division string, dates [3]string) {
     <div id="report">
         <div class="flex items-start">
-            <button type="button" name="wedate" hx-get="" hx-target="#report" hx-swap="outerHTML" value={ dates[0] }>{ dates[0] }</button>
+            <button type="button" name="wedate" hx-get={ division } hx-target="#report" hx-swap="outerHTML" value={ dates[0] }>{ dates[0] }</button>
             <p><strong>Week Ending { dates[1] }</strong></p>
-            <button type="button" name="wedate" hx-get="" hx-target="#report" hx-swap="outerHTML" value={ dates[2] }>{ dates[2] }</button>
+            <button type="button" name="wedate" hx-get={ division } hx-target="#report" hx-swap="outerHTML"  value={ dates[2] }>{ dates[2] }</button>
         </div>
         <div>
-            <table>
-                <tr>
-                    <th>Job</th>
-                    <th>Description</th>
-                    <th>Hours</th>
-                </tr>
-                for _, job := range jobs {
-                    @jobTotalHoursRow(job.Job.String, job.Description.String, fmt.Sprintf("%.2f", job.Hours))
-                }
-            </table>
+            { children... }
         </div>
     </div>
 }

@@ -16,12 +16,13 @@ func (app *Epilogue) Routes() *chi.Mux {
 	FileServer(r, "/static", fileDir)
 
 	r.Get("/", handlers.HandleHome)
+	r.Get("/landing/*", handlers.HandleLanding)
+
+	r.Get("/cmp/display/", handlers.HandleDisplayIn)
 
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.VPConnection(app.Viewpoint))
-		r.Get("/vp/grading", handlers.HandleAllJobHours)
-		r.Get("/vp/paving", handlers.HandleAllJobHours)
-		r.Get("/vp/bridge", handlers.HandleAllJobHours)
+		r.Get("/vp/hours/", handlers.HandleHours)
 	})
 	return r
 }

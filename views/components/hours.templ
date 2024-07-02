@@ -7,34 +7,36 @@ import (
 )
 
 
-templ JobHoursTable(division string, dates [3]string, jobs []viewpoint.JobTotalHours) {
-    @Hours(division, dates) {
-        <table>
+templ JobHoursTable(jobs []viewpoint.JobTotalHours) {
+    <table>
+        <tr>
+            <th>Job</th>
+            <th>Description</th>
+            <th>Hours</th>
+        </tr>
+        for _, job := range jobs {
             <tr>
-                <th>Job</th>
-                <th>Description</th>
-                <th>Hours</th>
+                <td>{ job.Job.String }</td>
+                <td>{ job.Description.String }</td>
+                <td>{ fmt.Sprintf("%.2f", job.Hours) }</td>
             </tr>
-            for _, job := range jobs {
-                <tr>
-                    <td>{ job.Job.String }</td>
-                    <td>{ job.Description.String }</td>
-                    <td>{ fmt.Sprintf("%.2f", job.Hours) }</td>
-                </tr>
-            }
-        </table>
-    }
+        }
+    </table>
 }
 
-templ Hours(division string, dates [3]string) {
-    <div id="report">
-        <div class="flex items-start">
-            <button type="button" name="wedate" hx-get={ division } hx-target="#report" hx-swap="outerHTML" value={ dates[0] }>{ dates[0] }</button>
-            <p><strong>Week Ending { dates[1] }</strong></p>
-            <button type="button" name="wedate" hx-get={ division } hx-target="#report" hx-swap="outerHTML"  value={ dates[2] }>{ dates[2] }</button>
-        </div>
-        <div>
-            { children... }
-        </div>
-    </div>
+templ EmployeeHoursTable(emps []viewpoint.EmployeeTotalHours) {
+    <table>
+        <tr>
+            <th>Employee</th>
+            <th>Name</th>
+            <th>Hours</th>
+        </tr>
+        for _, emp := range emps {
+            <tr>
+                <td>{ emp.Employee }</td>
+                <td>{ emp.Name }</td>
+                <td>{ fmt.Sprintf("%.2f", emp.Hours) }</td>
+            </tr>
+        }
+    </table>
 }

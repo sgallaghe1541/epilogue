@@ -1,20 +1,28 @@
 package layouts
 
-import(
-    "github.com/sgallaghe1541/epilogue/package/viewpoint"
-    "github.com/sgallaghe1541/epilogue/views/components"
-)
-
-templ DivisionLanding(division string, dates [3]string, jobs []viewpoint.JobTotalHours) {
+templ DivisionLanding(division, displayby, date string) {
     @Base() {
-        @components.JobHoursTable(division, dates, jobs)
+    <div id="params">
+        <input type="hidden" name="division" value={ division } />
+        <input type="hidden" id="displayby" name="displayby" value={ displayby } hx-trigger="load" hx-get="/vp/hours/" hx-include="#params" hx-target="#report" />
+        <div class="flex items-start">
+            <label for="wedate">Week Ending:</label>
+            <input type="date" name="wedate" hx-get="/vp/hours/" hx-include="#params" hx-target="#report" hx-swap="innerHTML" id="wedate" value={ date } step="7" />
+        </div>
+        <div>
+            <button type="button" hx-get="/cmp/display/" name="display" value="job" hx-target="#displayby" hx-swap="outerHTML">By Job</button>
+            <button type="button" hx-get="/cmp/display/" name="display" value="employee" hx-target="#displayby" hx-swap="outerHTML">By Employee</button>
+        </div>
+    </div>
+    <div id="report">
+    </div>
     }
 }
 
 templ Home() {
     @Base() {
-        <a href="/vp/grading">Grading</a>
-        <a href="/vp/paving">Paving</a>
-        <a href="/vp/bridge">Bridge</a>
+        <a href="/landing/?division=grading">Grading</a>
+        <a href="/landing/division=paving">Paving</a>
+        <a href="/landing/division=bridge">Bridge</a>
     }
 }

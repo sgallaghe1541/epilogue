@@ -29,16 +29,40 @@ const (
 		AND udFMTS='Y'
 	`
 	JobHours = `
-		SELECT PRTH.Job AS job, JCJM.Description AS description, SUM(PRTH.Hours) AS hours
-		FROM PRTH
-		LEFT JOIN JCJM ON PRTH.PRCo = JCJM.JCCo AND PRTH.Job = JCJM.Job
-		WHERE PRTH.PRCo = 1 
-		AND PRTH.PRGroup <> 2
-		AND PRTH.PRDept IN (:payrolldepts)
-		AND PRTH.PREndDate = :wedate
-		AND PRTH.Hours <> 0
-		GROUP BY PRTH.Job, JCJM.Description
-		ORDER BY PRTH.Job, JCJM.Description
+	    WITH jobhours AS (
+			SELECT PRTH.Job AS job, JCJM.Description AS description, PRTH.Hours AS hours
+			FROM PRTH
+			LEFT JOIN JCJM ON PRTH.PRCo = JCJM.JCCo AND PRTH.Job = JCJM.Job
+			WHERE PRTH.PRCo = 1 
+			AND PRTH.PRGroup <> 2
+			AND PRTH.PRDept IN (:payrolldepts)
+			AND PRTH.PREndDate = :wedate
+			AND PRTH.Hours <> 0)
+		SELECT job, description, SUM(hours) AS hours
+		FROM jobhours
+		GROUP BY job, description
+		UNION ALL 
+		SELECT 'Total', ' - ', SUM(hours) AS hours
+		FROM jobhours
+		ORDER BY job, description
+	`
+	EmployeeHours = `
+		WITH employeehours AS (
+			SELECT STR(PRTH.Employee) AS employee, CONCAT(PREH.FirstName, ' ', PREH.LastName) AS name, PRTH.Hours AS hours
+			FROM PRTH
+			JOIN PREH ON PRTH.PRCo = PREH.PRCo AND PRTH.Employee = PREH.Employee
+			WHERE PRTH.PRCo = 1 
+			AND PRTH.PRGroup <> 2
+			AND PRTH.PRDept IN (:payrolldepts)
+			AND PRTH.PREndDate = :wedate
+			AND PRTH.Hours <> 0)
+		SELECT employee, name, SUM(hours) AS hours
+		FROM employeehours
+		GROUP BY employee, name
+		UNION ALL 
+		SELECT 'Total', ' - ', SUM(hours) AS hours
+		FROM employeehours
+		ORDER BY employee, name
 	`
 )
 
@@ -51,4 +75,10 @@ type JobTotalHours struct {
 	Job         sql.NullString `db:"job"`
 	Description sql.NullString `db:"description"`
 	Hours       float32        `db:"hours"`
+}
+
+type EmployeeTotalHours struct {
+	Employee string  `db:"employee"`
+	Name     string  `db:"name"`
+	Hours    float32 `db:"hours"`
 }

@@ -49,7 +49,20 @@ func writeJSON(w http.ResponseWriter, status int, v any) error {
 	return json.NewEncoder(w).Encode(v)
 }
 
-func queryDateStringtoHTMLDateString(date string) string {
-	datetime, _ := time.Parse("01/02/2006", date)
-	return datetime.Format("2006-01-02")
+func htmlDatetoQueryDate(date string) string {
+	datetime, _ := time.Parse("2006-01-02", date)
+	return datetime.Format("01/02/2006")
+}
+
+func getRecentWEDate() string {
+	now := time.Now()
+
+	now = now.Add(time.Hour * -24 * 5)
+
+	for now.Weekday() != 6 {
+		now = now.Add(time.Hour * -24)
+		fmt.Println(now)
+	}
+
+	return now.Format("2006-01-02")
 }

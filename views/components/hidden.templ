@@ -1,0 +1,5 @@
+package components
+
+templ HiddenDisplay(displayby string) {
+    <input type="hidden" id="displayby" name="displayby" value={ displayby } hx-trigger="load" hx-get="/vp/hours/" hx-include="#params" hx-target="#report" />
+}

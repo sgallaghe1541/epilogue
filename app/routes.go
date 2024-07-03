@@ -16,7 +16,7 @@ func (app *Epilogue) Routes() *chi.Mux {
 	FileServer(r, "/static", fileDir)
 
 	r.Get("/", handlers.HandleHome)
-	r.Get("/landing/*", handlers.HandleLanding)
+	r.Get("/reports/employeehours/*", handlers.HandleEmployeeHours)
 
 	r.Get("/cmp/display/", handlers.HandleDisplayIn)
 

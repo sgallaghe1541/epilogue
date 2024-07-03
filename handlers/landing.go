@@ -5,10 +5,10 @@ import (
 	"net/http"
 
 	"github.com/sgallaghe1541/epilogue/views/components"
-	"github.com/sgallaghe1541/epilogue/views/layouts"
+	"github.com/sgallaghe1541/epilogue/views/reports"
 )
 
-func HandleLanding(w http.ResponseWriter, r *http.Request) {
+func HandleEmployeeHours(w http.ResponseWriter, r *http.Request) {
 	v := r.URL.Query()
 	if v.Get("wedate") == "" {
 		date := getRecentWEDate()
@@ -22,7 +22,7 @@ func HandleLanding(w http.ResponseWriter, r *http.Request) {
 	displayBy := v.Get("displayby")
 
 	w.Header().Set("Content-Type", "text/html")
-	layouts.DivisionLanding(vpDiv, displayBy, date).Render(context.Background(), w)
+	reports.EmployeeHours(vpDiv, displayBy, date).Render(context.Background(), w)
 }
 
 func HandleDisplayIn(w http.ResponseWriter, r *http.Request) {

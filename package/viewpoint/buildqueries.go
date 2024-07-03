@@ -20,3 +20,12 @@ func BuildInQuery(querystring string, div QueryArgs) (string, []interface{}, err
 	query = sqlx.Rebind(sqlx.QUESTION, query)
 	return query, args, nil
 }
+
+func BuildQuery(querystring string, div QueryArgs) (string, []interface{}, error) {
+	query, args, err := sqlx.Named(querystring, div)
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to prep named query: %s", err)
+	}
+	query = sqlx.Rebind(sqlx.QUESTION, query)
+	return query, args, nil
+}

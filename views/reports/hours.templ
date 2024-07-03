@@ -5,16 +5,19 @@ import(
 )
 templ EmployeeHours(division, displayby, date string) {
     @layouts.Base() {
-    <div id="params">
-        <input type="hidden" name="division" value={ division } />
-        <input type="hidden" id="displayby" name="displayby" value={ displayby } hx-trigger="load" hx-get="/vp/hours/" hx-include="#params" hx-target="#report" />
+    <div>
+        <div id="params">
+            <input type="hidden" id="division" name="division" value={ division } />
+            <input type="hidden" id="wedate" name="wedate" value={ date } />
+            <input type="hidden" id="displayby" name="displayby" value={ displayby } hx-trigger="load" hx-get="/vp/hours/" hx-include="#params" hx-target="#report" />
+        </div>
         <div class="flex items-start">
             <label for="wedate">Week Ending: </label>
-            <input type="date" name="wedate" hx-get="/vp/hours/" hx-include="#params" hx-target="#report" hx-swap="innerHTML" id="wedate" value={ date } step="7" />
+            <input type="date" name="wedate" hx-get="/cmp/params/" hx-target="#wedate" hx-swap="outerHTML" value={ date } step="7" />
         </div>
         <div>
-            <button type="button" hx-get="/cmp/display/" name="display" value="job" hx-target="#displayby" hx-swap="outerHTML">By Job</button>
-            <button type="button" hx-get="/cmp/display/" name="display" value="employee" hx-target="#displayby" hx-swap="outerHTML">By Employee</button>
+            <button type="button" hx-get="/cmp/params/" name="displayby" value="job" hx-target="#displayby" hx-swap="outerHTML">By Job</button>
+            <button type="button" hx-get="/cmp/params/" name="displayby" value="employee" hx-target="#displayby" hx-swap="outerHTML">By Employee</button>
         </div>
     </div>
     <div id="report">

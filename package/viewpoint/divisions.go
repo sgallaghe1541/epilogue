@@ -5,6 +5,8 @@ type QueryArgs struct {
 	PayrollDepts []string `db:"payrolldepts"`
 	JobEnding    string   `db:"jobending"`
 	WEDate       string   `db:"wedate"`
+	Job          string   `db:"job"`
+	Employee     string   `db:"employee"`
 }
 
 var Grading = QueryArgs{

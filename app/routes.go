@@ -18,10 +18,11 @@ func (app *Epilogue) Routes() *chi.Mux {
 	r.Get("/", handlers.HandleHome)
 	r.Get("/reports/employeehours/*", handlers.HandleEmployeeHours)
 
-	r.Get("/cmp/display/", handlers.HandleDisplayIn)
+	r.Get("/cmp/params/", handlers.HandleHiddenParams)
 
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.VPConnection(app.Viewpoint))
+		r.Get("/vp/hoursbyjob/", handlers.HandleJobHours)
 		r.Get("/vp/hours/", handlers.HandleHours)
 	})
 	return r

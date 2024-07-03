@@ -2,12 +2,13 @@ package components
 
 import (
     "fmt"
+    "strings"
 
     "github.com/sgallaghe1541/epilogue/package/viewpoint"
 )
 
 
-templ JobHoursTable(jobs []viewpoint.JobTotalHours) {
+templ JobHoursTable(jobs []viewpoint.JobHoursResult) {
     <table>
         <tr>
             <th>Job</th>
@@ -16,7 +17,11 @@ templ JobHoursTable(jobs []viewpoint.JobTotalHours) {
         </tr>
         for _, job := range jobs {
             <tr>
-                <td>{ job.Job.String }</td>
+                if job.Job.String != "Total" {
+                    <td><button hx-get="/vp/hoursbyjob/" name="job" value={ job.Job.String } hx-include="#params" hx-trigger="click once" hx-target="closest tr" hx-swap="afterend">{ job.Job.String }</button></td>
+                } else {
+                    <td>{ job.Job.String }</td>
+                }
                 <td>{ job.Description.String }</td>
                 <td>{ fmt.Sprintf("%.2f", job.Hours) }</td>
             </tr>
@@ -24,7 +29,7 @@ templ JobHoursTable(jobs []viewpoint.JobTotalHours) {
     </table>
 }
 
-templ EmployeeHoursTable(emps []viewpoint.EmployeeTotalHours) {
+templ EmployeeHoursTable(emps []viewpoint.EmployeeHoursResult) {
     <table>
         <tr>
             <th>Employee</th>
@@ -39,4 +44,26 @@ templ EmployeeHoursTable(emps []viewpoint.EmployeeTotalHours) {
             </tr>
         }
     </table>
+}
+
+templ EmployeeHoursRows(job string, emps []viewpoint.EmployeeHoursResult) {
+    <tr id={ cssID("j", job) }>
+        <td><button _={ cssID("on click remove #j", job)}>X</button></td>
+        <td>
+            <table>
+            for _, emp := range emps {
+                <tr>
+                    <td>{ emp.Employee }</td>
+                    <td>{ emp.Name }</td>
+                    <td>{ fmt.Sprintf("%.2f", emp.Hours) }</td>
+                </tr>
+            }
+            </table>
+        </td>
+    </tr>
+}
+
+func cssID(before, id string) string {
+    combined := before + id
+    return strings.ReplaceAll(combined, ".", "")
 }

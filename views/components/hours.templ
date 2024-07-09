@@ -15,6 +15,7 @@ templ JobHoursTable(jobs []viewpoint.JobHoursResult) {
           <th scope="col" class="px-4 py-3">Job</th>
           <th scope="col" class="px-4 py-3">Description</th>
           <th scope="col" class="px-4 py-3">Employee Hours</th>
+          <th scope="col" class="px-4 py-3">Equipment Hours</th>
         </tr>
       </thead>
       <tbody class="overflow-y-auto">
@@ -28,7 +29,8 @@ templ JobHoursTable(jobs []viewpoint.JobHoursResult) {
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">{ job.Job.String }</td>
           }
           <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">{ job.Description.String }</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">{ fmt.Sprintf("%.2f", job.Hours) }</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">{ fmt.Sprintf("%.2f", job.EEHours) }</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">{ fmt.Sprintf("%.2f", job.EQHours) }</td>
         </tr>
       }
       </tbody>

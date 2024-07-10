@@ -5,12 +5,14 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/sgallaghe1541/epilogue/handlers"
-	"github.com/sgallaghe1541/epilogue/middleware"
+	"github.com/sgallaghe1541/epilogue/middlewares"
 )
 
 func (app *Epilogue) Routes() *chi.Mux {
 	r := chi.NewRouter()
+	r.Use(middleware.Logger)
 
 	fileDir := http.Dir("./static/")
 	FileServer(r, "/static", fileDir)
@@ -21,7 +23,7 @@ func (app *Epilogue) Routes() *chi.Mux {
 	r.Get("/cmp/params/", handlers.HandleHiddenParams)
 
 	r.Group(func(r chi.Router) {
-		r.Use(middleware.VPConnection(app.Viewpoint))
+		r.Use(middlewares.VPConnection(app.Viewpoint))
 		r.Get("/vp/hoursbyjob/", handlers.HandleJobHours)
 		r.Get("/vp/hours/", handlers.HandleHours)
 	})

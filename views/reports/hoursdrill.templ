@@ -1,0 +1,30 @@
+package reports
+
+import (
+    "fmt"
+    "strings"
+
+    "github.com/sgallaghe1541/epilogue/package/viewpoint"
+)
+
+templ EmployeeHoursRows(job string, emps []viewpoint.EmployeeHoursResult) {
+    <tr id={ cssID("j", job) }>
+        <td><button _={ cssID("on click remove #j", job)}>X</button></td>
+        <td>
+            <table>
+            for _, emp := range emps {
+                <tr>
+                    <td>{ emp.Employee }</td>
+                    <td>{ emp.Name }</td>
+                    <td>{ fmt.Sprintf("%.2f", emp.Hours) }</td>
+                </tr>
+            }
+            </table>
+        </td>
+    </tr>
+}
+
+func cssID(before, id string) string {
+    combined := before + id
+    return strings.ReplaceAll(combined, ".", "")
+}

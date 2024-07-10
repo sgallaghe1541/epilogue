@@ -25,12 +25,22 @@ templ Base() {
 }
 
 templ Header() {
-    <div class="flex w-screen bg-stone-50 flex-row items-center shadow-sm">
-      <img class="flex h-24" src="/static/images/logo.jpg" />
+    <div class="flex h-24 w-screen bg-stone-50 flex-row items-center shadow-sm">
+      <a href="/"><img class="flex h-24" src="/static/images/logo.jpg" /></a>
+      <div class="flex grow flex-col">
+        <div class="flex flex-row-reverse items-center">
+          <a class="p-4" href="/reports/employeehours/?division=grading">Grading</a>
+          <a class="p-4" href="/reports/employeehours/division=paving">Paving</a>
+          <a class="p-4" href="/reports/employeehours/division=bridge">Bridge</a>
+        </div>
+        <div class="flex flex-row items-end">
+          <a class="p-4" href="/reports/">Reports</a>
+        </div>
+      </div>
     </div>
 }
 
 templ SideBar() {
-    <div class="flex w-48 bg-stone-700 shadow-sm">
+    <div class="flex shrink-0 w-48 bg-stone-700 shadow-sm">
     </div>
 }

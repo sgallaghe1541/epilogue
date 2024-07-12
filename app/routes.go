@@ -18,6 +18,7 @@ func (app *Epilogue) Routes() *chi.Mux {
 	FileServer(r, "/static", fileDir)
 
 	r.Get("/", handlers.HandleHome)
+	r.Get("/reports/", handlers.HandleReports)
 	r.Get("/reports/employeehours/*", handlers.HandleEmployeeHours)
 
 	r.Get("/cmp/params/", handlers.HandleHiddenParams)

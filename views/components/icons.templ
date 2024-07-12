@@ -1,0 +1,16 @@
+package components
+
+templ IconSVG(path string) {
+    <svg class="size-12 m-4 fill-yellow-300 group-hover:fill-stone-700" xmlns="http://www.w3.org/2000/svg" data-name="Layer 1" viewBox="0 0 24 24">
+      <path d={ path } />
+    </svg>
+}
+
+templ SideBarIcon(link, tooltip string, svg templ.Component) {
+    <div hx-get={ link } hx-target="#contents" hx- class="relative flex items-center justify-center 
+    max-w-fit m-4 rounded-full text-yellow-300 bg-stone-700 group
+   hover:bg-yellow-300 hover:rounded-3xl cursor-pointer">
+      @svg
+      <span class="absolute w-auto p-2 m-2 min-w-max left-24 rounded-md shadow-md transition-all text-stone-50 bg-stone-700 z-50 scale-0 group-hover:scale-100">{ tooltip }</span>
+    </div>
+}

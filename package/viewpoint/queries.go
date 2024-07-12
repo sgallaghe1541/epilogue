@@ -65,10 +65,10 @@ type Job struct {
 }
 
 type JobHoursResult struct {
-	Job         sql.NullString `db:"job"`
-	Description sql.NullString `db:"description"`
-	EEHours     float32        `db:"emphours"`
-	EQHours     float32        `db:"equiphours"`
+	Job         sql.NullString  `db:"job"`
+	Description sql.NullString  `db:"description"`
+	EEHours     float32         `db:"emphours"`
+	EQHours     sql.NullFloat64 `db:"equiphours"`
 }
 
 type EmployeeHoursResult struct {

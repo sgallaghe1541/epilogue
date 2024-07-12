@@ -30,7 +30,7 @@ templ JobHoursTable(jobs []viewpoint.JobHoursResult) {
           }
           <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">{ job.Description.String }</td>
           <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">{ fmt.Sprintf("%.2f", job.EEHours) }</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">{ fmt.Sprintf("%.2f", job.EQHours) }</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">{ fmt.Sprintf("%.2f", job.EQHours.Float64) }</td>
         </tr>
       }
       </tbody>

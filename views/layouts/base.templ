@@ -1,5 +1,9 @@
 package layouts
 
+import (
+  "github.com/sgallaghe1541/epilogue/views/components"
+)
+
 templ Base() {
     <!DOCTYPE html>
     <html lang="en">
@@ -11,21 +15,16 @@ templ Base() {
       <link href="/static/css/styles.css" rel="stylesheet"/>
     </head>
     <body hx-boost="true">
-      <div class="flex flex-col">
-        @Header()
-          <div class="flex flex-row h-[calc(100vh-theme(space.32))] max-h-[calc(100vh-theme(space.32))]">
-          @SideBar()
-          { children... }
-          </div>
-        <div class="flex h-8 bg-yellow-300">
-        </div>
-        </div>
+      @Header()
+      @SideBar()
+      @Contents()
+      @Footer()
     </body>
     </html>
 }
 
 templ Header() {
-    <div class="flex h-24 w-screen bg-stone-50 flex-row items-center shadow-sm">
+    <div class="fixed t-0 left-0 flex h-24 w-screen flex-row items-center shadow-sm">
       <a href="/"><img class="flex h-24" src="/static/images/logo.jpg" /></a>
       <div class="flex grow flex-col">
         <div class="flex flex-row-reverse items-center">
@@ -33,14 +32,24 @@ templ Header() {
           <a class="p-4" href="/reports/employeehours/division=paving">Paving</a>
           <a class="p-4" href="/reports/employeehours/division=bridge">Bridge</a>
         </div>
-        <div class="flex flex-row items-end">
-          <a class="p-4" href="/reports/">Reports</a>
-        </div>
       </div>
     </div>
 }
 
 templ SideBar() {
-    <div class="flex shrink-0 w-48 bg-stone-700 shadow-sm">
+    <div class="fixed top-24 left-0 flex flex-col h-[calc(100vh-theme(space.24))] w-28 bg-stone-900 shadow-sm">
+      @components.SideBarIcon("/reports/", "Reports",components.IconSVG("m7,13h10v1H7v-1Zm0,5h7v-1h-7v1Zm15-10.707v16.707H2V2.5c0-1.378,1.122-2.5,2.5-2.5h10.207l7.293,7.293Zm-7-.293h5.293L15,1.707v5.293Zm6,16v-15h-7V1H4.5c-.827,0-1.5.673-1.5,1.5v20.5h18Z"))
+      @components.SideBarIcon("/timeentry", "Time Entry",components.IconSVG("m0,23h10v1H0v-1Zm8-4H0v1h8v-1Zm-2-4H0v1h6v-1Zm5-10v7.283l5.243,3.146.514-.857-4.757-2.854v-6.717h-1Zm1-5C5.383,0,0,5.383,0,12c0,.338.023.669.051,1h1c-.03-.33-.051-.662-.051-1C1,5.935,5.935,1,12,1s11,4.935,11,11-4.935,11-11,11v1c6.617,0,12-5.383,12-12S18.617,0,12,0Z"))
+    </div>
+}
+
+templ Footer() {
+    <div class="fixed left-28 bottom-0 h-8 w-[calc(100vw-theme(space.28))] bg-yellow-300">
+    </div>
+}
+
+templ Contents() {
+    <div id="contents" class="relative top-24 left-28 flex max-h-[calc(100vh-theme(space.32))] h-[calc(100vh-theme(space.32))] max-w-[calc(100vw-theme(space.28))] w-[calc(100vw-theme(space.28))] -z-50 bg-stone-50">
+      { children... }
     </div>
 }

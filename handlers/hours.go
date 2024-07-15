@@ -8,6 +8,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/sgallaghe1541/epilogue/package/viewpoint"
 	"github.com/sgallaghe1541/epilogue/views/components"
+	"github.com/sgallaghe1541/epilogue/views/reports"
 )
 
 func HandleHours(w http.ResponseWriter, r *http.Request) {
@@ -96,49 +97,55 @@ func HandleHiddenParams(w http.ResponseWriter, r *http.Request) {
 }
 
 func HandleJobHours(w http.ResponseWriter, r *http.Request) {
-
-	var vpArgs viewpoint.QueryArgs
-
-	vpconn := r.Context().Value("vp").(*sqlx.DB)
-
-	v := r.URL.Query()
-
-	div := v.Get("division")
-
-	switch div {
-	case "grading":
-		vpArgs = viewpoint.Grading
-	case "paving":
-		vpArgs = viewpoint.Paving
-	case "bridge":
-		vpArgs = viewpoint.Bridge
-	default:
-		fmt.Println("division did not come through...")
-		//need to handle bad path
-	}
-
-	vpArgs.WEDate = v.Get("wedate")
-	vpArgs.Job = v.Get("job")
-
-	empHours := []viewpoint.EmployeeHoursResult{}
-	query, args, err := viewpoint.BuildQuery(viewpoint.JobEmployeeHours, vpArgs)
-	if err != nil {
-		fmt.Print(err.Error())
-	}
-
-	rows, err := vpconn.Queryx(query, args...)
-
-	if err != nil {
-		fmt.Print(err.Error())
-	}
-
-	defer rows.Close()
-
-	err = sqlx.StructScan(rows, &empHours)
-	if err != nil {
-		fmt.Print(err.Error())
-	}
-
 	w.Header().Set("Content-Type", "text/html")
-	components.EmployeeHoursRows(vpArgs.Job, empHours).Render(context.Background(), w)
+	reports.Report("Job Hours").Render(context.Background(), w)
 }
+
+// func HandleJobHours(w http.ResponseWriter, r *http.Request) {
+
+// 	var vpArgs viewpoint.QueryArgs
+
+// 	vpconn := r.Context().Value("vp").(*sqlx.DB)
+
+// 	v := r.URL.Query()
+
+// 	div := v.Get("division")
+
+// 	switch div {
+// 	case "grading":
+// 		vpArgs = viewpoint.Grading
+// 	case "paving":
+// 		vpArgs = viewpoint.Paving
+// 	case "bridge":
+// 		vpArgs = viewpoint.Bridge
+// 	default:
+// 		fmt.Println("division did not come through...")
+// 		vpArgs = viewpoint.Grading
+// 		//need to handle bad path
+// 	}
+
+// 	vpArgs.WEDate = v.Get("wedate")
+// 	vpArgs.Job = v.Get("job")
+
+// 	empHours := []viewpoint.EmployeeHoursResult{}
+// 	query, args, err := viewpoint.BuildQuery(viewpoint.JobEmployeeHours, vpArgs)
+// 	if err != nil {
+// 		fmt.Print(err.Error())
+// 	}
+
+// 	rows, err := vpconn.Queryx(query, args...)
+
+// 	if err != nil {
+// 		fmt.Print(err.Error())
+// 	}
+
+// 	defer rows.Close()
+
+// 	err = sqlx.StructScan(rows, &empHours)
+// 	if err != nil {
+// 		fmt.Print(err.Error())
+// 	}
+
+// 	w.Header().Set("Content-Type", "text/html")
+// 	components.EmployeeHoursRows(vpArgs.Job, empHours).Render(context.Background(), w)
+// }

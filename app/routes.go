@@ -19,7 +19,9 @@ func (app *Epilogue) Routes() *chi.Mux {
 
 	r.Get("/", handlers.HandleHome)
 	r.Get("/reports/", handlers.HandleReports)
-	r.Get("/reports/employeehours/*", handlers.HandleEmployeeHours)
+	r.Get("/reports/jobhours/", handlers.HandleJobHours)
+
+	r.Get("/timeentry/", handlers.HandleTimeCardLinks)
 
 	r.Get("/cmp/params/", handlers.HandleHiddenParams)
 

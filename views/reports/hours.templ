@@ -1,11 +1,6 @@
 package reports
 
-import(
-    "github.com/sgallaghe1541/epilogue/views/layouts"
-)
-templ EmployeeHours(division, displayby, date string) {
-    @layouts.Base() {
-
+templ JobHours(division, displayby, date string) {
     <div class="flex flex-col p-4">
         <div id="params">
             <input type="hidden" id="division" name="division" value={ division } />
@@ -23,5 +18,4 @@ templ EmployeeHours(division, displayby, date string) {
         <div id="report" class="max-h-full overflow-y-scroll">
         </div>
     </div>
-    }
 }

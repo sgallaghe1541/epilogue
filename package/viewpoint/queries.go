@@ -19,7 +19,7 @@ const (
 			WHERE PRTH.PRCo = 1 
 			AND PRTH.PRGroup <> 2
 			AND PRTH.PRDept IN (:payrolldepts)
-			AND PRTH.PREndDate = :wedate)
+			AND PRTH.PREndDate BETWEEN :startwedate AND :endwedate)
 		SELECT job, description, SUM(emphours) AS emphours, SUM(equiphours) AS equiphours
 		FROM jobhours
 		GROUP BY job, description

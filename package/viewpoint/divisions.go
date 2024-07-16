@@ -4,7 +4,8 @@ type QueryArgs struct {
 	JobCostDepts []string `db:"jobcostdepts"`
 	PayrollDepts []string `db:"payrolldepts"`
 	JobEnding    string   `db:"jobending"`
-	WEDate       string   `db:"wedate"`
+	StartWEDate  string   `db:"startwedate"`
+	EndWEDate    string   `db:"endwedate"`
 	Job          string   `db:"job"`
 	Employee     string   `db:"employee"`
 }

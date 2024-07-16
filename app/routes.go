@@ -4,13 +4,13 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/sgallaghe1541/epilogue/handlers"
 	"github.com/sgallaghe1541/epilogue/middlewares"
 )
 
-func (app *Epilogue) Routes() *chi.Mux {
+func (app *App) Routes() *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 
@@ -18,18 +18,21 @@ func (app *Epilogue) Routes() *chi.Mux {
 	FileServer(r, "/static", fileDir)
 
 	r.Get("/", handlers.HandleHome)
-	r.Get("/reports/", handlers.HandleReports)
-	r.Get("/reports/jobhours/", handlers.HandleJobHours)
-
-	r.Get("/timeentry/", handlers.HandleTimeCardLinks)
-
 	r.Get("/cmp/params/", handlers.HandleHiddenParams)
 
-	r.Group(func(r chi.Router) {
-		r.Use(middlewares.VPConnection(app.Viewpoint))
-		r.Get("/vp/hoursbyjob/", handlers.HandleJobHours)
-		r.Get("/vp/hours/", handlers.HandleHours)
-	})
+	reportRouter := chi.NewRouter()
+	reportRouter.Use(middlewares.EpilogueConnection(app.Epilogue))
+	reportRouter.Get("/", handlers.HandleReports)
+	reportRouter.Get("/{reportname}", handlers.HandleReportParams)
+
+	vprouter := chi.NewRouter()
+	vprouter.Use(middlewares.VPConnection(app.Viewpoint))
+	//vprouter.Get("/hoursbyjob/", handlers.HandleJobHours)
+	vprouter.Get("/jobhours/", handlers.HandleHours)
+
+	r.Mount("/reports", reportRouter)
+	r.Mount("/vp", vprouter)
+
 	return r
 }
 

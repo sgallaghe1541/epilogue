@@ -6,7 +6,8 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type Epilogue struct {
+type App struct {
 	Logger    *slog.Logger
 	Viewpoint *sqlx.DB
+	Epilogue  *sqlx.DB
 }

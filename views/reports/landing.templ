@@ -1,29 +1,41 @@
 package reports
 
-templ ListReports(reports map[string]string) {
-    <div class="flex flex-row w-full m-4 p-2 rounded-md bg-stone-100 shadow-sm divide-x-2 divide-stone-300">
+import (
+  "github.com/sgallaghe1541/epilogue/internal/db"
+  "github.com/sgallaghe1541/epilogue/views/components"
+)
+
+templ ListReports(reports []db.EpilogueReport) {
+    <div class="flex flex-row w-full m-4 p-2 rounded-md max-h-full max-w-full overflow-clip bg-stone-100 shadow-sm">
       <div class="flex flex-col w-fit pr-4 pl-2">
         <p class="text-3xl font-bold">Reports</p>
         <ul class="list-none">
-          <li><p hx-get="jobhours/" hx-target="#report" class="text-blue-900 text-xl font-semibold no-underline hover:cursor-pointer hover:underline transition-all">Job Hours</p></li>
+          for _, report := range reports {
+            <li><p hx-get={ report.URL } hx-target="#report" class="text-blue-900 text-xl font-semibold no-underline hover:cursor-pointer hover:underline transition-all">{ report.Name }</p></li>
+          }
         </ul>
       </div>
-      <div id="report" class="flex flex-col grow">
+      <div id="report" class="flex max-h-full rounded-md flex-col grow">
       </div>
     </div>
 }
 
-templ Report(title string) {
-  <div id="title" class="flex h-20 items-center justify-center bg-stone-300">
-    <p class="text-2xl font-bold">{ title }</p>
+templ Report(date string, report db.EpilogueReport, params []db.ReportParameter) {
+  <div id="title" class="flex w-full items-center justify-center bg-stone-300">
+    <p class="text-2xl font-bold">{ report.Name }</p>
   </div>
-  <div class="flex flex-row divide-x-2 divide-stone-300 grow">
+  <div class="flex flex-row w-full">
     <div id="params" class="flex flex-col p-2 space-y-2">
       <p class="text-xl font-bold">Parameters</p>
-      <button class="bg-yellow-200 text-stone-700 rounded-md hover:bg-stone-700 hover:text-yellow-300 transition-all">Run Report</button>
+      for _, param := range params {
+          if param.Type == "date" {
+            @components.DateParam(date, param)
+          }
+      }
+      <button class="bg-yellow-200 text-stone-700 rounded-md hover:bg-stone-700 hover:text-yellow-300 transition-all" hx-target="#data" hx-get={ report.VPURL() } hx-include="#params">Run Report</button>
       <button class="bg-yellow-200 text-stone-700 rounded-md hover:bg-stone-700 hover:text-yellow-300 transition-all">Excel</button>
     </div>
-    <div id="data" class="flex">
+    <div id="data" class="flex-1 overflow-y-scroll">
     </div>
   </div>
 }

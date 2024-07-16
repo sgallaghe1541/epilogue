@@ -1,0 +1,8 @@
+package components
+
+import "github.com/sgallaghe1541/epilogue/internal/db"
+
+templ DateParam(date string, param db.ReportParameter) {
+    <label for={ param.Name }>{ param.Description }: </label>
+    <input type="date" name={ param.Name } value={ date } step="7" />
+}

@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/sgallaghe1541/epilogue/app"
+	"github.com/sgallaghe1541/epilogue/internal/db"
 	"github.com/sgallaghe1541/epilogue/package/viewpoint"
 )
 
@@ -24,9 +25,18 @@ func main() {
 
 	defer vp.Close()
 
-	server := &app.Epilogue{
+	data, err := db.ConnectToEpilogue()
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+
+	defer data.Close()
+
+	server := &app.App{
 		Logger:    logger,
 		Viewpoint: vp,
+		Epilogue:  data,
 	}
 
 	server.Logger.Info("starting server")

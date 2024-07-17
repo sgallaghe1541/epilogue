@@ -6,7 +6,7 @@ VALUES
     (5, 'Admin');
 
 INSERT INTO reports (reportid, reportname, reporturl, permission)
-VALUES (1, 'Job Hours', 'jobhours', 2);
+VALUES (1, 'All Job Hours', 'alljobhours', 2);
 
 INSERT INTO parametertypes (paramtype)
 VALUES 

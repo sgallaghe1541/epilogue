@@ -28,7 +28,7 @@ func (app *App) Routes() *chi.Mux {
 	vprouter := chi.NewRouter()
 	vprouter.Use(middlewares.VPConnection(app.Viewpoint))
 	//vprouter.Get("/hoursbyjob/", handlers.HandleJobHours)
-	vprouter.Get("/jobhours/", handlers.HandleHours)
+	vprouter.Get("/alljobhours/", handlers.HandleHours)
 
 	r.Mount("/reports", reportRouter)
 	r.Mount("/vp", vprouter)

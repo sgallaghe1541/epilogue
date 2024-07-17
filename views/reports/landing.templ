@@ -15,16 +15,16 @@ templ ListReports(reports []db.EpilogueReport) {
           }
         </ul>
       </div>
-      <div id="report" class="flex max-h-full rounded-md flex-col grow">
+      <div id="report" class="flex max-h-full h-full rounded-md flex-col grow">
       </div>
     </div>
 }
 
 templ Report(date string, report db.EpilogueReport, params []db.ReportParameter) {
-  <div id="title" class="flex w-full items-center justify-center bg-stone-300">
+  <div id="title" class="flex w-full items-center justify-center bg-stone-300 h-fit max-h-fit">
     <p class="text-2xl font-bold">{ report.Name }</p>
   </div>
-  <div class="flex flex-row w-full">
+  <div class="flex flex-row w-full h-full max-h-full">
     <div id="params" class="flex flex-col p-2 space-y-2">
       <p class="text-xl font-bold">Parameters</p>
       for _, param := range params {
@@ -35,7 +35,7 @@ templ Report(date string, report db.EpilogueReport, params []db.ReportParameter)
       <button class="bg-yellow-200 text-stone-700 rounded-md hover:bg-stone-700 hover:text-yellow-300 transition-all" hx-target="#data" hx-get={ report.VPURL() } hx-include="#params">Run Report</button>
       <button class="bg-yellow-200 text-stone-700 rounded-md hover:bg-stone-700 hover:text-yellow-300 transition-all">Excel</button>
     </div>
-    <div id="data" class="flex-1 overflow-y-scroll">
+    <div id="data" class="flex-initial h-[calc(100%-theme(space.8))] w-full overflow-y-scroll">
     </div>
   </div>
 }

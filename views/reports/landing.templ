@@ -5,13 +5,17 @@ import (
   "github.com/sgallaghe1541/epilogue/views/components"
 )
 
+func absURL(url string) string {
+    return "http://127.0.0.1:7331/reports/" + url
+}
+
 templ ListReports(reports []db.EpilogueReport) {
-    <div class="flex flex-row w-full m-4 p-2 rounded-md max-h-full max-w-full overflow-clip bg-stone-100 shadow-sm">
-      <div class="flex flex-col w-fit pr-4 pl-2">
+    <div class="flex flex-row space-x-4 w-full p-4 max-h-full max-w-full overflow-clip">
+      <div class="flex flex-col w-fit p-2 bg-stone-100 shadow-sm rounded-md">
         <p class="text-3xl font-bold">Reports</p>
-        <ul class="list-none">
+        <ul class="list-none text-nowrap">
           for _, report := range reports {
-            <li><p hx-get={ report.URL } hx-target="#report" class="text-blue-900 text-xl font-semibold no-underline hover:cursor-pointer hover:underline transition-all">{ report.Name }</p></li>
+            <li><p hx-get={ absURL(report.URL) } hx-target="#report" class="text-blue-900 text-lg font-semibold no-underline hover:cursor-pointer hover:underline transition-all">{ report.Name }</p></li>
           }
         </ul>
       </div>
@@ -21,12 +25,12 @@ templ ListReports(reports []db.EpilogueReport) {
 }
 
 templ Report(date string, report db.EpilogueReport, params []db.ReportParameter) {
-  <div id="title" class="flex w-full items-center justify-center bg-stone-300 h-fit max-h-fit">
+  <div id="title" class="flex w-full items-center justify-center bg-stone-300 h-fit max-h-fit shadow-sm rounded-t-md">
     <p class="text-2xl font-bold">{ report.Name }</p>
   </div>
-  <div class="flex flex-row w-full h-full max-h-full">
+  <div class="flex flex-row w-full h-[calc(100%-theme(space.8))] max-h-[calc(100%-theme(space.8))] overflow-clip rounded-b-md bg-stone-100">
     <div id="params" class="flex flex-col p-2 space-y-2">
-      <p class="text-xl font-bold">Parameters</p>
+      <p class="text-xl text-center font-bold">Parameters</p>
       for _, param := range params {
           if param.Type == "date" {
             @components.DateParam(date, param)
@@ -35,7 +39,7 @@ templ Report(date string, report db.EpilogueReport, params []db.ReportParameter)
       <button class="bg-yellow-200 text-stone-700 rounded-md hover:bg-stone-700 hover:text-yellow-300 transition-all" hx-target="#data" hx-get={ report.VPURL() } hx-include="#params">Run Report</button>
       <button class="bg-yellow-200 text-stone-700 rounded-md hover:bg-stone-700 hover:text-yellow-300 transition-all">Excel</button>
     </div>
-    <div id="data" class="flex-initial h-[calc(100%-theme(space.8))] w-full overflow-y-scroll">
+    <div id="data" class="flex pb-2 h-full max-h-full w-full overflow-y-auto">
     </div>
   </div>
 }

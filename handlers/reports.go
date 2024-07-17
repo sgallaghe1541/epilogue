@@ -65,21 +65,21 @@ func HandleReportParams(w http.ResponseWriter, r *http.Request) {
 	date := getRecentWEDate()
 
 	w.Header().Set("Content-Type", "text/html")
-	w.Header().Set("HX-Push-Url", r.URL.Path)
+	// w.Header().Set("HX-Push-Url", r.URL.Path)
 	reports.Report(date, report, reportparams).Render(context.Background(), w)
 }
 
-func HandleLoadHours(w http.ResponseWriter, r *http.Request) {
-	v := r.URL.Query()
+// func HandleLoadHours(w http.ResponseWriter, r *http.Request) {
+// 	v := r.URL.Query()
 
-	div := v.Get("division")
-	if div == "" {
-		div = "grading"
-	}
-	date := v.Get("wedate")
-	updatedURL := "/reports/jobhours/?" + v.Encode()
+// 	div := v.Get("division")
+// 	if div == "" {
+// 		div = "grading"
+// 	}
+// 	date := v.Get("wedate")
+// 	updatedURL := "/reports/jobhours/?" + v.Encode()
 
-	w.Header().Set("Content-Type", "text/html")
-	w.Header().Set("HX-Push-Url", updatedURL)
-	reports.JobHours(div, "job", date).Render(context.Background(), w)
-}
+// 	w.Header().Set("Content-Type", "text/html")
+// 	w.Header().Set("HX-Push-Url", updatedURL)
+// 	reports.JobHours(div, "job", date).Render(context.Background(), w)
+// }

@@ -8,6 +8,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/sgallaghe1541/epilogue/package/viewpoint"
 	"github.com/sgallaghe1541/epilogue/views/components"
+	"github.com/sgallaghe1541/epilogue/views/reports"
 )
 
 func HandleHours(w http.ResponseWriter, r *http.Request) {
@@ -36,7 +37,7 @@ func HandleHours(w http.ResponseWriter, r *http.Request) {
 	vpArgs.StartWEDate = v.Get("startwedate")
 	vpArgs.EndWEDate = v.Get("endwedate")
 
-	updatedURL := "/reports/jobhours/?" + v.Encode()
+	updatedURL := "/reports/alljobhours/?" + v.Encode()
 	fmt.Println(updatedURL)
 
 	jobHours := []viewpoint.JobHoursResult{}
@@ -60,7 +61,7 @@ func HandleHours(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html")
 	w.Header().Set("HX-Push-Url", updatedURL)
-	components.JobHoursTable(jobHours).Render(context.Background(), w)
+	reports.AllJobHours(jobHours).Render(context.Background(), w)
 }
 
 func HandleHiddenParams(w http.ResponseWriter, r *http.Request) {

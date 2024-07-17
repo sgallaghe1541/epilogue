@@ -5,17 +5,17 @@ import (
   "github.com/sgallaghe1541/epilogue/views/components"
 )
 
-func absURL(url string) string {
-    return "http://127.0.0.1:7331/reports/" + url
+func absURL(base, reporturl string) string {
+    return base + reporturl
 }
 
-templ ListReports(reports []db.EpilogueReport) {
+templ ListReports(url string, reports []db.EpilogueReport) {
     <div class="flex flex-row space-x-4 w-full p-4 max-h-full max-w-full overflow-clip">
       <div class="flex flex-col w-fit p-2 bg-stone-100 shadow-sm rounded-md">
         <p class="text-3xl font-bold">Reports</p>
         <ul class="list-none text-nowrap">
           for _, report := range reports {
-            <li><p hx-get={ absURL(report.URL) } hx-target="#report" class="text-blue-900 text-lg font-semibold no-underline hover:cursor-pointer hover:underline transition-all">{ report.Name }</p></li>
+            <li><p hx-get={ absURL(url, report.URL) } hx-target="#report" class="text-blue-900 text-lg font-semibold no-underline hover:cursor-pointer hover:underline transition-all">{ report.Name }</p></li>
           }
         </ul>
       </div>

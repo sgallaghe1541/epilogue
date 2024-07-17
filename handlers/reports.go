@@ -31,7 +31,7 @@ func HandleReports(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html")
 	w.Header().Set("HX-Push-Url", r.URL.Path)
-	reports.ListReports(reportlist).Render(context.Background(), w)
+	reports.ListReports(getAbsURL(*r.URL), reportlist).Render(context.Background(), w)
 }
 
 func HandleReportParams(w http.ResponseWriter, r *http.Request) {

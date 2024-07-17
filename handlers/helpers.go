@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -65,4 +66,9 @@ func getRecentWEDate() string {
 	}
 
 	return now.Format("2006-01-02")
+}
+
+func getAbsURL(u url.URL) string {
+	b := u.JoinPath(u.Scheme, u.Host)
+	return fmt.Sprint(b, "/")
 }

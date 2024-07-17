@@ -38,3 +38,17 @@ CREATE TABLE IF NOT EXISTS parameters (
     FOREIGN KEY(paramtype) REFERENCES parametertypes(paramtype),
     PRIMARY KEY(paramname, reportid)
 );
+
+CREATE TABLE IF NOT EXISTS icons (
+    iconid INTEGER PRIMARY KEY ASC,
+    iconurl TEXT,
+    tooltip TEXT,
+    permission INTEGER,
+    FOREIGN KEY(permission) REFERENCES permissionlevel(permissionid)
+);
+
+CREATE TABLE IF NOT EXISTS iconpaths (
+    iconpath TEXT,
+    iconid INTEGER,
+    FOREIGN KEY(iconid) REFERENCES icons(iconid)
+);

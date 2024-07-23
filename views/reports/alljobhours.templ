@@ -6,8 +6,57 @@ import (
     "github.com/sgallaghe1541/epilogue/package/viewpoint"
 )
 
-templ AllJobHours(jobs []viewpoint.JobHoursResult) {
-    <table class="table-auto w-full text-sm text-left text-gray-500 dark:text-gray-400">
+// templ AllJobHours(jobs []viewpoint.JobHoursResult) {
+//     <table class="table-auto w-full text-sm text-left text-gray-500 dark:text-gray-400">
+//       <thead class="text-xs text-gray-700 uppercase bg-stone-100 dark:bg-gray-700 dark:text-gray-400 sticky top-0">
+//         <tr>
+//           <th scope="col" class="px-4 py-3">Job</th>
+//           <th scope="col" class="px-4 py-3">Description</th>
+//           <th scope="col" class="px-4 py-3">Employee Hours</th>
+//           <th scope="col" class="px-4 py-3">Equipment Hours</th>
+//         </tr>
+//       </thead>
+//       <tbody>
+//       for _, job := range jobs {
+//         <tr class="odd:bg-white even:bg-stone-100 dark:odd:bg-neutral-900 dark:even:bg-neutral-800">
+//           if job.Job.String != "Total" {
+//             <td class="px-6 py-4 whitespace-nowrap text-end text-sm font-medium">
+//               <button type="button" class="gap-x-2 text-sm font-semibold rounded-lg border border-transparent text-blue-600 hover:text-blue-800 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-400" hx-get="/vp/hoursbyjob/" name="job" value={ job.Job.String } hx-include="#params" hx-trigger="click once" hx-target="closest tr" hx-swap="afterend">{ job.Job.String }</button>
+//             </td>
+//           } else {
+//             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">{ job.Job.String }</td>
+//           }
+//           <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">{ job.Description.String }</td>
+//           <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">{ fmt.Sprintf("%.2f", job.EEHours) }</td>
+//           <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">{ fmt.Sprintf("%.2f", job.EQHours.Float64) }</td>
+//         </tr>
+//         <tr>
+//           <td colspan="2">
+//             <table>
+//               <thead>
+//                 <tr>
+//                   <th>Employee</th>
+//                   <th>Hours</th>
+//                 </tr>
+//               </thead>
+//               <tbody>
+//                 for _, emp := range job.EEHoursDetail {
+//                   <tr>
+//                     <td>{ emp.Name }</td>
+//                     <td>{ fmt.Sprintf("%.2f", emp.Hours) }</td>
+//                   </tr>
+//                 }
+//               </tbody>
+//             </table>
+//           </td>
+//         </tr>
+//       }
+//       </tbody>
+//     </table>
+// }
+
+templ AllJobHours(jobs []*viewpoint.JobHoursResult) {
+    <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
       <thead class="text-xs text-gray-700 uppercase bg-stone-100 dark:bg-gray-700 dark:text-gray-400 sticky top-0">
         <tr>
           <th scope="col" class="px-4 py-3">Job</th>
@@ -16,12 +65,12 @@ templ AllJobHours(jobs []viewpoint.JobHoursResult) {
           <th scope="col" class="px-4 py-3">Equipment Hours</th>
         </tr>
       </thead>
-      <tbody>
       for _, job := range jobs {
+        <thead>
         <tr class="odd:bg-white even:bg-stone-100 dark:odd:bg-neutral-900 dark:even:bg-neutral-800">
           if job.Job.String != "Total" {
             <td class="px-6 py-4 whitespace-nowrap text-end text-sm font-medium">
-              <button type="button" class="gap-x-2 text-sm font-semibold rounded-lg border border-transparent text-blue-600 hover:text-blue-800 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-400" hx-get="/vp/hoursbyjob/" name="job" value={ job.Job.String } hx-include="#params" hx-trigger="click once" hx-target="closest tr" hx-swap="afterend">{ job.Job.String }</button>
+              <button type="button" class="gap-x-2 text-sm font-semibold rounded-lg border border-transparent text-blue-600 hover:text-blue-800 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-400" _="on click toggle .hidden on the next <tbody/>">{ job.Job.String }</button>
             </td>
           } else {
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">{ job.Job.String }</td>
@@ -30,7 +79,55 @@ templ AllJobHours(jobs []viewpoint.JobHoursResult) {
           <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">{ fmt.Sprintf("%.2f", job.EEHours) }</td>
           <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">{ fmt.Sprintf("%.2f", job.EQHours.Float64) }</td>
         </tr>
+        </thead>
+        <tbody class="hidden">
+          <tr>
+            <td colspan="4">
+              <div class="flex flex-row items-start">
+              if len(job.EEHoursDetail) != 0 {
+                  @DrillDownEE(job.EEHoursDetail)
+              }
+              if len(job.EQHoursDetail) != 0 {
+                  @DrillDownEQ(job.EQHoursDetail)
+              }
+              </div>
+            </td>
+          </tr>
+        </tbody>
       }
-      </tbody>
     </table>
+}
+
+templ DrillDownEE(emps []viewpoint.EmployeeHoursResult) {
+  <div class="flex mb-2 p-2 rounded-b-md bg-white w-fit">
+    <table>
+      <tr>
+        <td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-800">Name</td>
+        <td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-800">Hours</td>
+      </tr>
+      for _, emp := range emps {
+        <tr>
+          <td class="px-4 py-1 whitespace-nowrap text-xs font-medium text-gray-800">{ emp.Name }</td>
+          <td class="px-4 py-1 whitespace-nowrap text-xs font-medium text-gray-800">{ fmt.Sprintf("%.2f", emp.Hours) }</td>
+        </tr>
+      }
+    </table>
+  </div>
+}
+
+templ DrillDownEQ(eqps []viewpoint.EquipmentHoursResult) {
+  <div class="flex mb-2 p-2 rounded-b-md bg-white w-fit">
+    <table>
+      <tr>
+        <td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-800">Equipment</td>
+        <td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-800">Hours</td>
+      </tr>
+      for _, eqp := range eqps {
+        <tr>
+          <td class="px-4 py-1 whitespace-nowrap text-xs font-medium text-gray-800">{ eqp.Description }</td>
+          <td class="px-4 py-1 whitespace-nowrap text-xs font-medium text-gray-800">{ fmt.Sprintf("%.2f", eqp.Hours) }</td>
+        </tr>
+      }
+    </table>
+  </div>
 }

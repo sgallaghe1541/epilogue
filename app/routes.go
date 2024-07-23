@@ -24,14 +24,18 @@ func (app *App) Routes() *chi.Mux {
 	reportRouter.Use(middlewares.EpilogueConnection(app.Epilogue))
 	reportRouter.Get("/", handlers.HandleReports)
 	reportRouter.Get("/{reportname}", handlers.HandleReportParams)
+	reportRouter.Get("/{reportname}/downloads/{fname}", handlers.HandleDownloads)
 
 	vprouter := chi.NewRouter()
 	vprouter.Use(middlewares.VPConnection(app.Viewpoint))
 	//vprouter.Get("/hoursbyjob/", handlers.HandleJobHours)
-	vprouter.Get("/alljobhours/", handlers.HandleHours)
+	vprouter.Get("/alljobhours/", handlers.HandleAllJobHours)
+	vprouter.Get("/employeesforfringe/", handlers.HandleEmployeesForFringe)
 
 	r.Mount("/reports", reportRouter)
 	r.Mount("/vp", vprouter)
+
+	// r.Get("/downloads/{fname}", handlers.HandleDownloads)
 
 	return r
 }

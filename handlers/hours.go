@@ -11,7 +11,7 @@ import (
 	"github.com/sgallaghe1541/epilogue/views/reports"
 )
 
-func HandleHours(w http.ResponseWriter, r *http.Request) {
+func HandleAllJobHours(w http.ResponseWriter, r *http.Request) {
 
 	var vpArgs viewpoint.QueryArgs
 
@@ -40,7 +40,7 @@ func HandleHours(w http.ResponseWriter, r *http.Request) {
 	updatedURL := "/reports/alljobhours/?" + v.Encode()
 	fmt.Println(updatedURL)
 
-	jobHours := []viewpoint.JobHoursResult{}
+	jobHours := []*viewpoint.JobHoursResult{}
 	query, args, err := viewpoint.BuildInQuery(viewpoint.JobHours, vpArgs)
 	if err != nil {
 		fmt.Print(err.Error())
@@ -57,6 +57,29 @@ func HandleHours(w http.ResponseWriter, r *http.Request) {
 	err = sqlx.StructScan(rows, &jobHours)
 	if err != nil {
 		fmt.Print(err.Error())
+	}
+
+	for _, job := range jobHours {
+		// job.GetDetail(vpArgs, vpconn)
+		eerows, err := vpconn.Queryx(viewpoint.JobEmployeeHours, job.Job.String, vpArgs.StartWEDate, vpArgs.EndWEDate)
+		if err != nil {
+			fmt.Print(err.Error())
+		}
+		err = sqlx.StructScan(eerows, &job.EEHoursDetail)
+		if err != nil {
+			fmt.Print(err.Error())
+		}
+		eerows.Close()
+
+		eqrows, err := vpconn.Queryx(viewpoint.JobEquipmentHours, job.Job.String, vpArgs.StartWEDate, vpArgs.EndWEDate)
+		if err != nil {
+			fmt.Print(err.Error())
+		}
+		err = sqlx.StructScan(eqrows, &job.EQHoursDetail)
+		if err != nil {
+			fmt.Print(err.Error())
+		}
+		eqrows.Close()
 	}
 
 	w.Header().Set("Content-Type", "text/html")

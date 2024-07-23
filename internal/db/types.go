@@ -17,3 +17,8 @@ type ReportParameter struct {
 	Type        string `db:"paramtype"`
 	ReportID    string `db:"reportid"`
 }
+
+type Division struct {
+	ID          string `db:"divisionid"`
+	Description string `db:"descr"`
+}

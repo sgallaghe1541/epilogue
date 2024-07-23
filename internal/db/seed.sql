@@ -1,3 +1,9 @@
+INSERT INTO divisions (divisionid, descr)
+VALUES
+    ('01', 'Grading'),
+    ('02', 'Paving'),
+    ('06', 'Bridge');
+
 INSERT INTO permissionlevels (permissionid, descr)
 VALUES 
     (1, 'Any'),
@@ -7,16 +13,21 @@ VALUES
     (5, 'Admin');
 
 INSERT INTO reports (reportid, reportname, reporturl, permission)
-VALUES (1, 'All Job Hours', 'alljobhours', 2);
+VALUES 
+    (1, 'All Job Hours', 'alljobhours', 2),
+    (2, 'Employees for Fringe', 'employeesforfringe', 4);
 
 INSERT INTO parametertypes (paramtype)
 VALUES 
-    ('date');
+    ('date'),
+    ('division');
 
 INSERT INTO parameters (paramname, paramdesc, reportid, paramtype)
 VALUES
     ('startwedate', 'Beginning WE Date', 1, 'date'),
-    ('endwedate', 'Ending WE Date', 1, 'date');
+    ('endwedate', 'Ending WE Date', 1, 'date'),
+    ('division', 'Division', 1, 'division'),
+    ('division', 'Division', 2, 'division');
 
 INSERT INTO icons (iconid, iconurl, tooltip, permission)
 VALUES

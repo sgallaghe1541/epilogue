@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS divisions (
-    divisionid INT PRIMARY KEY,
+    divisionid TEXT PRIMARY KEY,
     descr TEXT
 );
 

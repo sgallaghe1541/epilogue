@@ -1,0 +1,30 @@
+package reports
+
+import (
+    "fmt"
+
+    "github.com/sgallaghe1541/epilogue/package/viewpoint"
+)
+
+templ EmpsForFringe(emps []*viewpoint.EmployeesForFringeResult) {
+    <table class="w-full table-auto text-sm text-left text-gray-500 dark:text-gray-400">
+      <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 sticky top-0">
+        <tr>
+          <th scope="col" class="px-4 py-3">Employee</th>
+          <th scope="col" class="px-4 py-3">Name</th>
+          <th scope="col" class="px-4 py-3">Hire Date</th>
+          <th scope="col" class="px-4 py-3">Hourly Rate</th>
+        </tr>
+      </thead>
+      <tbody class="overflow-y-auto">
+        for _, emp := range emps {
+            <tr class="odd:bg-white even:bg-gray-100 dark:odd:bg-neutral-900 dark:even:bg-neutral-800">
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">{ emp.Employee }</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">{ emp.Name }</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">{ emp.HireDate.Format("01/02/2006") }</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">{ fmt.Sprintf("%.2f", emp.Rate) }</td>
+            </tr>
+        }
+      </tbody>
+    </table>
+}

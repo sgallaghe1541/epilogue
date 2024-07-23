@@ -1,8 +1,25 @@
 package components
 
-import "github.com/sgallaghe1541/epilogue/internal/db"
+import (
+    "path/filepath"
+    "strings"
+    "github.com/sgallaghe1541/epilogue/internal/db"
+)
 
 templ DateParam(date string, param db.ReportParameter) {
     <label class="w-fit text-nowrap" for={ param.Name }>{ param.Description }: </label>
     <input type="date" name={ param.Name } value={ date } step="7" />
+}
+
+templ DivisionParam(param db.ReportParameter, divisions []db.Division) {
+    <label class="w-fit text-nowrap" for={ param.Name }>{ param.Description }: </label>
+    <select name={ param.Name } id="divisions">
+    for _, div := range divisions {
+        <option value={ strings.ToLower(div.Description) }>{ div.ID } -- { div.Description }</option>
+    }
+    </select>
+}
+
+templ DownloadLink(fpath string) {
+    <a href={ templ.URL(fpath) }>{ filepath.Base(fpath) }</a>
 }

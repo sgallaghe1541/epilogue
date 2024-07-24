@@ -76,8 +76,8 @@ const (
 )
 
 type Excelable interface {
-	Headers() []interface{}
-	DataArray() []interface{}
+	Headers() *[]interface{}
+	ToExcel(string) error
 }
 
 type Job struct {

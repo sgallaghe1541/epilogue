@@ -3,8 +3,8 @@ package handlers
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -13,7 +13,6 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/sgallaghe1541/epilogue/internal/db"
 	"github.com/sgallaghe1541/epilogue/package/viewpoint"
-	"github.com/sgallaghe1541/epilogue/views/components"
 	"github.com/sgallaghe1541/epilogue/views/reports"
 	"github.com/xuri/excelize/v2"
 )
@@ -143,7 +142,7 @@ func HandleEmployeesForFringe(w http.ResponseWriter, r *http.Request) {
 
 	updatedURL := "/reports/employeesforfringe/?" + v.Encode()
 
-	emps := []*viewpoint.EmployeesForFringeResult{}
+	emps := viewpoint.EmployeesForFringeResult{}
 	query, args, err := viewpoint.BuildInQuery(viewpoint.EmployeesForFringe, vpArgs)
 	if err != nil {
 		fmt.Print(err.Error())
@@ -157,7 +156,7 @@ func HandleEmployeesForFringe(w http.ResponseWriter, r *http.Request) {
 
 	defer rows.Close()
 
-	err = sqlx.StructScan(rows, &emps)
+	err = sqlx.StructScan(rows, &emps.Result)
 	if err != nil {
 		fmt.Print(err.Error())
 	}
@@ -170,36 +169,14 @@ func HandleEmployeesForFringe(w http.ResponseWriter, r *http.Request) {
 		fName := fmt.Sprintf("EmployeesForFringe-%s.xlsx", strings.Title(div))
 		dir := filepath.Join(r.URL.Host, "tempfiles", fName)
 
-		f := excelize.NewFile()
-		defer func() {
-			if err := f.Close(); err != nil {
-				fmt.Println(err)
-			}
-		}()
-
-		err = f.SetSheetRow("Sheet1", "A1", emps[0].Headers())
+		err := emps.ToExcel(dir)
 		if err != nil {
-			log.Fatal(err.Error())
+			fmt.Println(err.Error())
 		}
-
-		rownum := 2
-
-		for _, emp := range emps {
-			cell, err := excelize.JoinCellName("A", rownum)
-			if err != nil {
-				log.Fatal(err.Error())
-			}
-			err = f.SetSheetRow("Sheet1", cell, emp.DataArray())
-			if err != nil {
-				log.Fatal(err.Error())
-			}
-			rownum++
-		}
-
-		f.SaveAs(dir)
 		w.Header().Set("Content-Type", "text/html")
+		w.Header().Set("HX-Redirect", filepath.Join(r.URL.Host, "downloads", filepath.Base(dir)))
 		fmt.Println(filepath.Join(r.URL.Host, "downloads", filepath.Base(dir)))
-		components.DownloadLink(filepath.Join(r.URL.Host, "downloads", filepath.Base(dir))).Render(context.Background(), w)
+		//components.DownloadLink(filepath.Join(r.URL.Host, "downloads", filepath.Base(dir))).Render(context.Background(), w)
 	}
 }
 
@@ -219,4 +196,10 @@ func HandleDownloads(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.ServeContent(w, r, fname, time.Time{}, strings.NewReader(buf.String()))
+	defer func() {
+		err := os.Remove(downloadFile)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+	}()
 }

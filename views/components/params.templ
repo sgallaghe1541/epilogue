@@ -8,7 +8,7 @@ import (
 
 templ DateParam(date string, param db.ReportParameter) {
     <label class="w-fit text-nowrap" for={ param.Name }>{ param.Description }: </label>
-    <input type="date" name={ param.Name } value={ date } step="7" />
+    <input type="date" id={ param.Name } name={ param.Name } value={ date } step="7" />
 }
 
 templ DivisionParam(param db.ReportParameter, divisions []db.Division) {

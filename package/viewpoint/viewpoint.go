@@ -5,16 +5,10 @@ import (
 	"os"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/joho/godotenv"
 	_ "github.com/microsoft/go-mssqldb"
 )
 
 func ConnectToViewpoint() (*sqlx.DB, error) {
-
-	err := godotenv.Load()
-	if err != nil {
-		return nil, err
-	}
 
 	vpServer := os.Getenv("VP_SERVER")
 	vpDB := os.Getenv("VP_DATABASE")

@@ -5,17 +5,25 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/joho/godotenv"
 	"github.com/sgallaghe1541/epilogue/app"
+	"github.com/sgallaghe1541/epilogue/internal/auth"
 	"github.com/sgallaghe1541/epilogue/internal/db"
 	"github.com/sgallaghe1541/epilogue/package/viewpoint"
 )
 
 func main() {
-
-	addr := ":4000"
+	addr := ":3000"
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 		AddSource: true,
 	}))
+	err := godotenv.Load()
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+
+	auth.NewAuth()
 
 	vp, err := viewpoint.ConnectToViewpoint()
 	if err != nil {

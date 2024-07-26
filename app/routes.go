@@ -10,18 +10,13 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/markbates/goth/gothic"
-	"github.com/sgallaghe1541/epilogue/handlers"
-	"github.com/sgallaghe1541/epilogue/middlewares"
 )
 
 func (app *App) Routes() *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
-	// r.Use(middlewares.StartSession(gothic.Store))
 	r.Use(cors.Handler(cors.Options{
-		// AllowedOrigins:   []string{"https://foo.com"}, // Use this to allow specific origin hosts
-		AllowedOrigins: []string{"https://*", "http://*"},
-		// AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
+		AllowedOrigins:   []string{"https://*", "http://*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
@@ -32,6 +27,7 @@ func (app *App) Routes() *chi.Mux {
 	fileDir := http.Dir("./static/")
 	FileServer(r, "/static", fileDir)
 
+	//************AUTH**************
 	r.Get("/auth/{provider}", func(w http.ResponseWriter, r *http.Request) {
 		provider := chi.URLParam(r, "provider")
 		r = r.WithContext(context.WithValue(context.Background(), "provider", provider))
@@ -43,7 +39,6 @@ func (app *App) Routes() *chi.Mux {
 		}
 	})
 	r.Get("/auth/{provider}/callback", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("Made it")
 		provider := chi.URLParam(r, "provider")
 		r = r.WithContext(context.WithValue(context.Background(), "provider", provider))
 		user, err := gothic.CompleteUserAuth(w, r)
@@ -54,24 +49,21 @@ func (app *App) Routes() *chi.Mux {
 		fmt.Println(user)
 		http.Redirect(w, r, "http://localhost:3000/", http.StatusFound)
 	})
-	r.Get("/", handlers.HandleHome)
+	//************AUTH**************
+
+	r.Get("/", app.HandleHome)
 
 	reportRouter := chi.NewRouter()
-	reportRouter.Use(middlewares.EpilogueConnection(app.Epilogue))
-	reportRouter.Get("/", handlers.HandleReports)
-	reportRouter.Get("/{reportname}", handlers.HandleReportParams)
-	reportRouter.Get("/{reportname}/downloads/{fname}", handlers.HandleDownloads)
+	reportRouter.Get("/", app.HandleReports)
+	reportRouter.Get("/{reportname}", app.HandleReportParams)
+	reportRouter.Get("/{reportname}/downloads/{fname}", app.HandleDownloads)
 
 	vprouter := chi.NewRouter()
-	vprouter.Use(middlewares.VPConnection(app.Viewpoint))
-	//vprouter.Get("/hoursbyjob/", handlers.HandleJobHours)
-	vprouter.Get("/alljobhours/", handlers.HandleAllJobHours)
-	vprouter.Get("/employeesforfringe/", handlers.HandleEmployeesForFringe)
+	vprouter.Get("/alljobhours/", app.HandleAllJobHours)
+	vprouter.Get("/employeesforfringe/", app.HandleEmployeesForFringe)
 
 	r.Mount("/reports", reportRouter)
 	r.Mount("/vp", vprouter)
-
-	// r.Get("/downloads/{fname}", handlers.HandleDownloads)
 
 	return r
 }

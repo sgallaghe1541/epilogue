@@ -1,10 +1,12 @@
 .*
 *.db
+*.sql
 !.gitignore
-/bin
+bin/
 *_templ.go
 *_templ.txt
-/node_modules
-/tmp
+node_modules/
+tmp/
 /static/icons/
-/tempfiles
+tempfiles/
+tls/

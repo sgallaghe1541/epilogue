@@ -45,6 +45,7 @@ func main() {
 		Logger:    logger,
 		Viewpoint: vp,
 		Epilogue:  data,
+		Users:     &db.UserModel{DB: data},
 	}
 
 	server.Logger.Info("starting server")

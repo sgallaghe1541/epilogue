@@ -1,0 +1,34 @@
+package layouts
+
+templ Signin() {
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8"></meta>
+      <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0"></meta>
+      <link href="/static/css/styles.css" rel="stylesheet"/>
+    </head>
+    <body>
+      <div class="bg-stone-300 flex flex-col h-dvh w-dvw justify-center items-center">
+        <div class="bg-white flex flex-col items-center rounded-[20px] h-fit w-80 p-4 space-y-4">
+          <img class="h-[112px] w-[224px]" src="/static/images/logo.jpg" />
+          <div class="w-full flex justify-center items-center"><p class="flex text-2xl text-stone-700 font-semibold">Sign In</p></div>
+          <form action="/signin" method="get">
+            <input class="w-full mb-4 h-[38px] bg-stone-100 border border-stone-300 placeholder-stone-400 text-md rounded-lg p-2.5" placeholder="Enter your email" type="text" name="email" id="email" size="30"/>
+            // <input class="w-full rounded-lg text-center text-lg h-[38px] text-yellow-300 bg-stone-700 hover:bg-yellow-300 hover:text-stone-700 cursor-pointer" type="submit" value="Next" />
+            <button type="submit"
+              class="w-full group inline-flex items-center justify-center whitespace-nowrap rounded-lg py-2 align-middle text-lg transition-all duration-300 ease-in-out disabled:cursor-not-allowed border bg-transparent stroke-black text-stone-700 hover:stroke-white hover:text-white h-[38px] min-w-[38px] gap-2 disabled:border-slate-100 disabled:bg-white disabled:stroke-slate-400 disabled:text-slate-400 disabled:hover:bg-white px-4 border-slate-300 hover:border-stone-700 hover:bg-stone-700">
+              <svg width="21" height="20" viewBox="0 0 21 20" fill="none" stroke="none" xmlns="http://www.w3.org/2000/svg" class="size-5 stroke-none">
+              <path d="M9.6665 1.66675H2.1665V9.16675H9.6665V1.66675Z" fill="#F25022"></path>
+              <path d="M18.8335 1.66675H11.3335V9.16675H18.8335V1.66675Z" fill="#7FBA00"></path>
+              <path d="M9.6665 10.8333H2.1665V18.3333H9.6665V10.8333Z" fill="#00A4EF"></path>
+              <path d="M18.8335 10.8333H11.3335V18.3333H18.8335V10.8333Z" fill="#FFB900"></path>
+              </svg>
+              <span>Sign in with Microsoft</span>
+            </button>
+          </form>
+        </div>
+      </div>
+    </body>
+    </html>
+}

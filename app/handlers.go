@@ -19,6 +19,28 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
+func (a *App) HandleSignin(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	email := r.FormValue("email")
+
+	switch email {
+	case "":
+		layouts.Signin().Render(context.Background(), w)
+	default:
+		if a.Users.ValidEmail(email) {
+			http.Redirect(w, r, "/auth/microsoftonline", http.StatusTemporaryRedirect)
+		} else {
+			layouts.Signin().Render(context.Background(), w)
+		}
+	}
+
+	layouts.Signin().Render(context.Background(), w)
+}
+
 func (a *App) HandleHome(w http.ResponseWriter, r *http.Request) {
 	layouts.Base().Render(context.Background(), w)
 }

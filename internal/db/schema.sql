@@ -9,9 +9,10 @@ CREATE TABLE IF NOT EXISTS permissionlevels (
 );
 
 CREATE TABLE IF NOT EXISTS users (
-    email TEXT,
-    username TEXT,
-    division INTEGER,
+    userid INTEGER PRIMARY KEY ASC,
+    email TEXT NOT NULL UNIQUE,
+    name TEXT NOT NULL,
+    division TEXT,
     permissionlevel INTEGER,
     FOREIGN KEY(division) REFERENCES divisions(divisionid),
     FOREIGN KEY(permissionlevel) REFERENCES permissionlevels(permissionid)

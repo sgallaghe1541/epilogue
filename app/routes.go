@@ -28,6 +28,8 @@ func (app *App) Routes() *chi.Mux {
 	FileServer(r, "/static", fileDir)
 
 	//************AUTH**************
+	r.Post("/signin", app.HandleSignin)
+	r.Get("/signin", app.HandleSignin)
 	r.Get("/auth/{provider}", func(w http.ResponseWriter, r *http.Request) {
 		provider := chi.URLParam(r, "provider")
 		r = r.WithContext(context.WithValue(context.Background(), "provider", provider))

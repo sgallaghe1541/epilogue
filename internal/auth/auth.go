@@ -6,7 +6,7 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
-	"github.com/markbates/goth/providers/microsoftonline"
+	"github.com/markbates/goth/providers/azuread"
 )
 
 const (
@@ -16,7 +16,8 @@ const (
 
 func NewAuth() {
 
-	store := sessions.NewCookieStore([]byte(os.Getenv("SESSION_SECRET")))
+	store := sessions.NewFilesystemStore("", []byte(os.Getenv("SESSION_SECRET")))
+	store.MaxLength(8192)
 	store.MaxAge(MaxAge)
 
 	store.Options.Path = "/"
@@ -26,6 +27,6 @@ func NewAuth() {
 	gothic.Store = store
 
 	goth.UseProviders(
-		microsoftonline.New(os.Getenv("MICROSOFTONLINE_KEY"), os.Getenv("MICROSOFTONLINE_SECRET"), "http://localhost:3000/auth/microsoftonline/callback"),
+		azuread.New(os.Getenv("MICROSOFTONLINE_KEY"), os.Getenv("MICROSOFTONLINE_SECRET"), "http://localhost:3000/auth/azuread/callback", nil),
 	)
 }

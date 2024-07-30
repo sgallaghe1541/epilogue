@@ -4,7 +4,7 @@ import (
   "github.com/sgallaghe1541/epilogue/views/components"
 )
 
-templ Base() {
+templ Base(name string) {
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -15,7 +15,7 @@ templ Base() {
       <link href="/static/css/styles.css" rel="stylesheet"/>
     </head>
     <body>
-      @Header()
+      @Header(name)
       @SideBar()
       @Contents()
       @Footer()
@@ -23,11 +23,13 @@ templ Base() {
     </html>
 }
 
-templ Header() {
+templ Header(name string) {
     <div class="fixed t-0 left-0 flex h-20 w-screen flex-row items-center shadow-sm">
       <a href="/"><img class="flex h-20" src="/static/images/logo.jpg" /></a>
       <div class="flex grow flex-col">
         <div class="flex flex-row-reverse items-center">
+          <p>{ name }</p>
+          <a href="/logout/azuread">Log Out</a>
         </div>
       </div>
     </div>

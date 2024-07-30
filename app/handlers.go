@@ -32,7 +32,7 @@ func (a *App) HandleSignin(w http.ResponseWriter, r *http.Request) {
 		layouts.Signin().Render(context.Background(), w)
 	default:
 		if a.Users.ValidEmail(email) {
-			http.Redirect(w, r, "/auth/microsoftonline", http.StatusTemporaryRedirect)
+			http.Redirect(w, r, "/auth/azuread", http.StatusTemporaryRedirect)
 		} else {
 			layouts.Signin().Render(context.Background(), w)
 		}
@@ -42,7 +42,11 @@ func (a *App) HandleSignin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) HandleHome(w http.ResponseWriter, r *http.Request) {
-	layouts.Base().Render(context.Background(), w)
+	name := a.SessionManager.GetString(r.Context(), "authenticatedUserName")
+	if name != "" {
+		layouts.Base(name).Render(context.Background(), w)
+	}
+	layouts.Base("failed").Render(context.Background(), w)
 }
 
 func (a *App) HandleAllJobHours(w http.ResponseWriter, r *http.Request) {
@@ -121,6 +125,8 @@ func (a *App) HandleAllJobHours(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) HandleReports(w http.ResponseWriter, r *http.Request) {
+	flash := a.SessionManager.PopString(r.Context(), "flash")
+	fmt.Println(flash)
 	conn := a.Epilogue
 	reportlist := []db.EpilogueReport{}
 	rows, err := conn.Queryx("SELECT * FROM reports")

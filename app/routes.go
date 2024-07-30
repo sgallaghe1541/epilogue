@@ -10,11 +10,15 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/markbates/goth/gothic"
+	"github.com/sgallaghe1541/epilogue/middlewares"
 )
 
 func (app *App) Routes() *chi.Mux {
+	mux := chi.NewRouter()
+	fileDir := http.Dir("./static/")
+	FileServer(mux, "/static", fileDir)
+
 	r := chi.NewRouter()
-	r.Use(middleware.Logger)
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"https://*", "http://*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -24,8 +28,10 @@ func (app *App) Routes() *chi.Mux {
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
 
-	fileDir := http.Dir("./static/")
-	FileServer(r, "/static", fileDir)
+	r.Use(app.SessionManager.LoadAndSave)
+	r.Use(middleware.Logger)
+	// fileDir := http.Dir("./static/")
+	// FileServer(r, "/static", fileDir)
 
 	//************AUTH**************
 	r.Post("/signin", app.HandleSignin)
@@ -33,8 +39,8 @@ func (app *App) Routes() *chi.Mux {
 	r.Get("/auth/{provider}", func(w http.ResponseWriter, r *http.Request) {
 		provider := chi.URLParam(r, "provider")
 		r = r.WithContext(context.WithValue(context.Background(), "provider", provider))
-		if user, err := gothic.CompleteUserAuth(w, r); err == nil {
-			fmt.Println(user)
+		if _, err := gothic.CompleteUserAuth(w, r); err == nil {
+
 			http.Redirect(w, r, "http://localhost:3000/", http.StatusFound)
 		} else {
 			gothic.BeginAuthHandler(w, r)
@@ -43,17 +49,25 @@ func (app *App) Routes() *chi.Mux {
 	r.Get("/auth/{provider}/callback", func(w http.ResponseWriter, r *http.Request) {
 		provider := chi.URLParam(r, "provider")
 		r = r.WithContext(context.WithValue(context.Background(), "provider", provider))
-		user, err := gothic.CompleteUserAuth(w, r)
+		gothUser, err := gothic.CompleteUserAuth(w, r)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
-		fmt.Println(user)
+		fmt.Println(gothUser.RefreshToken)
+		user, _ := app.Users.GetUser(gothUser.Email)
+		// app.SessionManager.Put(r.Context(), "authenticatedUserID", user.ID)
+		app.SessionManager.Put(r.Context(), "authenticatedUserName", user.Name)
+		app.SessionManager.Put(r.Context(), "authenticatedUserDiv", user.Division)
+		app.SessionManager.Put(r.Context(), "authenticatedUserPermission", user.PermissionLevel)
 		http.Redirect(w, r, "http://localhost:3000/", http.StatusFound)
 	})
 	//************AUTH**************
 
-	r.Get("/", app.HandleHome)
+	r.Group(func(r chi.Router) {
+		r.Use(middlewares.Auth(app.SessionManager))
+		r.Get("/", app.HandleHome)
+	})
 
 	reportRouter := chi.NewRouter()
 	reportRouter.Get("/", app.HandleReports)
@@ -67,7 +81,8 @@ func (app *App) Routes() *chi.Mux {
 	r.Mount("/reports", reportRouter)
 	r.Mount("/vp", vprouter)
 
-	return r
+	mux.Mount("/", r)
+	return mux
 }
 
 func FileServer(r chi.Router, path string, root http.FileSystem) {

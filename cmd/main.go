@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/alexedwards/scs/sqlite3store"
+	"github.com/alexedwards/scs/v2"
 	"github.com/joho/godotenv"
 	"github.com/sgallaghe1541/epilogue/app"
 	"github.com/sgallaghe1541/epilogue/internal/auth"
@@ -23,8 +25,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	auth.NewAuth()
-
 	vp, err := viewpoint.ConnectToViewpoint()
 	if err != nil {
 		logger.Error(err.Error())
@@ -41,12 +41,19 @@ func main() {
 
 	defer data.Close()
 
+	sessionManager := scs.New()
+
+	sessionManager.Store = sqlite3store.New(data.DB)
+
 	server := &app.App{
-		Logger:    logger,
-		Viewpoint: vp,
-		Epilogue:  data,
-		Users:     &db.UserModel{DB: data},
+		Logger:         logger,
+		Viewpoint:      vp,
+		Epilogue:       data,
+		Users:          &db.UserModel{DB: data},
+		SessionManager: sessionManager,
 	}
+
+	auth.NewAuth()
 
 	server.Logger.Info("starting server")
 

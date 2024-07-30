@@ -21,3 +21,12 @@ func (u *UserModel) ValidEmail(email string) bool {
 	err := u.DB.QueryRow("SELECT email FROM users WHERE email=?", email).Scan(&emailresult)
 	return err == nil
 }
+
+func (u *UserModel) GetUser(email string) (*User, error) {
+	var user *User
+	err := u.DB.QueryRow("SELECT * FROM users WHERE email=?", email).Scan(&user)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}

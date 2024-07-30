@@ -53,3 +53,11 @@ CREATE TABLE IF NOT EXISTS iconpaths (
     iconid INTEGER,
     FOREIGN KEY(iconid) REFERENCES icons(iconid)
 );
+
+CREATE TABLE IF NOT EXISTS sessions (
+	token TEXT PRIMARY KEY,
+	data BLOB NOT NULL,
+	expiry REAL NOT NULL
+);
+
+CREATE INDEX sessions_expiry_idx ON sessions(expiry);

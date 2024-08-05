@@ -1,299 +1,248 @@
 package app
 
-import (
-	"context"
-	"fmt"
-	"net/http"
-	"os"
-	"path/filepath"
-	"strings"
-	"time"
+// func (a *App) HandleAllJobHours(w http.ResponseWriter, r *http.Request) {
 
-	"github.com/go-chi/chi/v5"
-	"github.com/jmoiron/sqlx"
-	"github.com/sgallaghe1541/epilogue/internal/db"
-	"github.com/sgallaghe1541/epilogue/package/viewpoint"
-	"github.com/sgallaghe1541/epilogue/views/layouts"
-	"github.com/sgallaghe1541/epilogue/views/reports"
-	"github.com/sgallaghe1541/epilogue/views/timeentry"
-	"github.com/xuri/excelize/v2"
-)
+// 	var vpArgs viewpoint.QueryArgs
 
-func (a *App) HandleSignin(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
-	if err != nil {
-		fmt.Println(err.Error())
-	}
+// 	vpconn := a.Viewpoint
 
-	email := r.FormValue("email")
+// 	v := r.URL.Query()
 
-	switch email {
-	case "":
-		layouts.Signin().Render(context.Background(), w)
-	default:
-		if a.Users.ValidEmail(email) {
-			http.Redirect(w, r, "/auth/azuread", http.StatusTemporaryRedirect)
-		} else {
-			layouts.Signin().Render(context.Background(), w)
-		}
-	}
+// 	div := v.Get("division")
 
-	layouts.Signin().Render(context.Background(), w)
-}
+// 	switch div {
+// 	case "grading":
+// 		vpArgs = viewpoint.Grading
+// 	case "paving":
+// 		vpArgs = viewpoint.Paving
+// 	case "bridge":
+// 		vpArgs = viewpoint.Bridge
+// 	default:
+// 		fmt.Println("division did not come through...")
+// 		vpArgs = viewpoint.Grading
+// 		//need to handle bad path
+// 	}
 
-func (a *App) HandleHome(w http.ResponseWriter, r *http.Request) {
-	name := a.SessionManager.GetString(r.Context(), "authenticatedUserName")
-	if name != "" {
-		layouts.Base(name).Render(context.Background(), w)
-	}
-	layouts.Base("failed").Render(context.Background(), w)
-}
+// 	vpArgs.StartWEDate = v.Get("startwedate")
+// 	vpArgs.EndWEDate = v.Get("endwedate")
 
-func (a *App) HandleAllJobHours(w http.ResponseWriter, r *http.Request) {
+// 	updatedURL := "/reports/alljobhours/?" + v.Encode()
+// 	fmt.Println(updatedURL)
 
-	var vpArgs viewpoint.QueryArgs
+// 	jobHours := []*viewpoint.JobHoursResult{}
+// 	query, args, err := viewpoint.BuildInQuery(viewpoint.JobHours, vpArgs)
+// 	if err != nil {
+// 		fmt.Print(err.Error())
+// 	}
 
-	vpconn := a.Viewpoint
+// 	rows, err := vpconn.Queryx(query, args...)
 
-	v := r.URL.Query()
+// 	if err != nil {
+// 		fmt.Print(err.Error())
+// 	}
 
-	div := v.Get("division")
+// 	defer rows.Close()
 
-	switch div {
-	case "grading":
-		vpArgs = viewpoint.Grading
-	case "paving":
-		vpArgs = viewpoint.Paving
-	case "bridge":
-		vpArgs = viewpoint.Bridge
-	default:
-		fmt.Println("division did not come through...")
-		vpArgs = viewpoint.Grading
-		//need to handle bad path
-	}
+// 	err = sqlx.StructScan(rows, &jobHours)
+// 	if err != nil {
+// 		fmt.Print(err.Error())
+// 	}
 
-	vpArgs.StartWEDate = v.Get("startwedate")
-	vpArgs.EndWEDate = v.Get("endwedate")
+// 	for _, job := range jobHours {
+// 		eerows, err := vpconn.Queryx(viewpoint.JobEmployeeHours, job.Job.String, vpArgs.StartWEDate, vpArgs.EndWEDate)
+// 		if err != nil {
+// 			fmt.Print(err.Error())
+// 		}
+// 		err = sqlx.StructScan(eerows, &job.EEHoursDetail)
+// 		if err != nil {
+// 			fmt.Print(err.Error())
+// 		}
+// 		eerows.Close()
 
-	updatedURL := "/reports/alljobhours/?" + v.Encode()
-	fmt.Println(updatedURL)
+// 		eqrows, err := vpconn.Queryx(viewpoint.JobEquipmentHours, job.Job.String, vpArgs.StartWEDate, vpArgs.EndWEDate)
+// 		if err != nil {
+// 			fmt.Print(err.Error())
+// 		}
+// 		err = sqlx.StructScan(eqrows, &job.EQHoursDetail)
+// 		if err != nil {
+// 			fmt.Print(err.Error())
+// 		}
+// 		eqrows.Close()
+// 	}
 
-	jobHours := []*viewpoint.JobHoursResult{}
-	query, args, err := viewpoint.BuildInQuery(viewpoint.JobHours, vpArgs)
-	if err != nil {
-		fmt.Print(err.Error())
-	}
+// 	w.Header().Set("Content-Type", "text/html")
+// 	w.Header().Set("HX-Push-Url", updatedURL)
+// 	reports.AllJobHours(jobHours).Render(context.Background(), w)
+// }
 
-	rows, err := vpconn.Queryx(query, args...)
+// func (a *App) HandleReports(w http.ResponseWriter, r *http.Request) {
+// 	conn := a.Epilogue
+// 	reportlist := []db.EpilogueReport{}
+// 	rows, err := conn.Queryx("SELECT * FROM reports")
 
-	if err != nil {
-		fmt.Print(err.Error())
-	}
+// 	if err != nil {
+// 		fmt.Print(err.Error())
+// 	}
 
-	defer rows.Close()
+// 	defer rows.Close()
 
-	err = sqlx.StructScan(rows, &jobHours)
-	if err != nil {
-		fmt.Print(err.Error())
-	}
+// 	err = sqlx.StructScan(rows, &reportlist)
+// 	if err != nil {
+// 		fmt.Print(err.Error())
+// 	}
 
-	for _, job := range jobHours {
-		eerows, err := vpconn.Queryx(viewpoint.JobEmployeeHours, job.Job.String, vpArgs.StartWEDate, vpArgs.EndWEDate)
-		if err != nil {
-			fmt.Print(err.Error())
-		}
-		err = sqlx.StructScan(eerows, &job.EEHoursDetail)
-		if err != nil {
-			fmt.Print(err.Error())
-		}
-		eerows.Close()
+// 	w.Header().Set("Content-Type", "text/html")
+// 	w.Header().Set("HX-Push-Url", r.URL.Path)
+// 	reports.ListReports(getAbsURL(*r.URL), reportlist).Render(context.Background(), w)
+// }
 
-		eqrows, err := vpconn.Queryx(viewpoint.JobEquipmentHours, job.Job.String, vpArgs.StartWEDate, vpArgs.EndWEDate)
-		if err != nil {
-			fmt.Print(err.Error())
-		}
-		err = sqlx.StructScan(eqrows, &job.EQHoursDetail)
-		if err != nil {
-			fmt.Print(err.Error())
-		}
-		eqrows.Close()
-	}
+// func (a *App) HandleReportParams(w http.ResponseWriter, r *http.Request) {
+// 	reportQuery := "SELECT * FROM reports WHERE reporturl = ?"
+// 	paramsQuery := "SELECT * FROM parameters WHERE reportid = ?"
+// 	divisionQuery := "SELECT * FROM divisions"
 
-	w.Header().Set("Content-Type", "text/html")
-	w.Header().Set("HX-Push-Url", updatedURL)
-	reports.AllJobHours(jobHours).Render(context.Background(), w)
-}
+// 	conn := a.Epilogue
+// 	reporturl := chi.URLParam(r, "reportname")
 
-func (a *App) HandleReports(w http.ResponseWriter, r *http.Request) {
-	flash := a.SessionManager.PopString(r.Context(), "flash")
-	fmt.Println(flash)
-	conn := a.Epilogue
-	reportlist := []db.EpilogueReport{}
-	rows, err := conn.Queryx("SELECT * FROM reports")
+// 	report := db.EpilogueReport{}
+// 	err := conn.Get(&report, reportQuery, reporturl)
+// 	if err != nil {
+// 		fmt.Print(err.Error())
+// 	}
 
-	if err != nil {
-		fmt.Print(err.Error())
-	}
+// 	reportparams := []db.ReportParameter{}
 
-	defer rows.Close()
+// 	rows, err := conn.Queryx(paramsQuery, report.ID)
+// 	if err != nil {
+// 		fmt.Print(err.Error())
+// 	}
 
-	err = sqlx.StructScan(rows, &reportlist)
-	if err != nil {
-		fmt.Print(err.Error())
-	}
+// 	defer rows.Close()
 
-	w.Header().Set("Content-Type", "text/html")
-	w.Header().Set("HX-Push-Url", r.URL.Path)
-	reports.ListReports(getAbsURL(*r.URL), reportlist).Render(context.Background(), w)
-}
+// 	err = sqlx.StructScan(rows, &reportparams)
+// 	if err != nil {
+// 		fmt.Print(err.Error())
+// 	}
 
-func (a *App) HandleReportParams(w http.ResponseWriter, r *http.Request) {
-	reportQuery := "SELECT * FROM reports WHERE reporturl = ?"
-	paramsQuery := "SELECT * FROM parameters WHERE reportid = ?"
-	divisionQuery := "SELECT * FROM divisions"
+// 	date := ""
+// 	for _, param := range reportparams {
+// 		if param.Type == "date" {
+// 			date = getRecentWEDate()
+// 			break
+// 		}
+// 	}
+// 	divisions := []db.Division{}
+// 	for _, param := range reportparams {
+// 		if param.Type == "division" {
+// 			rows, err := conn.Queryx(divisionQuery)
 
-	conn := a.Epilogue
-	reporturl := chi.URLParam(r, "reportname")
+// 			if err != nil {
+// 				fmt.Print(err.Error())
+// 			}
 
-	report := db.EpilogueReport{}
-	err := conn.Get(&report, reportQuery, reporturl)
-	if err != nil {
-		fmt.Print(err.Error())
-	}
+// 			defer rows.Close()
 
-	reportparams := []db.ReportParameter{}
+// 			err = sqlx.StructScan(rows, &divisions)
+// 			if err != nil {
+// 				fmt.Print(err.Error())
+// 			}
+// 			break
+// 		}
+// 	}
 
-	rows, err := conn.Queryx(paramsQuery, report.ID)
-	if err != nil {
-		fmt.Print(err.Error())
-	}
+// 	w.Header().Set("Content-Type", "text/html")
+// 	reports.Report(date, report, reportparams, divisions).Render(context.Background(), w)
+// }
 
-	defer rows.Close()
+// func (a *App) HandleTimeCardLinks(w http.ResponseWriter, r *http.Request) {
+// 	w.Header().Set("Content-Type", "text/html")
+// 	w.Header().Set("HX-Push-Url", r.URL.Path)
+// 	timeentry.TimeEntryLinks().Render(context.Background(), w)
+// }
 
-	err = sqlx.StructScan(rows, &reportparams)
-	if err != nil {
-		fmt.Print(err.Error())
-	}
+// func (a *App) HandleEmployeesForFringe(w http.ResponseWriter, r *http.Request) {
 
-	date := ""
-	for _, param := range reportparams {
-		if param.Type == "date" {
-			date = getRecentWEDate()
-			break
-		}
-	}
-	divisions := []db.Division{}
-	for _, param := range reportparams {
-		if param.Type == "division" {
-			rows, err := conn.Queryx(divisionQuery)
+// 	var vpArgs viewpoint.QueryArgs
 
-			if err != nil {
-				fmt.Print(err.Error())
-			}
+// 	h := r.Header
+// 	excel := h.Get("excel")
 
-			defer rows.Close()
+// 	vpconn := a.Viewpoint
 
-			err = sqlx.StructScan(rows, &divisions)
-			if err != nil {
-				fmt.Print(err.Error())
-			}
-			break
-		}
-	}
+// 	v := r.URL.Query()
+// 	div := v.Get("division")
 
-	w.Header().Set("Content-Type", "text/html")
-	reports.Report(date, report, reportparams, divisions).Render(context.Background(), w)
-}
+// 	switch div {
+// 	case "grading":
+// 		vpArgs = viewpoint.Grading
+// 	case "paving":
+// 		vpArgs = viewpoint.Paving
+// 	case "bridge":
+// 		vpArgs = viewpoint.Bridge
+// 	default:
+// 		fmt.Println("division did not come through...")
+// 		vpArgs = viewpoint.Grading
+// 		//need to handle bad path
+// 	}
 
-func (a *App) HandleTimeCardLinks(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html")
-	w.Header().Set("HX-Push-Url", r.URL.Path)
-	timeentry.TimeEntryLinks().Render(context.Background(), w)
-}
+// 	updatedURL := "/reports/employeesforfringe/?" + v.Encode()
 
-func (a *App) HandleEmployeesForFringe(w http.ResponseWriter, r *http.Request) {
+// 	emps := viewpoint.EmployeesForFringeResult{}
+// 	query, args, err := viewpoint.BuildInQuery(viewpoint.EmployeesForFringe, vpArgs)
+// 	if err != nil {
+// 		fmt.Print(err.Error())
+// 	}
 
-	var vpArgs viewpoint.QueryArgs
+// 	rows, err := vpconn.Queryx(query, args...)
+// 	if err != nil {
+// 		fmt.Print(err.Error())
+// 	}
 
-	h := r.Header
-	excel := h.Get("excel")
+// 	defer rows.Close()
 
-	vpconn := a.Viewpoint
+// 	err = sqlx.StructScan(rows, &emps.Result)
+// 	if err != nil {
+// 		fmt.Print(err.Error())
+// 	}
 
-	v := r.URL.Query()
-	div := v.Get("division")
+// 	if excel == "" {
+// 		w.Header().Set("Content-Type", "text/html")
+// 		w.Header().Set("HX-Push-Url", updatedURL)
+// 		reports.EmpsForFringe(emps).Render(context.Background(), w)
+// 	} else {
+// 		fName := fmt.Sprintf("EmployeesForFringe-%s.xlsx", strings.Title(div))
+// 		dir := filepath.Join(r.URL.Host, "tempfiles", fName)
 
-	switch div {
-	case "grading":
-		vpArgs = viewpoint.Grading
-	case "paving":
-		vpArgs = viewpoint.Paving
-	case "bridge":
-		vpArgs = viewpoint.Bridge
-	default:
-		fmt.Println("division did not come through...")
-		vpArgs = viewpoint.Grading
-		//need to handle bad path
-	}
+// 		err := emps.ToExcel(dir)
+// 		if err != nil {
+// 			fmt.Println(err.Error())
+// 		}
+// 		w.Header().Set("Content-Type", "text/html")
+// 		w.Header().Set("HX-Redirect", filepath.Join(r.URL.Host, "downloads", filepath.Base(dir)))
+// 		fmt.Println(filepath.Join(r.URL.Host, "downloads", filepath.Base(dir)))
+// 	}
+// }
 
-	updatedURL := "/reports/employeesforfringe/?" + v.Encode()
+// func (a *App) HandleDownloads(w http.ResponseWriter, r *http.Request) {
+// 	fname := chi.URLParam(r, "fname")
 
-	emps := viewpoint.EmployeesForFringeResult{}
-	query, args, err := viewpoint.BuildInQuery(viewpoint.EmployeesForFringe, vpArgs)
-	if err != nil {
-		fmt.Print(err.Error())
-	}
+// 	downloadFile := filepath.Join(r.URL.Host, "tempfiles", fname)
 
-	rows, err := vpconn.Queryx(query, args...)
-	if err != nil {
-		fmt.Print(err.Error())
-	}
+// 	f, err := excelize.OpenFile(downloadFile)
+// 	if err != nil {
+// 		fmt.Println(err.Error())
+// 	}
 
-	defer rows.Close()
+// 	buf, err := f.WriteToBuffer()
+// 	if err != nil {
+// 		fmt.Println(err.Error())
+// 	}
 
-	err = sqlx.StructScan(rows, &emps.Result)
-	if err != nil {
-		fmt.Print(err.Error())
-	}
-
-	if excel == "" {
-		w.Header().Set("Content-Type", "text/html")
-		w.Header().Set("HX-Push-Url", updatedURL)
-		reports.EmpsForFringe(emps).Render(context.Background(), w)
-	} else {
-		fName := fmt.Sprintf("EmployeesForFringe-%s.xlsx", strings.Title(div))
-		dir := filepath.Join(r.URL.Host, "tempfiles", fName)
-
-		err := emps.ToExcel(dir)
-		if err != nil {
-			fmt.Println(err.Error())
-		}
-		w.Header().Set("Content-Type", "text/html")
-		w.Header().Set("HX-Redirect", filepath.Join(r.URL.Host, "downloads", filepath.Base(dir)))
-		fmt.Println(filepath.Join(r.URL.Host, "downloads", filepath.Base(dir)))
-	}
-}
-
-func (a *App) HandleDownloads(w http.ResponseWriter, r *http.Request) {
-	fname := chi.URLParam(r, "fname")
-
-	downloadFile := filepath.Join(r.URL.Host, "tempfiles", fname)
-
-	f, err := excelize.OpenFile(downloadFile)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-
-	buf, err := f.WriteToBuffer()
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-
-	http.ServeContent(w, r, fname, time.Time{}, strings.NewReader(buf.String()))
-	defer func() {
-		err := os.Remove(downloadFile)
-		if err != nil {
-			fmt.Println(err.Error())
-		}
-	}()
-}
+// 	http.ServeContent(w, r, fname, time.Time{}, strings.NewReader(buf.String()))
+// 	defer func() {
+// 		err := os.Remove(downloadFile)
+// 		if err != nil {
+// 			fmt.Println(err.Error())
+// 		}
+// 	}()
+// }

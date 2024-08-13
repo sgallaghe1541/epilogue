@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -28,7 +27,7 @@ func GenerateJWT(u *db.User, tokenSecret string, expiresIn time.Duration) (strin
 			Issuer:    "epilogue",
 			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(expiresIn)),
-			Subject:   fmt.Sprintf("%d", u.ID),
+			Subject:   u.Name,
 		},
 	}
 
@@ -59,7 +58,7 @@ func ValidateJWT(tokenString, tokenSecret string) (string, []string, error) {
 	if expires.Time.Before(time.Now()) {
 		return "", nil, errors.New(JWTExpired)
 	}
-	userIDString, err := claims.GetSubject()
+	userName, err := claims.GetSubject()
 	if err != nil {
 		return "", nil, err
 	}
@@ -78,7 +77,7 @@ func ValidateJWT(tokenString, tokenSecret string) (string, []string, error) {
 		permissions[i] = p.Stringify()
 	}
 
-	return userIDString, permissions, nil
+	return userName, permissions, nil
 }
 
 func GenerateRefreshToken() (string, error) {

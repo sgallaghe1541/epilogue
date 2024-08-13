@@ -25,7 +25,7 @@ func (app *app) authenticate(next http.Handler) http.Handler {
 		if err != nil {
 			switch {
 			case errors.Is(err, http.ErrNoCookie):
-				http.Redirect(w, r, "/signin", http.StatusForbidden)
+				http.Redirect(w, r, "/signin", http.StatusTemporaryRedirect)
 				return
 			default:
 				app.logger.Error("server error", "err", err.Error())
@@ -34,7 +34,7 @@ func (app *app) authenticate(next http.Handler) http.Handler {
 			}
 		}
 
-		userid, userpermissions, err := auth.ValidateJWT(token.Value, os.Getenv("JWT_SECRET"))
+		username, userpermissions, err := auth.ValidateJWT(token.Value, os.Getenv("JWT_SECRET"))
 		if err != nil {
 			switch {
 			case err.Error() == auth.JWTExpired:
@@ -57,7 +57,7 @@ func (app *app) authenticate(next http.Handler) http.Handler {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		}
 
-		r.Header.Set("userid", userid)
+		r.Header.Set("user", username)
 		for _, p := range userpermissions {
 			r.Header.Add("perm", p)
 		}

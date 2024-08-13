@@ -7,11 +7,18 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/sgallaghe1541/epilogue/internal/auth"
+	"github.com/sgallaghe1541/epilogue/internal/db"
+	"github.com/sgallaghe1541/epilogue/internal/viewpoint"
 	"github.com/sgallaghe1541/epilogue/views/layouts"
+	"github.com/sgallaghe1541/epilogue/views/reports"
+	"github.com/sgallaghe1541/epilogue/views/timeentry"
+	"github.com/xuri/excelize/v2"
 )
 
 func (app *app) handleSignIn(w http.ResponseWriter, r *http.Request) {
@@ -136,5 +143,257 @@ func readUserEmail(r io.Reader) (string, error) {
 }
 
 func (app *app) handleHome(w http.ResponseWriter, r *http.Request) {
-	layouts.Base("failed").Render(context.Background(), w)
+	layouts.Base(r.Header.Get("user")).Render(context.Background(), w)
+}
+
+func (app *app) handleAllJobHours(w http.ResponseWriter, r *http.Request) {
+
+	var vpArgs viewpoint.QueryArgs
+
+	vpconn := app.viewpoint
+
+	v := r.URL.Query()
+
+	div := v.Get("division")
+
+	switch div {
+	case "01":
+		vpArgs = viewpoint.Grading
+	case "02":
+		vpArgs = viewpoint.Paving
+	case "06":
+		vpArgs = viewpoint.Bridge
+	case "30":
+		vpArgs = viewpoint.Plants
+	default:
+		fmt.Println("division did not come through...")
+		vpArgs = viewpoint.Grading
+		//need to handle bad path
+	}
+
+	vpArgs.StartWEDate = v.Get("startwedate")
+	vpArgs.EndWEDate = v.Get("endwedate")
+
+	updatedURL := "/reports/alljobhours?" + v.Encode()
+	fmt.Println(updatedURL)
+
+	jobHours := []*viewpoint.JobHoursResult{}
+	query, args, err := viewpoint.BuildInQuery(viewpoint.JobHours, vpArgs)
+	if err != nil {
+		fmt.Print(err.Error())
+	}
+
+	rows, err := vpconn.Queryx(query, args...)
+
+	if err != nil {
+		fmt.Print(err.Error())
+	}
+
+	defer rows.Close()
+
+	err = sqlx.StructScan(rows, &jobHours)
+	if err != nil {
+		fmt.Print(err.Error())
+	}
+
+	for _, job := range jobHours {
+		eerows, err := vpconn.Queryx(viewpoint.JobEmployeeHours, job.Job.String, vpArgs.StartWEDate, vpArgs.EndWEDate)
+		if err != nil {
+			fmt.Print(err.Error())
+		}
+		err = sqlx.StructScan(eerows, &job.EEHoursDetail)
+		if err != nil {
+			fmt.Print(err.Error())
+		}
+		eerows.Close()
+
+		eqrows, err := vpconn.Queryx(viewpoint.JobEquipmentHours, job.Job.String, vpArgs.StartWEDate, vpArgs.EndWEDate)
+		if err != nil {
+			fmt.Print(err.Error())
+		}
+		err = sqlx.StructScan(eqrows, &job.EQHoursDetail)
+		if err != nil {
+			fmt.Print(err.Error())
+		}
+		eqrows.Close()
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+	w.Header().Set("HX-Push-Url", updatedURL)
+	reports.AllJobHours(jobHours).Render(context.Background(), w)
+}
+
+func (app *app) handleReports(w http.ResponseWriter, r *http.Request) {
+	conn := app.epilogue
+	reportlist := []db.EpilogueReport{}
+	rows, err := conn.Queryx("SELECT * FROM reports")
+
+	if err != nil {
+		fmt.Print(err.Error())
+	}
+
+	defer rows.Close()
+
+	err = sqlx.StructScan(rows, &reportlist)
+	if err != nil {
+		fmt.Print(err.Error())
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+	w.Header().Set("HX-Push-Url", r.URL.Path)
+	reports.ListReports(getAbsURL(*r.URL), reportlist).Render(context.Background(), w)
+}
+
+func (app *app) handleReportParams(w http.ResponseWriter, r *http.Request) {
+	reportQuery := "SELECT * FROM reports WHERE reporturl = ?"
+	paramsQuery := "SELECT * FROM parameters WHERE reportid = ?"
+	divisionQuery := `SELECT report_divisions.divisionid AS divisionid, divisions.Description AS description 
+	FROM report_divisions JOIN divisions 
+	ON report_divisions.divisionid = divisions.divisionid 
+	WHERE report_divisions.reportid = ?`
+
+	conn := app.epilogue
+	reporturl := r.PathValue("reportname")
+
+	report := db.EpilogueReport{}
+	err := conn.Get(&report, reportQuery, reporturl)
+	if err != nil {
+		fmt.Print(err.Error())
+	}
+
+	reportparams := []db.ReportParameter{}
+
+	rows, err := conn.Queryx(paramsQuery, report.ID)
+	if err != nil {
+		fmt.Print(err.Error())
+	}
+
+	defer rows.Close()
+
+	err = sqlx.StructScan(rows, &reportparams)
+	if err != nil {
+		fmt.Print(err.Error())
+	}
+
+	date := ""
+	for _, param := range reportparams {
+		if param.Type == "date" {
+			date = getRecentWEDate()
+			break
+		}
+	}
+	divisions := []db.Division{}
+	for _, param := range reportparams {
+		if param.Type == "division" {
+			rows, err := conn.Queryx(divisionQuery, report.ID)
+
+			if err != nil {
+				fmt.Print(err.Error())
+			}
+
+			defer rows.Close()
+
+			err = sqlx.StructScan(rows, &divisions)
+			if err != nil {
+				fmt.Print(err.Error())
+			}
+			break
+		}
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+	reports.Report(date, report, reportparams, divisions).Render(context.Background(), w)
+}
+
+func (app *app) HandleTimeCardLinks(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html")
+	w.Header().Set("HX-Push-Url", r.URL.Path)
+	timeentry.TimeEntryLinks().Render(context.Background(), w)
+}
+
+func (app *app) HandleEmployeesForFringe(w http.ResponseWriter, r *http.Request) {
+
+	var vpArgs viewpoint.QueryArgs
+
+	h := r.Header
+	excel := h.Get("excel")
+
+	vpconn := app.viewpoint
+
+	v := r.URL.Query()
+	div := v.Get("division")
+
+	switch div {
+	case "grading":
+		vpArgs = viewpoint.Grading
+	case "paving":
+		vpArgs = viewpoint.Paving
+	case "bridge":
+		vpArgs = viewpoint.Bridge
+	default:
+		fmt.Println("division did not come through...")
+		vpArgs = viewpoint.Grading
+		//need to handle bad path
+	}
+
+	updatedURL := "/reports/employeesforfringe/?" + v.Encode()
+
+	emps := viewpoint.EmployeesForFringeResult{}
+	query, args, err := viewpoint.BuildInQuery(viewpoint.EmployeesForFringe, vpArgs)
+	if err != nil {
+		fmt.Print(err.Error())
+	}
+
+	rows, err := vpconn.Queryx(query, args...)
+	if err != nil {
+		fmt.Print(err.Error())
+	}
+
+	defer rows.Close()
+
+	err = sqlx.StructScan(rows, &emps.Result)
+	if err != nil {
+		fmt.Print(err.Error())
+	}
+
+	if excel == "" {
+		w.Header().Set("Content-Type", "text/html")
+		w.Header().Set("HX-Push-Url", updatedURL)
+		reports.EmpsForFringe(emps).Render(context.Background(), w)
+	} else {
+		fName := fmt.Sprintf("EmployeesForFringe-%s.xlsx", strings.Title(div))
+		dir := filepath.Join(r.URL.Host, "tempfiles", fName)
+
+		err := emps.ToExcel(dir)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+		w.Header().Set("Content-Type", "text/html")
+		w.Header().Set("HX-Redirect", filepath.Join(r.URL.Host, "downloads", filepath.Base(dir)))
+		fmt.Println(filepath.Join(r.URL.Host, "downloads", filepath.Base(dir)))
+	}
+}
+
+func (app *app) HandleDownloads(w http.ResponseWriter, r *http.Request) {
+	fname := r.PathValue("fname")
+
+	downloadFile := filepath.Join(r.URL.Host, "tempfiles", fname)
+
+	f, err := excelize.OpenFile(downloadFile)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	buf, err := f.WriteToBuffer()
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	http.ServeContent(w, r, fname, time.Time{}, strings.NewReader(buf.String()))
+	defer func() {
+		err := os.Remove(downloadFile)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+	}()
 }

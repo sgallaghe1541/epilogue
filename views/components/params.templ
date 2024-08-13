@@ -15,7 +15,7 @@ templ DivisionParam(param db.ReportParameter, divisions []db.Division) {
     <label class="w-fit text-nowrap" for={ param.Name }>{ param.Description }: </label>
     <select name={ param.Name } id="divisions">
     for _, div := range divisions {
-        <option value={ strings.ToLower(div.Description) }>{ div.ID } -- { div.Description }</option>
+        <option value={ strings.ToLower(div.ID) }>{ div.Description }</option>
     }
     </select>
 }

@@ -8,7 +8,7 @@ type EpilogueReport struct {
 }
 
 func (e *EpilogueReport) VPURL() string {
-	return "/vp/" + e.URL + "/"
+	return "/vp/" + e.URL
 }
 
 type ReportParameter struct {
@@ -20,5 +20,5 @@ type ReportParameter struct {
 
 type Division struct {
 	ID          string `db:"divisionid"`
-	Description string `db:"descr"`
+	Description string `db:"description"`
 }

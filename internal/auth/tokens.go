@@ -8,24 +8,27 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/sgallaghe1541/epilogue/internal/db"
 )
 
 const JWTExpired = "current token has expired"
 
+type UserData struct {
+}
 type EpilogueClaims struct {
-	Div string `json:"div"`
+	Permissions []db.Permission `json:"permissions"`
 	jwt.RegisteredClaims
 }
 
-func GenerateJWT(userID int, div, tokenSecret string, expiresIn time.Duration) (string, error) {
+func GenerateJWT(u *db.User, tokenSecret string, expiresIn time.Duration) (string, error) {
 	signingKey := []byte(tokenSecret)
-	claims := EpilogueClaims{
-		div,
+	claims := &EpilogueClaims{
+		u.Permissions,
 		jwt.RegisteredClaims{
 			Issuer:    "epilogue",
 			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(expiresIn)),
-			Subject:   fmt.Sprintf("%d", userID),
+			Subject:   fmt.Sprintf("%d", u.ID),
 		},
 	}
 
@@ -33,45 +36,49 @@ func GenerateJWT(userID int, div, tokenSecret string, expiresIn time.Duration) (
 	return token.SignedString(signingKey)
 }
 
-func ValidateJWT(tokenString, tokenSecret string) (string, string, error) {
-	claimsStruct := EpilogueClaims{}
+func ValidateJWT(tokenString, tokenSecret string) (string, []string, error) {
 	token, err := jwt.ParseWithClaims(
 		tokenString,
-		&claimsStruct,
+		&EpilogueClaims{},
 		func(token *jwt.Token) (interface{}, error) { return []byte(tokenSecret), nil },
 	)
 	if err != nil {
-		return "", "", err
+		return "", nil, err
 	}
 
-	expires, err := token.Claims.GetExpirationTime()
+	claims, ok := token.Claims.(*EpilogueClaims)
+	if !ok {
+		return "", nil, errors.New("failed to parse claims")
+	}
+
+	expires, err := claims.GetExpirationTime()
 	if err != nil {
-		return "", "", err
+		return "", nil, err
 	}
 
 	if expires.Time.Before(time.Now()) {
-		return "", "", errors.New(JWTExpired)
+		return "", nil, errors.New(JWTExpired)
 	}
-	userIDString, err := token.Claims.GetSubject()
+	userIDString, err := claims.GetSubject()
 	if err != nil {
-		return "", "", err
+		return "", nil, err
 	}
 
-	userDiv := claimsStruct.Div
-	if userDiv == "" {
-		return "", "", errors.New("division didn't come through")
-	}
-
-	issuer, err := token.Claims.GetIssuer()
+	issuer, err := claims.GetIssuer()
 	if err != nil {
-		return "", "", err
+		return "", nil, err
 	}
 
 	if issuer != string("epilogue") {
-		return "", "", errors.New("invalid issuer")
+		return "", nil, errors.New("invalid issuer")
 	}
 
-	return userIDString, userDiv, nil
+	permissions := make([]string, len(claims.Permissions))
+	for i, p := range claims.Permissions {
+		permissions[i] = p.Stringify()
+	}
+
+	return userIDString, permissions, nil
 }
 
 func GenerateRefreshToken() (string, error) {

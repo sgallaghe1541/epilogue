@@ -7,7 +7,7 @@ dev/templ:
 # run air to detect any go file changes to re-build and re-run the server.
 dev/server:
 	go run github.com/cosmtrek/air@v1.51.0 \
-	--build.cmd "go build -C cmd -o ../tmp/main" \
+	--build.cmd "go build -C cmd/web -o ../../tmp/main" \
 	--build.bin "tmp/main" \
 	--build.delay "100" \
 	--build.exclude_dir "node_modules" \

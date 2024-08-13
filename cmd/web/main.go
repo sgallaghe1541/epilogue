@@ -8,15 +8,41 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
-	"github.com/sgallaghe1541/epilogue/app"
-	"github.com/sgallaghe1541/epilogue/auth"
+	"github.com/sgallaghe1541/epilogue/internal/auth"
 	"github.com/sgallaghe1541/epilogue/internal/db"
-	"github.com/sgallaghe1541/epilogue/package/viewpoint"
+	"github.com/sgallaghe1541/epilogue/internal/viewpoint"
+	"golang.org/x/oauth2"
 )
 
+type app struct {
+	auth          *oauth2.Config
+	logger        *slog.Logger
+	viewpoint     *sqlx.DB
+	epilogue      *sqlx.DB
+	users         *db.UserModel
+	refreshTokens *db.RefreshTokenModel
+}
+
+func newApp(auth *oauth2.Config,
+	logger *slog.Logger,
+	viewpoint *sqlx.DB,
+	epilogue *sqlx.DB,
+	users *db.UserModel,
+	refreshTokens *db.RefreshTokenModel) *app {
+	return &app{
+		auth:          auth,
+		logger:        logger,
+		viewpoint:     viewpoint,
+		epilogue:      epilogue,
+		users:         users,
+		refreshTokens: refreshTokens,
+	}
+}
+
 func run(ctx context.Context) error {
-	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
+	_, cancel := signal.NotifyContext(ctx, os.Interrupt)
 	defer cancel()
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
@@ -47,7 +73,7 @@ func run(ctx context.Context) error {
 
 	defer data.Close()
 
-	srv := app.NewServer(
+	app := newApp(
 		auth.MicrosoftConfig(),
 		logger,
 		vp,
@@ -58,8 +84,9 @@ func run(ctx context.Context) error {
 
 	httpServer := &http.Server{
 		Addr:    addr,
-		Handler: srv,
+		Handler: app.routes(),
 	}
+
 	logger.Info(fmt.Sprintf("starting server. listening on %s", httpServer.Addr))
 	if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		return err

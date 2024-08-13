@@ -1,15 +1,25 @@
 package db
 
 import (
+	"fmt"
+
 	"github.com/jmoiron/sqlx"
 )
 
+type Permission struct {
+	Division string `db:"division" json:"division"`
+	Role     string `db:"role" json:"role"`
+}
+
+func (p Permission) Stringify() string {
+	return fmt.Sprintf("%s|%s,", p.Division, p.Role)
+}
+
 type User struct {
-	ID              int    `db:"userid"`
-	Name            string `db:"name"`
-	Email           string `db:"email"`
-	Division        string `db:"division"`
-	PermissionLevel int    `db:"permissionlevel"`
+	ID          int          `db:"userid"`
+	Name        string       `db:"name"`
+	Email       string       `db:"email"`
+	Permissions []Permission `json:"permissions"`
 }
 
 type UserModel struct {
@@ -23,10 +33,23 @@ func (u *UserModel) ValidEmail(email string) bool {
 }
 
 func (u *UserModel) GetUser(email string) (*User, error) {
-	var user = User{}
+	var (
+		user        = User{}
+		permissions = []Permission{}
+	)
 	err := u.DB.Get(&user, "SELECT * FROM users WHERE email=?", email)
 	if err != nil {
 		return nil, err
 	}
+	err = u.DB.Select(&permissions, "SELECT division, role FROM user_permissions WHERE userid=?", user.ID)
+	if err != nil {
+		return nil, err
+	}
+	if len(permissions) == 0 {
+		return nil, fmt.Errorf("no permissions found for %s", user.Name)
+	}
+
+	user.Permissions = permissions
+
 	return &user, nil
 }

@@ -2,6 +2,8 @@ package main
 
 import (
 	"net/http"
+
+	"github.com/justinas/alice"
 )
 
 func (app *app) routes() http.Handler {
@@ -11,18 +13,24 @@ func (app *app) routes() http.Handler {
 
 	mux.Handle("GET /static/", http.StripPrefix("/static", fileServer))
 
-	mux.Handle("GET /{$}", app.authenticate(http.HandlerFunc(app.handleHome)))
+	standardMiddle := alice.New(app.recoverPanic, app.logRequest, commonHeaders)
+	sessionMiddle := alice.New(app.sessionManager.LoadAndSave)
+	protectedMiddle := sessionMiddle.Append(app.authenticate, app.requireAuthentication)
+	htmxMiddle := protectedMiddle.Append(app.htmxOnly)
+
+	mux.Handle("GET /{$}", protectedMiddle.ThenFunc(app.handleHome))
 
 	mux.HandleFunc("/signin", app.handleSignIn)
-	mux.HandleFunc("GET /auth/microsoft", app.microsoftLogin)
-	mux.HandleFunc("GET /auth/microsoft_callback", app.microsoftCallBack)
+	mux.Handle("GET /auth/microsoft", sessionMiddle.ThenFunc(app.microsoftLogin))
+	mux.Handle("GET /auth/microsoft_callback", sessionMiddle.ThenFunc(app.microsoftCallBack))
+	mux.Handle("GET /logout", sessionMiddle.ThenFunc(app.handleLogOut))
 
-	mux.HandleFunc("GET /reports", app.handleReports)
-	mux.HandleFunc("GET /reports/{reportname}", app.handleReportParams)
+	mux.Handle("GET /reports", protectedMiddle.ThenFunc(app.handleReports))
+	mux.Handle("GET /reports/{reportname}", protectedMiddle.ThenFunc(app.handleReportParams))
 
-	mux.HandleFunc("GET /vp/alljobhours", app.handleAllJobHours)
-	mux.HandleFunc("GET /vp/employeesforfringe/", app.HandleEmployeesForFringe)
+	mux.Handle("GET /vp/alljobhours", htmxMiddle.ThenFunc(app.handleAllJobHours))
+	mux.Handle("GET /vp/employeesforfringe", htmxMiddle.ThenFunc(app.HandleEmployeesForFringe))
 
 	// reportRouter.Get("/{reportname}/downloads/{fname}", app.HandleDownloads)
-	return commonHeaders(mux)
+	return standardMiddle.Then(mux)
 }

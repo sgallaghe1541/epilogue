@@ -7,7 +7,10 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"time"
 
+	"github.com/alexedwards/scs/sqlite3store"
+	"github.com/alexedwards/scs/v2"
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
 	"github.com/sgallaghe1541/epilogue/internal/auth"
@@ -17,27 +20,30 @@ import (
 )
 
 type app struct {
-	auth          *oauth2.Config
-	logger        *slog.Logger
-	viewpoint     *sqlx.DB
-	epilogue      *sqlx.DB
-	users         *db.UserModel
-	refreshTokens *db.RefreshTokenModel
+	auth           *oauth2.Config
+	logger         *slog.Logger
+	viewpoint      *sqlx.DB
+	epilogue       *sqlx.DB
+	sessionManager *scs.SessionManager
+	users          *db.UserModel
+	refreshTokens  *db.RefreshTokenModel
 }
 
 func newApp(auth *oauth2.Config,
 	logger *slog.Logger,
 	viewpoint *sqlx.DB,
 	epilogue *sqlx.DB,
+	sessionManager *scs.SessionManager,
 	users *db.UserModel,
 	refreshTokens *db.RefreshTokenModel) *app {
 	return &app{
-		auth:          auth,
-		logger:        logger,
-		viewpoint:     viewpoint,
-		epilogue:      epilogue,
-		users:         users,
-		refreshTokens: refreshTokens,
+		auth:           auth,
+		logger:         logger,
+		viewpoint:      viewpoint,
+		epilogue:       epilogue,
+		sessionManager: sessionManager,
+		users:          users,
+		refreshTokens:  refreshTokens,
 	}
 }
 
@@ -73,11 +79,16 @@ func run(ctx context.Context) error {
 
 	defer data.Close()
 
+	sessionManager := scs.New()
+	sessionManager.Store = sqlite3store.New(data.DB)
+	sessionManager.Lifetime = 12 * time.Hour
+
 	app := newApp(
 		auth.MicrosoftConfig(),
 		logger,
 		vp,
 		data,
+		sessionManager,
 		&db.UserModel{DB: data},
 		&db.RefreshTokenModel{DB: data},
 	)

@@ -2,9 +2,7 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -12,7 +10,6 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/sgallaghe1541/epilogue/internal/auth"
 	"github.com/sgallaghe1541/epilogue/internal/db"
 	"github.com/sgallaghe1541/epilogue/internal/viewpoint"
 	"github.com/sgallaghe1541/epilogue/views/layouts"
@@ -60,13 +57,13 @@ func (app *app) microsoftCallBack(w http.ResponseWriter, r *http.Request) {
 
 	token, err := app.auth.Exchange(r.Context(), code)
 	if err != nil {
-		serverError(app.logger, w, r, err)
+		app.serverError(w, r, err)
 		return
 	}
 
 	userRequest, err := http.NewRequest("GET", endpointProfile, nil)
 	if err != nil {
-		serverError(app.logger, w, r, err)
+		app.serverError(w, r, err)
 		return
 	}
 
@@ -76,7 +73,7 @@ func (app *app) microsoftCallBack(w http.ResponseWriter, r *http.Request) {
 
 	userResponse, err := client.Do(userRequest)
 	if err != nil {
-		serverError(app.logger, w, r, err)
+		app.serverError(w, r, err)
 		return
 	}
 
@@ -90,7 +87,7 @@ func (app *app) microsoftCallBack(w http.ResponseWriter, r *http.Request) {
 	email, err := readUserEmail(userResponse.Body)
 	app.logger.Info(email)
 	if err != nil {
-		serverError(app.logger, w, r, err)
+		app.serverError(w, r, err)
 		return
 	}
 
@@ -101,49 +98,32 @@ func (app *app) microsoftCallBack(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jwt, err := auth.GenerateJWT(eu, os.Getenv("JWT_SECRET"), time.Hour)
+	err = app.sessionManager.RenewToken(r.Context())
 	if err != nil {
-		serverError(app.logger, w, r, err)
-		return
-	}
-	refresh, err := auth.GenerateRefreshToken()
-	if err != nil {
-		serverError(app.logger, w, r, err)
-		return
-	}
-	err = app.refreshTokens.SaveRefreshToken(eu.ID, refresh)
-	if err != nil {
-		serverError(app.logger, w, r, err)
+		app.serverError(w, r, err)
 		return
 	}
 
-	w.Header().Add("Set-Cookie", auth.NewJWTCookie(auth.JWTCookie, jwt))
-	w.Header().Add("Set-Cookie", auth.NewRefreshCookie(auth.RefreshCookie, refresh))
+	app.sessionManager.Put(r.Context(), "authenticatedUserID", eu.ID)
+	app.sessionManager.Put(r.Context(), "userName", eu.Name)
 
-	http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-func readUserEmail(r io.Reader) (string, error) {
-	u := struct {
-		Name              string `json:"name"`
-		Email             string `json:"mail"`
-		FirstName         string `json:"givenName"`
-		LastName          string `json:"surname"`
-		NickName          string `json:"mailNickname"`
-		UserPrincipalName string `json:"userPrincipalName"`
-		Location          string `json:"usageLocation"`
-	}{}
-
-	err := json.NewDecoder(r).Decode(&u)
+func (app *app) handleLogOut(w http.ResponseWriter, r *http.Request) {
+	err := app.sessionManager.RenewToken(r.Context())
 	if err != nil {
-		return "", err
+		app.serverError(w, r, err)
+		return
 	}
-
-	return strings.ToLower(u.Email), nil
+	app.sessionManager.Remove(r.Context(), "authenticatedUserID")
+	app.sessionManager.Put(r.Context(), "flash", "Log Out Successful")
+	http.Redirect(w, r, "/signin", http.StatusSeeOther)
 }
 
 func (app *app) handleHome(w http.ResponseWriter, r *http.Request) {
-	layouts.Base(r.Header.Get("user")).Render(context.Background(), w)
+	name := app.sessionManager.GetString(r.Context(), "userName")
+	layouts.Base(name).Render(context.Background(), w)
 }
 
 func (app *app) handleAllJobHours(w http.ResponseWriter, r *http.Request) {
@@ -175,7 +155,6 @@ func (app *app) handleAllJobHours(w http.ResponseWriter, r *http.Request) {
 	vpArgs.EndWEDate = v.Get("endwedate")
 
 	updatedURL := "/reports/alljobhours?" + v.Encode()
-	fmt.Println(updatedURL)
 
 	jobHours := []*viewpoint.JobHoursResult{}
 	query, args, err := viewpoint.BuildInQuery(viewpoint.JobHours, vpArgs)

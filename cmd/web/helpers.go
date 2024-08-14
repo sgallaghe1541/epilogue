@@ -1,20 +1,22 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"log/slog"
+	"io"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 )
 
-func serverError(logger *slog.Logger, w http.ResponseWriter, r *http.Request, err error) {
+func (app *app) serverError(w http.ResponseWriter, r *http.Request, err error) {
 	var (
 		method = r.Method
 		uri    = r.URL.RequestURI()
 	)
 
-	logger.Error(err.Error(), "method", method, "uri", uri)
+	app.logger.Error(err.Error(), "method", method, "uri", uri)
 	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 }
 
@@ -37,4 +39,31 @@ func getRecentWEDate() string {
 	}
 
 	return now.Format("2006-01-02")
+}
+
+func readUserEmail(r io.Reader) (string, error) {
+	u := struct {
+		Name              string `json:"name"`
+		Email             string `json:"mail"`
+		FirstName         string `json:"givenName"`
+		LastName          string `json:"surname"`
+		NickName          string `json:"mailNickname"`
+		UserPrincipalName string `json:"userPrincipalName"`
+		Location          string `json:"usageLocation"`
+	}{}
+
+	err := json.NewDecoder(r).Decode(&u)
+	if err != nil {
+		return "", err
+	}
+
+	return strings.ToLower(u.Email), nil
+}
+
+func (app *app) isAuthenticated(r *http.Request) bool {
+	isAuthenticated, ok := r.Context().Value(isAuthenticatedContextKey).(bool)
+	if !ok {
+		return false
+	}
+	return isAuthenticated
 }

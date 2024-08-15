@@ -131,6 +131,7 @@ func (app *app) handleAllJobHours(w http.ResponseWriter, r *http.Request) {
 	var vpArgs viewpoint.QueryArgs
 
 	vpconn := app.viewpoint
+	excel := r.Header.Get("Excel")
 
 	v := r.URL.Query()
 
@@ -156,8 +157,10 @@ func (app *app) handleAllJobHours(w http.ResponseWriter, r *http.Request) {
 
 	updatedURL := "/reports/alljobhours?" + v.Encode()
 
-	jobHours := []*viewpoint.JobHoursResult{}
-	query, args, err := viewpoint.BuildInQuery(viewpoint.JobHours, vpArgs)
+	jobHours := viewpoint.JobHoursResult{
+		Result: []*viewpoint.JobHours{},
+	}
+	query, args, err := viewpoint.BuildInQuery(viewpoint.JobHoursQuery, vpArgs)
 	if err != nil {
 		fmt.Print(err.Error())
 	}
@@ -170,36 +173,31 @@ func (app *app) handleAllJobHours(w http.ResponseWriter, r *http.Request) {
 
 	defer rows.Close()
 
-	err = sqlx.StructScan(rows, &jobHours)
+	err = sqlx.StructScan(rows, &jobHours.Result)
 	if err != nil {
 		fmt.Print(err.Error())
 	}
 
-	for _, job := range jobHours {
-		eerows, err := vpconn.Queryx(viewpoint.JobEmployeeHours, job.Job.String, vpArgs.StartWEDate, vpArgs.EndWEDate)
-		if err != nil {
-			fmt.Print(err.Error())
-		}
-		err = sqlx.StructScan(eerows, &job.EEHoursDetail)
-		if err != nil {
-			fmt.Print(err.Error())
-		}
-		eerows.Close()
-
-		eqrows, err := vpconn.Queryx(viewpoint.JobEquipmentHours, job.Job.String, vpArgs.StartWEDate, vpArgs.EndWEDate)
-		if err != nil {
-			fmt.Print(err.Error())
-		}
-		err = sqlx.StructScan(eqrows, &job.EQHoursDetail)
-		if err != nil {
-			fmt.Print(err.Error())
-		}
-		eqrows.Close()
+	for _, job := range jobHours.Result {
+		job.GetDetail(vpArgs, vpconn)
 	}
 
-	w.Header().Set("Content-Type", "text/html")
-	w.Header().Set("HX-Push-Url", updatedURL)
-	reports.AllJobHours(jobHours).Render(context.Background(), w)
+	if excel == "" {
+		w.Header().Set("Content-Type", "text/html")
+		w.Header().Set("HX-Push-Url", updatedURL)
+		reports.AllJobHours(jobHours).Render(context.Background(), w)
+	} else {
+		fName := fmt.Sprintf("AllJobHours-%s.xlsx", strings.Title(div))
+		dir := filepath.Join(r.URL.Host, "tempfiles", fName)
+
+		// err := jobHours.ToExcel(dir)
+		// if err != nil {
+		// 	fmt.Println(err.Error())
+		// }
+		w.Header().Set("Content-Type", "text/html")
+		w.Header().Set("HX-Redirect", fmt.Sprintf("/downloads/%s", filepath.Base(dir)))
+
+	}
 }
 
 func (app *app) handleReports(w http.ResponseWriter, r *http.Request) {
@@ -284,13 +282,13 @@ func (app *app) handleReportParams(w http.ResponseWriter, r *http.Request) {
 	reports.Report(date, report, reportparams, divisions).Render(context.Background(), w)
 }
 
-func (app *app) HandleTimeCardLinks(w http.ResponseWriter, r *http.Request) {
+func (app *app) handleTimeCardLinks(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	w.Header().Set("HX-Push-Url", r.URL.Path)
 	timeentry.TimeEntryLinks().Render(context.Background(), w)
 }
 
-func (app *app) HandleEmployeesForFringe(w http.ResponseWriter, r *http.Request) {
+func (app *app) handleEmployeesForFringe(w http.ResponseWriter, r *http.Request) {
 
 	var vpArgs viewpoint.QueryArgs
 
@@ -303,11 +301,11 @@ func (app *app) HandleEmployeesForFringe(w http.ResponseWriter, r *http.Request)
 	div := v.Get("division")
 
 	switch div {
-	case "grading":
+	case "01":
 		vpArgs = viewpoint.Grading
-	case "paving":
+	case "02":
 		vpArgs = viewpoint.Paving
-	case "bridge":
+	case "06":
 		vpArgs = viewpoint.Bridge
 	default:
 		fmt.Println("division did not come through...")
@@ -315,7 +313,7 @@ func (app *app) HandleEmployeesForFringe(w http.ResponseWriter, r *http.Request)
 		//need to handle bad path
 	}
 
-	updatedURL := "/reports/employeesforfringe/?" + v.Encode()
+	updatedURL := "/reports/employeesforfringe?" + v.Encode()
 
 	emps := viewpoint.EmployeesForFringeResult{}
 	query, args, err := viewpoint.BuildInQuery(viewpoint.EmployeesForFringe, vpArgs)
@@ -348,12 +346,12 @@ func (app *app) HandleEmployeesForFringe(w http.ResponseWriter, r *http.Request)
 			fmt.Println(err.Error())
 		}
 		w.Header().Set("Content-Type", "text/html")
-		w.Header().Set("HX-Redirect", filepath.Join(r.URL.Host, "downloads", filepath.Base(dir)))
-		fmt.Println(filepath.Join(r.URL.Host, "downloads", filepath.Base(dir)))
+		w.Header().Set("HX-Redirect", fmt.Sprintf("/downloads/%s", filepath.Base(dir)))
+
 	}
 }
 
-func (app *app) HandleDownloads(w http.ResponseWriter, r *http.Request) {
+func (app *app) handleDownloads(w http.ResponseWriter, r *http.Request) {
 	fname := r.PathValue("fname")
 
 	downloadFile := filepath.Join(r.URL.Host, "tempfiles", fname)

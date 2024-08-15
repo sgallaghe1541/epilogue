@@ -29,8 +29,8 @@ func (app *app) routes() http.Handler {
 	mux.Handle("GET /reports/{reportname}", protectedMiddle.ThenFunc(app.handleReportParams))
 
 	mux.Handle("GET /vp/alljobhours", htmxMiddle.ThenFunc(app.handleAllJobHours))
-	mux.Handle("GET /vp/employeesforfringe", htmxMiddle.ThenFunc(app.HandleEmployeesForFringe))
+	mux.Handle("GET /vp/employeesforfringe", htmxMiddle.ThenFunc(app.handleEmployeesForFringe))
 
-	// reportRouter.Get("/{reportname}/downloads/{fname}", app.HandleDownloads)
+	mux.Handle("GET /downloads/{fname}", protectedMiddle.ThenFunc(app.handleDownloads))
 	return standardMiddle.Then(mux)
 }

@@ -40,7 +40,7 @@ templ Report(date string, report db.EpilogueReport, params []db.ReportParameter,
           }
       }
       <button class="bg-yellow-200 text-stone-700 rounded-md hover:bg-stone-700 hover:text-yellow-300 transition-all" hx-target="#data" hx-get={ report.VPURL() } hx-include="#params">Run Report</button>
-      <button class="bg-yellow-200 text-stone-700 rounded-md hover:bg-stone-700 hover:text-yellow-300 transition-all" hx-target="#downloadlink" hx-get={ report.VPURL() } hx-include="#params" hx-headers='{"excel":"true"}'>Excel</button>
+      <button class="bg-yellow-200 text-stone-700 rounded-md hover:bg-stone-700 hover:text-yellow-300 transition-all" hx-get={ report.VPURL() } hx-include="#params" hx-headers='{"excel":"true"}'>Excel</button>
       <div id="error"></div>
     </div>
     <div id="data" class="flex pb-2 h-full max-h-full w-full overflow-y-auto">

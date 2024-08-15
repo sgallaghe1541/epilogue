@@ -190,10 +190,10 @@ func (app *app) handleAllJobHours(w http.ResponseWriter, r *http.Request) {
 		fName := fmt.Sprintf("AllJobHours-%s.xlsx", strings.Title(div))
 		dir := filepath.Join(r.URL.Host, "tempfiles", fName)
 
-		// err := jobHours.ToExcel(dir)
-		// if err != nil {
-		// 	fmt.Println(err.Error())
-		// }
+		err := jobHours.ToExcel(dir)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
 		w.Header().Set("Content-Type", "text/html")
 		w.Header().Set("HX-Redirect", fmt.Sprintf("/downloads/%s", filepath.Base(dir)))
 

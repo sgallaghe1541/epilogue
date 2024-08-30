@@ -30,6 +30,7 @@ func (app *app) routes() http.Handler {
 
 	mux.Handle("GET /vp/alljobhours", htmxMiddle.ThenFunc(app.handleAllJobHours))
 	mux.Handle("GET /vp/employeesforfringe", htmxMiddle.ThenFunc(app.handleEmployeesForFringe))
+	mux.Handle("GET /vp/fhwabygroup", htmxMiddle.ThenFunc(app.handleFHWAGroup))
 
 	mux.Handle("GET /downloads/{fname}", protectedMiddle.ThenFunc(app.handleDownloads))
 	return standardMiddle.Then(mux)

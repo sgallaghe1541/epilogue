@@ -1,0 +1,14 @@
+package reports
+
+import (
+    "github.com/sgallaghe1541/epilogue/internal/viewpoint"
+    "github.com/sgallaghe1541/epilogue/views/components"
+)
+
+templ EmpsForFringe(emps *viewpoint.EmployeesForFringeResult) {
+    @components.EpilogueTable(emps)
+}
+
+templ FHWA(fhwa *viewpoint.FHWAClassificationResult) {
+    @components.EpilogueTable(fhwa)
+}

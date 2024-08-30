@@ -8,6 +8,8 @@ type QueryArgs struct {
 	EndWEDate    string   `db:"endwedate"`
 	Job          string   `db:"job"`
 	Employee     string   `db:"employee"`
+	Date         string   `db:"wedate"`
+	Groups       []string `db:"prgroups"`
 }
 
 var Grading = QueryArgs{

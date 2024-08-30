@@ -8,7 +8,7 @@ import (
 
 type Permission struct {
 	Division string `db:"division" json:"division"`
-	Role     string `db:"role" json:"role"`
+	Role     string `db:"roleid" json:"roleid"`
 }
 
 func (p Permission) Stringify() string {
@@ -57,7 +57,7 @@ func (u *UserModel) GetUser(email string) (*User, error) {
 	if user.Active == 0 {
 		return nil, ErrInactiveUser
 	}
-	err = u.DB.Select(&permissions, "SELECT division, role FROM user_permissions WHERE userid=?", user.ID)
+	err = u.DB.Select(&permissions, "SELECT division, roleid FROM user_permissions WHERE userid=?", user.ID)
 	if err != nil {
 		return nil, err
 	}

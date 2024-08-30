@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	EmployeesForFringe = `
+	EmployeesForFringeQuery = `
 		SELECT 
 			TRIM(STR(Employee)) AS employee, 
 			CONCAT(FirstName, ' ', LastName) AS name,
@@ -32,26 +32,51 @@ type EmployeeForFringe struct {
 	Rate     float32   `db:"payrate"`
 }
 
-func (e *EmployeeForFringe) DataArray() *[]interface{} {
-	data := make([]interface{}, 4)
+func (e *EmployeeForFringe) DataArray() []string {
+	data := make([]string, 4)
 	data[0] = e.Employee
 	data[1] = e.Name
 	data[2] = e.HireDate.Format("01/02/2006")
 	data[3] = fmt.Sprintf("%.2f", e.Rate)
-	return &data
+	return data
 }
 
 type EmployeesForFringeResult struct {
 	Result []*EmployeeForFringe
 }
 
-func (e *EmployeesForFringeResult) Headers() *[]interface{} {
+func (e *EmployeesForFringeResult) Headers() []string {
+	headers := make([]string, 4)
+	headers[0] = "Employee"
+	headers[1] = "Name"
+	headers[2] = "Hire Date"
+	headers[3] = "Pay Rate"
+	return headers
+}
+
+func (e *EmployeesForFringeResult) Data() [][]string {
+	data := make([][]string, len(e.Result))
+	for i, r := range e.Result {
+		data[i] = r.DataArray()
+	}
+	return data
+}
+
+func (e *EmployeesForFringeResult) excelHeaders() *[]interface{} {
 	headers := make([]interface{}, 4)
 	headers[0] = "Employee"
 	headers[1] = "Name"
 	headers[2] = "Hire Date"
 	headers[3] = "Pay Rate"
 	return &headers
+}
+func (e *EmployeeForFringe) excelDataArray() *[]interface{} {
+	data := make([]interface{}, 4)
+	data[0] = e.Employee
+	data[1] = e.Name
+	data[2] = e.HireDate.Format("01/02/2006")
+	data[3] = fmt.Sprintf("%.2f", e.Rate)
+	return &data
 }
 
 func (e *EmployeesForFringeResult) ToExcel(fileName string) error {
@@ -68,7 +93,7 @@ func (e *EmployeesForFringeResult) ToExcel(fileName string) error {
 	if err != nil {
 		return err
 	}
-	err = f.SetSheetRow("Sheet1", "A1", e.Headers())
+	err = f.SetSheetRow("Sheet1", "A1", e.excelHeaders())
 	if err != nil {
 		return err
 	}
@@ -84,7 +109,7 @@ func (e *EmployeesForFringeResult) ToExcel(fileName string) error {
 		if err != nil {
 			return err
 		}
-		err = f.SetSheetRow("Sheet1", cell, emp.DataArray())
+		err = f.SetSheetRow("Sheet1", cell, emp.excelDataArray())
 		if err != nil {
 			return err
 		}

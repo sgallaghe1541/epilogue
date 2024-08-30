@@ -11,7 +11,11 @@ const (
 	`
 )
 
-type Excelable interface {
-	Headers() *[]interface{}
+type ViewpointResult interface {
+	Headers() []string
+	Data() [][]string
+}
+
+type ExcelableResult interface {
 	ToExcel(string) error
 }

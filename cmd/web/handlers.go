@@ -224,10 +224,10 @@ func (app *app) handleReports(w http.ResponseWriter, r *http.Request) {
 func (app *app) handleReportParams(w http.ResponseWriter, r *http.Request) {
 	reportQuery := "SELECT * FROM reports WHERE reporturl = ?"
 	paramsQuery := "SELECT * FROM parameters WHERE reportid = ?"
-	divisionQuery := `SELECT report_divisions.divisionid AS divisionid, divisions.Description AS description 
-	FROM report_divisions JOIN divisions 
-	ON report_divisions.divisionid = divisions.divisionid 
-	WHERE report_divisions.reportid = ?`
+	divisionQuery := `SELECT report_permissions.divisionid AS divisionid, divisions.Description AS description 
+	FROM report_permissions JOIN divisions 
+	ON report_permissions.divisionid = divisions.divisionid 
+	WHERE report_permissions.reportid = ?`
 
 	conn := app.epilogue
 	reporturl := r.PathValue("reportname")
@@ -315,8 +315,8 @@ func (app *app) handleEmployeesForFringe(w http.ResponseWriter, r *http.Request)
 
 	updatedURL := "/reports/employeesforfringe?" + v.Encode()
 
-	emps := viewpoint.EmployeesForFringeResult{}
-	query, args, err := viewpoint.BuildInQuery(viewpoint.EmployeesForFringe, vpArgs)
+	emps := &viewpoint.EmployeesForFringeResult{}
+	query, args, err := viewpoint.BuildInQuery(viewpoint.EmployeesForFringeQuery, vpArgs)
 	if err != nil {
 		fmt.Print(err.Error())
 	}
@@ -373,4 +373,74 @@ func (app *app) handleDownloads(w http.ResponseWriter, r *http.Request) {
 			fmt.Println(err.Error())
 		}
 	}()
+}
+
+func (app *app) handleFHWA(w http.ResponseWriter, r *http.Request) {
+	args := viewpoint.QueryArgs{}
+	conn := app.viewpoint
+
+	fhwa := &viewpoint.FHWAClassificationResult{}
+
+	v := r.URL.Query()
+	we := v.Get("wedate")
+	if we == "" {
+		app.serverError(w, r, fmt.Errorf("no wedate"))
+	}
+	args.Date = we
+
+	by := v.Get("displayby")
+
+	if by == "job" {
+		job := v.Get("job")
+		if job == "" {
+			app.serverError(w, r, fmt.Errorf("displayby=job but no job"))
+		}
+		args.Job = job
+
+		rows, err := conn.NamedQuery(viewpoint.FHWAjobQuery, args)
+		if err != nil {
+			app.serverError(w, r, err)
+		}
+		defer rows.Close()
+
+		err = sqlx.StructScan(rows, &fhwa.Result)
+		if err != nil {
+			app.serverError(w, r, err)
+		}
+
+	} else if by == "group" {
+		group := v.Get("prgroup")
+
+		if group == "all" {
+			args.Groups = []string{"1", "2"}
+		} else if group == "1" {
+			args.Groups = []string{"1"}
+		} else if group == "2" {
+			args.Groups = []string{"2"}
+		} else {
+			app.serverError(w, r, fmt.Errorf("no groups"))
+		}
+		query, args, err := viewpoint.BuildInQuery(viewpoint.FHWAgroupQuery, args)
+		if err != nil {
+			app.serverError(w, r, err)
+		}
+		rows, err := conn.Queryx(query, args...)
+
+		if err != nil {
+			fmt.Print(err.Error())
+		}
+		defer rows.Close()
+
+		err = sqlx.StructScan(rows, &fhwa.Result)
+		if err != nil {
+			app.serverError(w, r, err)
+		}
+
+	} else {
+		app.serverError(w, r, fmt.Errorf("no displayby"))
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+	// w.Header().Set("HX-Push-Url", updatedURL)
+	reports.FHWA(fhwa).Render(context.Background(), w)
 }

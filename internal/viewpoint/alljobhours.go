@@ -50,11 +50,6 @@ const (
 	`
 )
 
-type Job struct {
-	Job         string         `db:"job"`
-	Description sql.NullString `db:"description"`
-}
-
 type EmployeeHours struct {
 	Employee string  `db:"employee"`
 	Name     string  `db:"name"`

@@ -15,7 +15,7 @@ func TestBuildQueries(t *testing.T) {
 	`
 	// expectedArgs := []interface{}{"1"," 4"}
 
-	query, _, err := BuildInQuery(JobListQuery, Paving)
+	query, _, err := BuildInQuery(jobListQuery, Paving)
 	if err != nil {
 		t.Fatalf("BuildQuery didn't work at all: %s", err)
 	}

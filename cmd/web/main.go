@@ -26,6 +26,7 @@ type app struct {
 	epilogue       *sqlx.DB
 	sessionManager *scs.SessionManager
 	users          *db.UserModel
+	jobs           *viewpoint.JobModel
 	refreshTokens  *db.RefreshTokenModel
 }
 
@@ -35,6 +36,7 @@ func newApp(auth *oauth2.Config,
 	epilogue *sqlx.DB,
 	sessionManager *scs.SessionManager,
 	users *db.UserModel,
+	jobs *viewpoint.JobModel,
 	refreshTokens *db.RefreshTokenModel) *app {
 	return &app{
 		auth:           auth,
@@ -43,6 +45,7 @@ func newApp(auth *oauth2.Config,
 		epilogue:       epilogue,
 		sessionManager: sessionManager,
 		users:          users,
+		jobs:           jobs,
 		refreshTokens:  refreshTokens,
 	}
 }
@@ -90,6 +93,7 @@ func run(ctx context.Context) error {
 		data,
 		sessionManager,
 		&db.UserModel{DB: data},
+		&viewpoint.JobModel{DB: vp},
 		&db.RefreshTokenModel{DB: data},
 	)
 

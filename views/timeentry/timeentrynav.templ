@@ -1,10 +1,37 @@
 package timeentry
 
+import (
+  "github.com/sgallaghe1541/epilogue/internal/viewpoint"
+)
+
 templ TimeEntryLinks() {
-    <div class="flex flex-col w-fit m-4 p-2 rounded-md bg-stone-100 shadow-sm">
-      <p class="text-2xl font-bold">Time Entry</p>
-      <ul class="list-none">
-        <li><p class="text-blue-900 font-semibold no-underline hover:cursor-pointer hover:font-bold hover:underline transition-all">Enter Time</p></li>
-      </ul>
+    <div class="flex flex-row space-x-4 w-full p-4 max-h-full max-w-full overflow-clip">
+      <div class="flex flex-col w-fit p-2 bg-stone-100 shadow-sm rounded-md">
+        <p class="text-3xl font-bold">Time Entry</p>
+        <ul class="list-none text-nowrap">
+          <li><p hx-get="/timeentry/newtime" hx-target="#entry" class="text-blue-900 text-xl font-semibold no-underline hover:cursor-pointer hover:underline transition-all">New Time Card</p></li>
+        </ul>
+      </div>
+      <div id="entry" class="flex max-h-full h-full rounded-md flex-col grow">
+      </div>
     </div>
+}
+
+templ NewTimeCard() {
+    <div id="tcheader" class="flex w-full items-center justify-center bg-stone-100 h-fit max-h-fit shadow-sm rounded-t-md">
+      <label class="w-fit text-nowrap m-2 text-lg font-semibold" for="workdate">Date:</label>
+      <input type="date" id="workdate" name="workdate"/>
+      <label class="w-fit text-nowrap m-2 text-lg font-semibold" for="job">Job:</label>
+      <select id="job" name="job" hx-get="/vp/jobselect" hx-swap="innerHTML" hx-trigger="load" hx-params="none">
+      </select>
+      <button class="bg-yellow-200 text-stone-700 p-2 m-2 rounded-md hover:bg-stone-700 hover:text-yellow-300 transition-all" hx-post="" hx-include="#headervals">Next</button>
+    </div>
+    <div id="tcemployees" class="flex w-full items-center justify-center bg-stone-100 h-fit max-h-fit shadow-sm rounded-b-md">
+    </div>
+}
+
+templ JobSelect(jobs []viewpoint.Job) {
+    for _, job := range jobs {
+      <option value={ job.Job }>{ job.Job } -- { job.Description.String }</option>
+    }
 }

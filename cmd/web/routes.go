@@ -28,7 +28,10 @@ func (app *app) routes() http.Handler {
 	mux.Handle("GET /reports", protectedMiddle.ThenFunc(app.handleReports))
 	mux.Handle("GET /reports/{reportname}", protectedMiddle.ThenFunc(app.handleReportParams))
 
+	mux.Handle("GET /timeentry", sessionMiddle.ThenFunc(app.handleTimeEntry))
+	mux.Handle("GET /timeentry/newtime", sessionMiddle.ThenFunc(app.handleNewTimeEntry))
 	mux.Handle("GET /vp/alljobhours", htmxMiddle.ThenFunc(app.handleAllJobHours))
+	mux.Handle("GET /vp/jobselect", htmxMiddle.ThenFunc(app.handleJobsSelect))
 	mux.Handle("GET /vp/employeesforfringe", htmxMiddle.ThenFunc(app.handleEmployeesForFringe))
 	mux.Handle("GET /vp/fhwabygroup", htmxMiddle.ThenFunc(app.handleFHWAGroup))
 

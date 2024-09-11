@@ -20,7 +20,13 @@ func (app *app) serverError(w http.ResponseWriter, r *http.Request, err error) {
 	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 }
 
-func clientError(w http.ResponseWriter, status int) {
+func (app *app) clientError(w http.ResponseWriter, r *http.Request, status int, err error) {
+	var (
+		method = r.Method
+		uri    = r.URL.RequestURI()
+	)
+
+	app.logger.Error(err.Error(), "method", method, "uri", uri)
 	http.Error(w, http.StatusText(status), status)
 }
 
@@ -66,4 +72,11 @@ func (app *app) isAuthenticated(r *http.Request) bool {
 		return false
 	}
 	return isAuthenticated
+}
+
+func getWEDate(date time.Time) time.Time {
+	for date.Weekday() != 6 {
+		date = date.Add(time.Hour * 24)
+	}
+	return date
 }

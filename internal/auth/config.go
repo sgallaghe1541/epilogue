@@ -9,7 +9,7 @@ import (
 
 func MicrosoftConfig() *oauth2.Config {
 	MicrosoftLoginConfig := oauth2.Config{
-		RedirectURL:  "http://localhost:3000/auth/microsoft_callback",
+		RedirectURL:  "http://localhost:7331/auth/microsoft_callback",
 		ClientID:     os.Getenv("MICROSOFTONLINE_KEY"),
 		ClientSecret: os.Getenv("MICROSOFTONLINE_SECRET"),
 		Scopes:       []string{"openid", "email", "user.read"},

@@ -7,22 +7,11 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type TimeCardHeaderCreateForm struct {
-	WorkDate    time.Time
-	Job         string
-	FieldErrors map[string]string
-}
-
-type TimeCardEmployeesForm struct {
-	Phases      string
-	FieldErrors map[string]string
-}
-
-type TimeCardModel struct {
+type TimecardModel struct {
 	DB *sqlx.DB
 }
 
-type TimeCardHeader struct {
+type TimecardHeader struct {
 	ID           int       `db:"id"`
 	Job          string    `db:"job"`
 	Date         time.Time `db:"workdate"`
@@ -33,26 +22,23 @@ type TimeCardHeader struct {
 	ModifiedBy   int       `db:"modifiedby"`
 }
 
-type TimeCardEmployee struct {
-	ID       int            `db:"tceid"`
-	TCHID    int            `db:"tchid"`
-	Employee string         `db:"employee"`
-	Name     string         `db:"fullname"`
-	Date     time.Time      `db:"workdate"`
-	Job      string         `db:"job"`
-	Phase    string         `db:"phase"`
-	Class    sql.NullString `db:"class"`
-	PayCode  string         `db:"paycode"`
-	Hours    float64        `db:"tcehours"`
+type TimecardEmployee struct {
+	ID      int            `db:"tceid"`
+	TCHID   int            `db:"tchid"`
+	Date    time.Time      `db:"workdate"`
+	Class   sql.NullString `db:"class"`
+	Name    string         `db:"fullname"`
+	PayCode string         `db:"paycode"`
+	Phase   string         `db:"phase"`
+	Hours   float64        `db:"tcehours"`
 }
 
-func (t *TimeCardModel) GetTimecardsByUser(userid int, timeCardStatus string) ([]TimeCardHeader, error) {
+func (t *TimecardModel) GetTimecards(userid int, timeCardStatus string) ([]TimecardHeader, error) {
 	args := map[string]interface{}{"userid": userid, "status": timeCardStatus}
-	timecards := []TimeCardHeader{}
+	timecards := []TimecardHeader{}
 
 	err := t.DB.Select(&timecards, `
-		SELECT *
-		FROM time_card_headers
+		SELECT * FROM time_card_header
 		WHERE createdby = :userid
 		AND tcstatus = :status
 		`, args)
@@ -62,21 +48,7 @@ func (t *TimeCardModel) GetTimecardsByUser(userid int, timeCardStatus string) ([
 	return timecards, nil
 }
 
-func (t *TimeCardModel) GetTimecardByID(tcID int) (TimeCardHeader, error) {
-	timecard := TimeCardHeader{}
-
-	err := t.DB.Get(&timecard, `
-		SELECT *
-		FROM time_card_headers
-		WHERE id = ?
-		`, tcID)
-	if err != nil {
-		return timecard, err
-	}
-	return timecard, nil
-}
-
-func (t *TimeCardModel) NewTimecard(job string, date time.Time, userid int) (int64, error) {
+func (t *TimecardModel) NewTimecard(job string, date time.Time, userid int) (int64, error) {
 	wedate := getWEDate(date)
 
 	vals := map[string]interface{}{
@@ -84,13 +56,13 @@ func (t *TimeCardModel) NewTimecard(job string, date time.Time, userid int) (int
 		"workdate":     date,
 		"wedate":       wedate,
 		"createdby":    userid,
-		"tcstatus":     "new",
+		"tcstatus":     "draft",
 		"lastmodified": time.Now(),
 		"modifiedby":   userid,
 	}
 
 	result, err := t.DB.NamedExec(`
-		INSERT INTO time_card_headers (
+		INSERT INTO time_card_header (
 			job, workdate, wedate, createdby, 
 			tcstatus, lastmodified, modifiedby)
 		VALUES (
@@ -107,13 +79,13 @@ func (t *TimeCardModel) NewTimecard(job string, date time.Time, userid int) (int
 	return tchid, nil
 }
 
-func (t *TimeCardModel) GetTimecardEmployees(timeCardHeaderID int) ([]TimeCardEmployee, error) {
-	employees := []TimeCardEmployee{}
+func (t *TimecardModel) GetTimecardEmployees(timeCardHeaderID int) ([]TimecardEmployee, error) {
+	args := map[string]interface{}{"tchid": timeCardHeaderID}
+	employees := []TimecardEmployee{}
 
 	err := t.DB.Select(&employees, `
-		SELECT *
-		FROM time_card_employees
-		WHERE tchid = ?`, timeCardHeaderID)
+		SELECT * FROM time_card_employees
+		WHERE tchid = :tchid`, args)
 	if err != nil {
 		return nil, err
 	}

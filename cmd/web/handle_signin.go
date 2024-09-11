@@ -85,7 +85,7 @@ func (app *app) microsoftCallBack(w http.ResponseWriter, r *http.Request) {
 	eu, err := app.users.GetUser(email)
 	if err != nil {
 		app.logger.Info("no epilogue user found for", "email", email, "error", err.Error())
-		app.clientError(w, r, http.StatusForbidden, err)
+		clientError(w, http.StatusForbidden)
 		return
 	}
 

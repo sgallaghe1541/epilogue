@@ -30,9 +30,6 @@ func (app *app) routes() http.Handler {
 
 	mux.Handle("GET /timeentry", sessionMiddle.ThenFunc(app.handleTimeEntry))
 	mux.Handle("GET /timeentry/newtime", sessionMiddle.ThenFunc(app.handleNewTimeEntry))
-	mux.Handle("POST /timeentry/newtime", htmxMiddle.ThenFunc(app.handlePostNewTimeHeader))
-	mux.Handle("GET /timeentry/timecard/{id}", protectedMiddle.ThenFunc(app.handleTimeCard))
-
 	mux.Handle("GET /vp/alljobhours", htmxMiddle.ThenFunc(app.handleAllJobHours))
 	mux.Handle("GET /vp/jobselect", htmxMiddle.ThenFunc(app.handleJobsSelect))
 	mux.Handle("GET /vp/employeesforfringe", htmxMiddle.ThenFunc(app.handleEmployeesForFringe))

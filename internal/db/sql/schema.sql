@@ -106,6 +106,7 @@ CREATE TABLE IF NOT EXISTS time_card_status (
 CREATE TABLE IF NOT EXISTS time_card_headers (
     id INTEGER PRIMARY KEY ASC,
     job TEXT,
+    jobdescription TEXT,
     workdate DATE,
     wedate DATE,
     createdby INTEGER,

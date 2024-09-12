@@ -1,5 +1,9 @@
 package timeentry
 
+import (
+  "github.com/sgallaghe1541/epilogue/internal/db"
+)
+
 templ TimeEntryLinks() {
     <div class="flex flex-row space-x-4 w-full p-4 max-h-full max-w-full overflow-clip">
       <div class="flex flex-col w-fit p-2 bg-stone-100 shadow-sm rounded-md">
@@ -13,7 +17,7 @@ templ TimeEntryLinks() {
     </div>
 }
 
-templ newTimeCardHeader(form TimeCardHeaderCreateForm) {
+templ ViewTimeCardHeader(form TimeCardHeaderCreateForm) {
     <div id="tcheader" name="tcheader" class="flex flex-col w-full items-start justify-center bg-stone-100 h-fit max-h-fit shadow-sm rounded-t-md p-2">
       <form>
         if form.FieldErrors["workdate"] != "" {
@@ -49,7 +53,7 @@ templ newTimeCardHeader(form TimeCardHeaderCreateForm) {
     </div>
 }
 
-templ EditTimeCard(header TimeCardHeader, emps []TimeCardEmployee, form TimeCardEmployeesForm) {
+templ EditTimeCard(header db.TimeCardHeader, emps []db.TimeCardEmployee, form TimeCardEmployeesForm) {
      <div id="tcheader" name="tcheader" class="flex flex-col w-full items-start justify-center bg-stone-100 h-fit max-h-fit shadow-sm rounded-t-md p-2">
       <form id="tcheaderform">
         <div>

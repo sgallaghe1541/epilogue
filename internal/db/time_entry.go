@@ -7,9 +7,10 @@ import (
 	"github.com/sgallaghe1541/epilogue/internal/utils"
 )
 
-type TimecardHeader struct {
+type TimeCardHeader struct {
 	ID           int       `db:"id"`
 	Job          string    `db:"job"`
+	Description  string    `db:"jobdescription"`
 	Date         time.Time `db:"workdate"`
 	WEDate       time.Time `db:"wedate"`
 	CreatedBy    int       `db:"createdby"`
@@ -18,23 +19,26 @@ type TimecardHeader struct {
 	ModifiedBy   int       `db:"modifiedby"`
 }
 
-type TimecardEmployee struct {
-	ID      int            `db:"tceid"`
-	TCHID   int            `db:"tchid"`
-	Date    time.Time      `db:"workdate"`
-	Class   sql.NullString `db:"class"`
-	Name    string         `db:"fullname"`
-	PayCode string         `db:"paycode"`
-	Phase   string         `db:"phase"`
-	Hours   float64        `db:"tcehours"`
+type TimeCardEmployee struct {
+	ID       int            `db:"tceid"`
+	TCHID    int            `db:"tchid"`
+	Employee string         `db:"employee"`
+	Name     string         `db:"fullname"`
+	Date     time.Time      `db:"workdate"`
+	Job      string         `db:"job"`
+	Phase    string         `db:"phase"`
+	Class    sql.NullString `db:"class"`
+	PayCode  string         `db:"paycode"`
+	Hours    float64        `db:"tcehours"`
 }
 
-func (e *EpilogueConnection) GetTimecards(userid int, timeCardStatus string) ([]TimecardHeader, error) {
+func (e *EpilogueConnection) GetTimecardsByUser(userid int, timeCardStatus string) ([]TimeCardHeader, error) {
 	args := map[string]interface{}{"userid": userid, "status": timeCardStatus}
-	timecards := []TimecardHeader{}
+	timecards := []TimeCardHeader{}
 
 	err := e.DB.Select(&timecards, `
-		SELECT * FROM time_card_header
+		SELECT *
+		FROM time_card_headers
 		WHERE createdby = :userid
 		AND tcstatus = :status
 		`, args)
@@ -44,25 +48,45 @@ func (e *EpilogueConnection) GetTimecards(userid int, timeCardStatus string) ([]
 	return timecards, nil
 }
 
+func (e *EpilogueConnection) GetTimecardByID(tcID int) (TimeCardHeader, error) {
+	timecard := TimeCardHeader{}
+
+	err := e.DB.Get(&timecard, `
+		SELECT *
+		FROM time_card_headers
+		WHERE id = ?
+		`, tcID)
+	if err != nil {
+		return timecard, err
+	}
+	return timecard, nil
+}
+
 func (e *EpilogueConnection) NewTimecard(job string, date time.Time, userid int) (int64, error) {
 	wedate := utils.GetWEDate(date)
 
+	jobNum, jobDesc, err := utils.Split(job)
+	if err != nil {
+		return 0, err
+	}
+
 	vals := map[string]interface{}{
-		"job":          job,
-		"workdate":     date,
-		"wedate":       wedate,
-		"createdby":    userid,
-		"tcstatus":     "draft",
-		"lastmodified": time.Now(),
-		"modifiedby":   userid,
+		"job":            jobNum,
+		"jobdescription": jobDesc,
+		"workdate":       date,
+		"wedate":         wedate,
+		"createdby":      userid,
+		"tcstatus":       "new",
+		"lastmodified":   time.Now(),
+		"modifiedby":     userid,
 	}
 
 	result, err := e.DB.NamedExec(`
-		INSERT INTO time_card_header (
-			job, workdate, wedate, createdby, 
+		INSERT INTO time_card_headers (
+			job, jobdescription, workdate, wedate, createdby, 
 			tcstatus, lastmodified, modifiedby)
 		VALUES (
-			:job, :workdate, :wedate, :createdby, 
+			:job, :jobdescription, :workdate, :wedate, :createdby, 
 			:tcstatus, :lastmodified, :modifiedby
 		)`, vals)
 	if err != nil {
@@ -75,13 +99,13 @@ func (e *EpilogueConnection) NewTimecard(job string, date time.Time, userid int)
 	return tchid, nil
 }
 
-func (e *EpilogueConnection) GetTimecardEmployees(timeCardHeaderID int) ([]TimecardEmployee, error) {
-	args := map[string]interface{}{"tchid": timeCardHeaderID}
-	employees := []TimecardEmployee{}
+func (e *EpilogueConnection) GetTimecardEmployees(timeCardHeaderID int) ([]TimeCardEmployee, error) {
+	employees := []TimeCardEmployee{}
 
 	err := e.DB.Select(&employees, `
-		SELECT * FROM time_card_employees
-		WHERE tchid = :tchid`, args)
+		SELECT *
+		FROM time_card_employees
+		WHERE tchid = ?`, timeCardHeaderID)
 	if err != nil {
 		return nil, err
 	}

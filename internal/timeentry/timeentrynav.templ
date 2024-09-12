@@ -1,0 +1,82 @@
+package timeentry
+
+templ TimeEntryLinks() {
+    <div class="flex flex-row space-x-4 w-full p-4 max-h-full max-w-full overflow-clip">
+      <div class="flex flex-col w-fit p-2 bg-stone-100 shadow-sm rounded-md">
+        <p class="text-3xl font-bold">Time Entry</p>
+        <ul class="list-none text-nowrap">
+          <li><p hx-get="/timeentry/newtime" hx-target="#entry" class="text-blue-900 text-xl font-semibold no-underline hover:cursor-pointer hover:underline transition-all">New Time Card</p></li>
+        </ul>
+      </div>
+      <div id="entry" class="flex max-h-full h-full rounded-md flex-col grow">
+      </div>
+    </div>
+}
+
+templ newTimeCardHeader(form TimeCardHeaderCreateForm) {
+    <div id="tcheader" name="tcheader" class="flex flex-col w-full items-start justify-center bg-stone-100 h-fit max-h-fit shadow-sm rounded-t-md p-2">
+      <form>
+        if form.FieldErrors["workdate"] != "" {
+          <div>
+            <label class="w-fit text-nowrap p-2 text-lg font-semibold" for="workdate">Date:</label>
+            <input type="date" id="workdate" class="border-red-700 rounded-md border-2 m-2 p-2" name="workdate" value={ form.WorkDate.Format("2006-01-02") }/>
+            <p class="text-red-700 w-fit text-nowrap text-sm font-semibold">{ form.FieldErrors["workdate"] }</p>
+          </div>
+        } else {
+          <div>
+            <label class="w-fit text-nowrap p-2 text-lg font-semibold" for="workdate">Date:</label>
+            <input type="date" id="workdate" name="workdate" class="p-2 mt-2 mb-2 rounded-md border-2 border-stone-700"/>
+          </div>
+        }
+        if form.FieldErrors["job"] != "" {
+          <div>
+            <label class="w-fit text-nowrap p-2 text-lg font-semibold" for="job">Job:</label>
+            <select id="job" name="job" class="p-2 m-2 rounded-md border-2 border-red-700" hx-get="/vp/jobselect" hx-swap="innerHTML" hx-trigger="load" hx-params="none">
+            </select>
+            <p class="text-red-700 w-fit text-nowrap text-sm font-semibold pl-2">{ form.FieldErrors["job"] }</p>
+          </div>
+        } else {
+          <div>
+            <label class="w-fit text-nowrap p-2 text-lg font-semibold" for="job">Job:</label>
+            <select id="job" name="job" class="p-2 m-2 rounded-md border-2 border-stone-700" hx-get="/vp/jobselect" hx-swap="innerHTML" hx-trigger="load" hx-params="none">
+            </select>
+          </div>
+        }
+        <button class="bg-yellow-300 text-stone-700 pl-24 pr-24 pb-2 pt-2 m-2 font-semibold rounded-md hover:bg-stone-700 hover:text-yellow-300 transition-all" hx-post="" hx-target="#entry">Next</button>
+      </form>
+    </div>
+    <div id="tcemployees" class="flex w-full items-center justify-center bg-stone-100 h-fit max-h-fit shadow-sm rounded-b-md">
+    </div>
+}
+
+templ EditTimeCard(header TimeCardHeader, emps []TimeCardEmployee, form TimeCardEmployeesForm) {
+     <div id="tcheader" name="tcheader" class="flex flex-col w-full items-start justify-center bg-stone-100 h-fit max-h-fit shadow-sm rounded-t-md p-2">
+      <form id="tcheaderform">
+        <div>
+          <label class="w-fit text-nowrap p-2 text-lg font-semibold" for="workdate">Date:</label>
+          <input type="date" id="workdate" name="workdate" class="p-2 mt-2 mb-2 rounded-md border-2 border-stone-700" disabled value={ header.Date.Format("2006-01-02") }/>
+        </div>
+        <div>
+          <label class="w-fit text-nowrap p-2 text-lg font-semibold" for="job">Job:</label>
+          <select id="job" name="job" class="p-2 m-2 rounded-md border-2 border-stone-700" hx-get="/vp/jobselect" hx-swap="innerHTML" hx-params="none" disabled>
+            <option value={ header.Job } selected>{ header.Job }</option>
+          </select>
+        </div>
+      </form>
+    </div>
+    <div id="tcdetails" name="tcdetails" class="grid grid-cols-5 w-full h-full bg-yellow-300 rounded-b-md"></div>
+}
+
+templ EmployeeTimeRow() {
+  <div id="tcdetails" name="tcdetails" class="grid grid-cols-5 w-full h-full bg-yellow-300"></div>
+}
+
+// templ SelectList(items []SelectOption) {
+//     for _, item := range items {
+//       <option value={ item.SelectValue() }>{ item.SelectString() }</option>
+//     }
+// }
+
+templ SelectList(item SelectOption) {
+    <option value={ item.SelectValue() }>{ item.SelectString() }</option>
+}

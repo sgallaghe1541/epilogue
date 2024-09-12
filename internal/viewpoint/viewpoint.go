@@ -8,7 +8,11 @@ import (
 	_ "github.com/microsoft/go-mssqldb"
 )
 
-func ConnectToViewpoint() (*sqlx.DB, error) {
+type ViewpointConnection struct {
+	DB *sqlx.DB
+}
+
+func ConnectToViewpoint() (*ViewpointConnection, error) {
 
 	vpServer := os.Getenv("VP_SERVER")
 	vpDB := os.Getenv("VP_DATABASE")
@@ -26,5 +30,5 @@ func ConnectToViewpoint() (*sqlx.DB, error) {
 		return nil, err
 	}
 
-	return conn, nil
+	return &ViewpointConnection{DB: conn}, nil
 }

@@ -11,7 +11,6 @@ import (
 
 	"github.com/alexedwards/scs/sqlite3store"
 	"github.com/alexedwards/scs/v2"
-	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
 	"github.com/sgallaghe1541/epilogue/internal/auth"
 	"github.com/sgallaghe1541/epilogue/internal/db"
@@ -22,31 +21,22 @@ import (
 type app struct {
 	auth           *oauth2.Config
 	logger         *slog.Logger
-	viewpoint      *sqlx.DB
-	epilogue       *sqlx.DB
+	viewpoint      *viewpoint.ViewpointConnection
+	epilogue       *db.EpilogueConnection
 	sessionManager *scs.SessionManager
-	users          *db.UserModel
-	jobs           *viewpoint.JobModel
-	refreshTokens  *db.RefreshTokenModel
 }
 
 func newApp(auth *oauth2.Config,
 	logger *slog.Logger,
-	viewpoint *sqlx.DB,
-	epilogue *sqlx.DB,
-	sessionManager *scs.SessionManager,
-	users *db.UserModel,
-	jobs *viewpoint.JobModel,
-	refreshTokens *db.RefreshTokenModel) *app {
+	viewpoint *viewpoint.ViewpointConnection,
+	epilogue *db.EpilogueConnection,
+	sessionManager *scs.SessionManager) *app {
 	return &app{
 		auth:           auth,
 		logger:         logger,
 		viewpoint:      viewpoint,
 		epilogue:       epilogue,
 		sessionManager: sessionManager,
-		users:          users,
-		jobs:           jobs,
-		refreshTokens:  refreshTokens,
 	}
 }
 
@@ -72,7 +62,7 @@ func run(ctx context.Context) error {
 		return err
 	}
 
-	defer vp.Close()
+	defer vp.DB.Close()
 
 	data, err := db.ConnectToEpilogue()
 	if err != nil {
@@ -80,10 +70,10 @@ func run(ctx context.Context) error {
 		return err
 	}
 
-	defer data.Close()
+	defer data.DB.Close()
 
 	sessionManager := scs.New()
-	sessionManager.Store = sqlite3store.New(data.DB)
+	sessionManager.Store = sqlite3store.New(data.DB.DB)
 	sessionManager.Lifetime = 12 * time.Hour
 
 	app := newApp(
@@ -92,9 +82,6 @@ func run(ctx context.Context) error {
 		vp,
 		data,
 		sessionManager,
-		&db.UserModel{DB: data},
-		&viewpoint.JobModel{DB: vp},
-		&db.RefreshTokenModel{DB: data},
 	)
 
 	httpServer := &http.Server{

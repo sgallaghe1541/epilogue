@@ -2,6 +2,7 @@
 *.db
 *.sql
 !.gitignore
+!schema.sql
 bin/
 *_templ.go
 *_templ.txt

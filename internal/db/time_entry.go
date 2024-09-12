@@ -4,12 +4,8 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/jmoiron/sqlx"
+	"github.com/sgallaghe1541/epilogue/internal/utils"
 )
-
-type TimecardModel struct {
-	DB *sqlx.DB
-}
 
 type TimecardHeader struct {
 	ID           int       `db:"id"`
@@ -33,11 +29,11 @@ type TimecardEmployee struct {
 	Hours   float64        `db:"tcehours"`
 }
 
-func (t *TimecardModel) GetTimecards(userid int, timeCardStatus string) ([]TimecardHeader, error) {
+func (e *EpilogueConnection) GetTimecards(userid int, timeCardStatus string) ([]TimecardHeader, error) {
 	args := map[string]interface{}{"userid": userid, "status": timeCardStatus}
 	timecards := []TimecardHeader{}
 
-	err := t.DB.Select(&timecards, `
+	err := e.DB.Select(&timecards, `
 		SELECT * FROM time_card_header
 		WHERE createdby = :userid
 		AND tcstatus = :status
@@ -48,8 +44,8 @@ func (t *TimecardModel) GetTimecards(userid int, timeCardStatus string) ([]Timec
 	return timecards, nil
 }
 
-func (t *TimecardModel) NewTimecard(job string, date time.Time, userid int) (int64, error) {
-	wedate := getWEDate(date)
+func (e *EpilogueConnection) NewTimecard(job string, date time.Time, userid int) (int64, error) {
+	wedate := utils.GetWEDate(date)
 
 	vals := map[string]interface{}{
 		"job":          job,
@@ -61,7 +57,7 @@ func (t *TimecardModel) NewTimecard(job string, date time.Time, userid int) (int
 		"modifiedby":   userid,
 	}
 
-	result, err := t.DB.NamedExec(`
+	result, err := e.DB.NamedExec(`
 		INSERT INTO time_card_header (
 			job, workdate, wedate, createdby, 
 			tcstatus, lastmodified, modifiedby)
@@ -79,22 +75,15 @@ func (t *TimecardModel) NewTimecard(job string, date time.Time, userid int) (int
 	return tchid, nil
 }
 
-func (t *TimecardModel) GetTimecardEmployees(timeCardHeaderID int) ([]TimecardEmployee, error) {
+func (e *EpilogueConnection) GetTimecardEmployees(timeCardHeaderID int) ([]TimecardEmployee, error) {
 	args := map[string]interface{}{"tchid": timeCardHeaderID}
 	employees := []TimecardEmployee{}
 
-	err := t.DB.Select(&employees, `
+	err := e.DB.Select(&employees, `
 		SELECT * FROM time_card_employees
 		WHERE tchid = :tchid`, args)
 	if err != nil {
 		return nil, err
 	}
 	return employees, nil
-}
-
-func getWEDate(date time.Time) time.Time {
-	for date.Weekday() != 6 {
-		date = date.Add(time.Hour * 24)
-	}
-	return date
 }

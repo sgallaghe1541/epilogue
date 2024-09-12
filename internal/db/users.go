@@ -2,8 +2,6 @@ package db
 
 import (
 	"fmt"
-
-	"github.com/jmoiron/sqlx"
 )
 
 type Permission struct {
@@ -23,19 +21,15 @@ type User struct {
 	Permissions []Permission `json:"permissions"`
 }
 
-type UserModel struct {
-	DB *sqlx.DB
-}
-
-func (u *UserModel) ValidEmail(email string) bool {
+func (e *EpilogueConnection) ValidEmail(email string) bool {
 	var emailresult string
-	err := u.DB.QueryRow("SELECT email FROM users WHERE email=?", email).Scan(&emailresult)
+	err := e.DB.QueryRow("SELECT email FROM users WHERE email=?", email).Scan(&emailresult)
 	return err == nil
 }
 
-func (u *UserModel) Active(id int) (bool, error) {
+func (e *EpilogueConnection) ActiveUser(id int) (bool, error) {
 	var active int
-	err := u.DB.QueryRow("SELECT active FROM users WHERE userid=?", id).Scan(&active)
+	err := e.DB.QueryRow("SELECT active FROM users WHERE userid=?", id).Scan(&active)
 	if err != nil {
 		return false, ErrUserDoesNotExist
 	}
@@ -45,19 +39,19 @@ func (u *UserModel) Active(id int) (bool, error) {
 	return true, nil
 }
 
-func (u *UserModel) GetUser(email string) (*User, error) {
+func (e *EpilogueConnection) GetUser(email string) (*User, error) {
 	var (
 		user        = User{}
 		permissions = []Permission{}
 	)
-	err := u.DB.Get(&user, "SELECT * FROM users WHERE email=?", email)
+	err := e.DB.Get(&user, "SELECT * FROM users WHERE email=?", email)
 	if err != nil {
 		return nil, err
 	}
 	if user.Active == 0 {
 		return nil, ErrInactiveUser
 	}
-	err = u.DB.Select(&permissions, "SELECT division, roleid FROM user_permissions WHERE userid=?", user.ID)
+	err = e.DB.Select(&permissions, "SELECT division, roleid FROM user_permissions WHERE userid=?", user.ID)
 	if err != nil {
 		return nil, err
 	}

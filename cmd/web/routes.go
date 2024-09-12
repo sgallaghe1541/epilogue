@@ -4,37 +4,43 @@ import (
 	"net/http"
 
 	"github.com/justinas/alice"
+	"github.com/sgallaghe1541/epilogue/internal/handlers"
+	"github.com/sgallaghe1541/epilogue/internal/middlewares"
 )
 
-func (app *app) routes() http.Handler {
+func (a *app) routes() http.Handler {
 	mux := http.NewServeMux()
 
 	fileServer := http.FileServer(http.Dir("./static/"))
 
 	mux.Handle("GET /static/", http.StripPrefix("/static", fileServer))
 
-	standardMiddle := alice.New(app.recoverPanic, app.logRequest, commonHeaders)
-	sessionMiddle := alice.New(app.sessionManager.LoadAndSave)
-	protectedMiddle := sessionMiddle.Append(app.authenticate, app.requireAuthentication)
-	htmxMiddle := protectedMiddle.Append(app.htmxOnly)
+	authenticate := middlewares.NewAuthMiddleware(a.epilogue, a.sessionManager, a.logger)
+	log := middlewares.NewLoggerMiddleware(a.logger)
+	recoverPanic := middlewares.NewRecoverPanicMiddleware(a.logger)
 
-	mux.Handle("GET /{$}", protectedMiddle.ThenFunc(app.handleHome))
+	standardMiddle := alice.New(recoverPanic, log, middlewares.CommonHeaders)
+	sessionMiddle := alice.New(a.sessionManager.LoadAndSave)
+	protectedMiddle := sessionMiddle.Append(authenticate, middlewares.RequireAuthentication)
+	htmxMiddle := protectedMiddle.Append(middlewares.HtmxOnly)
 
-	mux.HandleFunc("/signin", app.handleSignIn)
-	mux.Handle("GET /auth/microsoft", sessionMiddle.ThenFunc(app.microsoftLogin))
-	mux.Handle("GET /auth/microsoft_callback", sessionMiddle.ThenFunc(app.microsoftCallBack))
-	mux.Handle("GET /logout", sessionMiddle.ThenFunc(app.handleLogOut))
+	mux.Handle("GET /{$}", protectedMiddle.Then(handlers.HandleHome(a.sessionManager)))
 
-	mux.Handle("GET /reports", protectedMiddle.ThenFunc(app.handleReports))
-	mux.Handle("GET /reports/{reportname}", protectedMiddle.ThenFunc(app.handleReportParams))
+	mux.Handle("/signin", handlers.HandleSignIn(a.logger, a.epilogue))
+	mux.Handle("GET /auth/microsoft", sessionMiddle.Then(handlers.HandleMicrosoftLogin(a.auth)))
+	mux.Handle("GET /auth/microsoft_callback", sessionMiddle.Then(handlers.HandleMicrosoftCallBack(a.auth, a.logger, a.sessionManager, a.epilogue)))
+	mux.Handle("GET /logout", sessionMiddle.Then(handlers.HandleLogOut(a.logger, a.sessionManager)))
 
-	mux.Handle("GET /timeentry", sessionMiddle.ThenFunc(app.handleTimeEntry))
-	mux.Handle("GET /timeentry/newtime", sessionMiddle.ThenFunc(app.handleNewTimeEntry))
-	mux.Handle("GET /vp/alljobhours", htmxMiddle.ThenFunc(app.handleAllJobHours))
-	mux.Handle("GET /vp/jobselect", htmxMiddle.ThenFunc(app.handleJobsSelect))
-	mux.Handle("GET /vp/employeesforfringe", htmxMiddle.ThenFunc(app.handleEmployeesForFringe))
-	mux.Handle("GET /vp/fhwabygroup", htmxMiddle.ThenFunc(app.handleFHWAGroup))
+	// mux.Handle("GET /reports", protectedMiddle.ThenFunc(app.handleReports))
+	// mux.Handle("GET /reports/{reportname}", protectedMiddle.ThenFunc(app.handleReportParams))
 
-	mux.Handle("GET /downloads/{fname}", protectedMiddle.ThenFunc(app.handleDownloads))
+	// mux.Handle("GET /timeentry", sessionMiddle.ThenFunc(app.handleTimeEntry))
+	// mux.Handle("GET /timeentry/newtime", sessionMiddle.ThenFunc(app.handleNewTimeEntry))
+	// mux.Handle("GET /vp/alljobhours", htmxMiddle.ThenFunc(app.handleAllJobHours))
+	mux.Handle("GET /vp/jobselect", htmxMiddle.Then(handlers.HandleJobsSelect(a.logger, a.viewpoint)))
+	// mux.Handle("GET /vp/employeesforfringe", htmxMiddle.ThenFunc(app.handleEmployeesForFringe))
+	// mux.Handle("GET /vp/fhwabygroup", htmxMiddle.ThenFunc(app.handleFHWAGroup))
+
+	// mux.Handle("GET /downloads/{fname}", protectedMiddle.ThenFunc(app.handleDownloads))
 	return standardMiddle.Then(mux)
 }

@@ -2,13 +2,7 @@ package db
 
 import (
 	"database/sql"
-
-	"github.com/jmoiron/sqlx"
 )
-
-type ReportParamModel struct {
-	DB *sqlx.DB
-}
 
 type EpilogueReport struct {
 	ID   int    `db:"reportid"`

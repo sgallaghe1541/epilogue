@@ -3,8 +3,6 @@ package db
 import (
 	"errors"
 	"time"
-
-	"github.com/jmoiron/sqlx"
 )
 
 var ErrRefreshExpired = errors.New("refresh token expired")
@@ -15,26 +13,22 @@ type RefreshToken struct {
 	Expires time.Time `db:"expires"`
 }
 
-type RefreshTokenModel struct {
-	DB *sqlx.DB
-}
-
-func (r *RefreshTokenModel) SaveRefreshToken(userID int, token string) error {
+func (e *EpilogueConnection) SaveRefreshToken(userID int, token string) error {
 	refreshToken := RefreshToken{
 		UserID:  userID,
 		Token:   token,
 		Expires: time.Now().Add(time.Hour),
 	}
 
-	_, err := r.DB.NamedExec("INSERT INTO refreshtokens (userid, token, expires) VALUES (:userid, :token, :expires)", refreshToken)
+	_, err := e.DB.NamedExec("INSERT INTO refreshtokens (userid, token, expires) VALUES (:userid, :token, :expires)", refreshToken)
 
 	return err
 }
 
-func (r *RefreshTokenModel) UserForRefreshToken(token string) (int, error) {
+func (e *EpilogueConnection) UserForRefreshToken(token string) (int, error) {
 	refreshToken := RefreshToken{}
 
-	err := r.DB.Select(&refreshToken, "SELECT * FROM refreshtokens WHERE token = ?", token)
+	err := e.DB.Select(&refreshToken, "SELECT * FROM refreshtokens WHERE token = ?", token)
 	if err != nil {
 		return 0, err
 	}
@@ -46,7 +40,7 @@ func (r *RefreshTokenModel) UserForRefreshToken(token string) (int, error) {
 	return refreshToken.UserID, nil
 }
 
-func (r *RefreshTokenModel) RevokeRefreshToken(token string) error {
-	_, err := r.DB.Exec("DELETE FROM refreshtokens WHERE token = ?", token)
+func (e *EpilogueConnection) RevokeRefreshToken(token string) error {
+	_, err := e.DB.Exec("DELETE FROM refreshtokens WHERE token = ?", token)
 	return err
 }

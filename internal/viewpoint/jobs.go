@@ -40,6 +40,7 @@ func (j Job) SelectString() string {
 }
 
 type Phase struct {
+	Job         string `db:"job"`
 	Phase       string `db:"phase"`
 	Description string `db:"description"`
 }
@@ -50,6 +51,12 @@ func (p Phase) SelectValue() string {
 
 func (p Phase) SelectString() string {
 	return fmt.Sprintf("%s -- %s", p.Phase, p.Description)
+}
+
+type CraftTemplate struct {
+	Template    int64  `db:"template"`
+	Class       string `db:"class"`
+	Description string `db:"description"`
 }
 
 func (v *ViewpointConnection) GetJobsByDivision(jobEnding string) ([]Job, error) {

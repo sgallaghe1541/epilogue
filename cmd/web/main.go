@@ -14,6 +14,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/sgallaghe1541/epilogue/internal/auth"
 	"github.com/sgallaghe1541/epilogue/internal/db"
+	"github.com/sgallaghe1541/epilogue/internal/sync"
 	"github.com/sgallaghe1541/epilogue/internal/viewpoint"
 	"golang.org/x/oauth2"
 )
@@ -75,6 +76,10 @@ func run(ctx context.Context) error {
 	sessionManager := scs.New()
 	sessionManager.Store = sqlite3store.New(data.DB.DB)
 	sessionManager.Lifetime = 12 * time.Hour
+
+	syncer := sync.NewWithSyncInterval(vp, data, logger, time.Minute*15)
+	syncer.Sync()
+	defer syncer.StopSync()
 
 	app := newApp(
 		auth.MicrosoftConfig(),

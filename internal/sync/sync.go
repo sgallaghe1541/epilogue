@@ -7,35 +7,6 @@ import (
 	"github.com/sgallaghe1541/epilogue/internal/viewpoint"
 )
 
-const (
-	insertTempTableTemplates = `
-		INSERT INTO temp_craftTemplates (template, class, description)
-		VALUES (
-			:template,
-			:class,
-			:description
-		)
-	`
-	insertTempTableJobs = `
-		INSERT INTO temp_jobs (job, description, state, certified, template)
-		VALUES (
-			:job,
-			:description,
-			:state,
-			:certified,
-			:template
-		)
-	`
-	insertTempTablePhases = `
-		INSERT INTO temp_phases (job, phase, description)
-		VALUES (
-			:job,
-			:phase,
-			:description
-		)
-	`
-)
-
 func (s *Syncer) sync() int {
 	// get vp templates, jobs, phases, employees, equipment
 	// phases := []viewpoint.Phase{}
@@ -149,6 +120,72 @@ func (s *Syncer) sync() int {
 	}
 
 	file, err = os.ReadFile("internal/db/sql/sync_update_phases.sql")
+	if err != nil {
+		s.logger.Error("failed to read file", "err", err.Error())
+		tx.Rollback()
+		return 1
+	}
+	commands = strings.Split(string(file), ";\n")
+	for _, command := range commands {
+		_, err = tx.Exec(command)
+		if err != nil {
+			s.logger.Error("failed to execute sql statement", "err", err.Error(), "file", "sync_update_phases.sql")
+			err = tx.Rollback()
+			if err != nil {
+				s.logger.Error("failed to roleback", "err", err.Error())
+			}
+			return 1
+		}
+	}
+
+	//get employees
+	employees := []viewpoint.Employee{}
+	err = s.viewpoint.DB.Select(&employees, syncAllEmployees)
+	if err != nil {
+		s.logger.Error("failed to get vp employees", "err", err.Error())
+		return 1
+	}
+	_, err = tx.NamedExec(insertTempTableEmployees, employees)
+	if err != nil {
+		s.logger.Error("failed to insert employees", "err", err.Error())
+		tx.Rollback()
+		return 1
+	}
+
+	file, err = os.ReadFile("internal/db/sql/sync_update_employees.sql")
+	if err != nil {
+		s.logger.Error("failed to read file", "err", err.Error())
+		tx.Rollback()
+		return 1
+	}
+	commands = strings.Split(string(file), ";\n")
+	for _, command := range commands {
+		_, err = tx.Exec(command)
+		if err != nil {
+			s.logger.Error("failed to execute sql statement", "err", err.Error(), "file", "sync_update_employees.sql")
+			err = tx.Rollback()
+			if err != nil {
+				s.logger.Error("failed to roleback", "err", err.Error())
+			}
+			return 1
+		}
+	}
+
+	//get equipment
+	equipment := []viewpoint.Equipment{}
+	err = s.viewpoint.DB.Select(&equipment, syncAllEquipment)
+	if err != nil {
+		s.logger.Error("failed to get vp equipment", "err", err.Error())
+		return 1
+	}
+	_, err = tx.NamedExec(insertTempTableEquipment, equipment)
+	if err != nil {
+		s.logger.Error("failed to insert equipment", "err", err.Error())
+		tx.Rollback()
+		return 1
+	}
+
+	file, err = os.ReadFile("internal/db/sql/sync_update_equipment.sql")
 	if err != nil {
 		s.logger.Error("failed to read file", "err", err.Error())
 		tx.Rollback()

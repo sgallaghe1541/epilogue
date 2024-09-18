@@ -14,8 +14,11 @@ const (
 )
 
 type Employee struct {
-	Employee string `db:"employee"`
-	Name     string `db:"name"`
+	Employee   string `db:"employee"`
+	Name       string `db:"name"`
+	Class      string `db:"class"`
+	Salaried   int64  `db:"salaried"`
+	Department string `db:"prdept"`
 }
 
 func (e Employee) SelectValue() string {
@@ -26,16 +29,16 @@ func (e Employee) SelectString() string {
 	return fmt.Sprintf("%s -- %s", e.Employee, e.Name)
 }
 
-func (v *ViewpointConnection) GetEmployeesByDivision(div QueryArgs) ([]Employee, error) {
-	emps := []Employee{}
+type Equipment struct {
+	Equipment   string `db:"equipment"`
+	Description string `db:"description"`
+	Department  string `db:"department"`
+}
 
-	query, args, err := BuildInQuery(employeesByDivision, div)
-	if err != nil {
-		return nil, err
-	}
-	err = v.DB.Select(&emps, query, args)
-	if err != nil {
-		return nil, err
-	}
-	return emps, nil
+func (e Equipment) SelectValue() string {
+	return fmt.Sprintf("%s -- %s", e.Equipment, e.Description)
+}
+
+func (e Equipment) SelectString() string {
+	return fmt.Sprintf("%s -- %s", e.Equipment, e.Description)
 }

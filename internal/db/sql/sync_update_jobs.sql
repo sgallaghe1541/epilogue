@@ -20,5 +20,3 @@ WHERE job NOT IN (
     SELECT job
     FROM temp_jobs 
 );
-
-DROP TABLE IF EXISTS temp_jobs;

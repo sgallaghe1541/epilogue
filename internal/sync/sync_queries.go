@@ -21,7 +21,7 @@ const (
 	`
 	syncAllEmployees = `
 		SELECT Employee AS employee,
-			CONCAT(FirstName, " ", LastName) AS fullname,
+			CONCAT(FirstName, ' ', LastName) AS name,
 			Class AS class,
 			CASE 
 				WHEN EarnCode=1 THEN 0
@@ -58,6 +58,50 @@ const (
 		FROM EMEM
 		WHERE Status='A'
 		AND PRCo=1
+	`
+	insertTempTableTemplates = `
+	INSERT INTO temp_craftTemplates (template, class, description)
+	VALUES (
+		:template,
+		:class,
+		:description
+	)
+	`
+	insertTempTableJobs = `
+		INSERT INTO temp_jobs (job, description, state, certified, template)
+		VALUES (
+			:job,
+			:description,
+			:state,
+			:certified,
+			:template
+		)
+	`
+	insertTempTablePhases = `
+		INSERT INTO temp_phases (job, phase, description)
+		VALUES (
+			:job,
+			:phase,
+			:description
+		)
+	`
+	insertTempTableEmployees = `
+		INSERT INTO temp_employees (employee, name, class, salaried, department)
+		VALUES (
+			:employee,
+			:name,
+			:class,
+			:salaried,
+			:prdept
+		)
+	`
+	insertTempTableEquipment = `
+		INSERT INTO temp_equipment (equipment, description, department)
+		VALUES (
+			:equipment,
+			:description,
+			:department
+		)
 	`
 )
 

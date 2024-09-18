@@ -12,5 +12,3 @@ WHERE template NOT IN (
     SELECT template
     FROM temp_craftTemplates
 );
-
-DROP TABLE IF EXISTS temp_craftTemplates;

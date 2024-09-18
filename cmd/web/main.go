@@ -77,7 +77,7 @@ func run(ctx context.Context) error {
 	sessionManager.Store = sqlite3store.New(data.DB.DB)
 	sessionManager.Lifetime = 12 * time.Hour
 
-	syncer := sync.NewWithSyncInterval(vp, data, logger, time.Minute*15)
+	syncer := sync.New(vp, data, logger)
 	syncer.Sync()
 	defer syncer.StopSync()
 

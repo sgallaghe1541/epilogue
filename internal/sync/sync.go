@@ -8,10 +8,6 @@ import (
 )
 
 func (s *Syncer) sync() int {
-	// get vp templates, jobs, phases, employees, equipment
-	// phases := []viewpoint.Phase{}
-	// employees := []viewpoint.Employee{}
-	//equipment := []viewpoint.
 
 	tx, err := s.epilogue.DB.Beginx()
 	s.logger.Info("starting sync...")
@@ -205,6 +201,6 @@ func (s *Syncer) sync() int {
 	}
 
 	tx.Commit()
-	s.logger.Info("sync successful... i think")
+	s.logger.Info("sync completed successfully")
 	return 0
 }

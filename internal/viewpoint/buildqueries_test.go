@@ -4,6 +4,15 @@ import (
 	"testing"
 )
 
+const (
+	jobListQuery = `
+		SELECT job, description, state, certified, template
+		FROM Jobs
+		WHERE active = 1
+		AND job LIKE ?
+	`
+)
+
 func TestBuildQueries(t *testing.T) {
 	expectedQuery := `
 		SELECT JCJM.Job AS Job, JCJM.Description AS Description

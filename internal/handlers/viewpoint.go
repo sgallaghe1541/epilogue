@@ -6,14 +6,15 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/sgallaghe1541/epilogue/internal/db"
 	"github.com/sgallaghe1541/epilogue/internal/timeentry"
 	"github.com/sgallaghe1541/epilogue/internal/viewpoint"
 )
 
-func HandleJobsSelect(logger *slog.Logger, viewpoint *viewpoint.ViewpointConnection) http.Handler {
+func HandleJobsSelect(logger *slog.Logger, epilogue *db.EpilogueConnection) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
-			jobs, err := viewpoint.GetJobsByDivision("%.01")
+			jobs, err := epilogue.GetJobsByDivision("%.01")
 			if err != nil {
 				fmt.Println(err.Error())
 			}

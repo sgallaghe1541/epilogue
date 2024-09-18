@@ -4,7 +4,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/sgallaghe1541/epilogue/internal/viewpoint"
+	"github.com/sgallaghe1541/epilogue/internal/db"
 )
 
 func (s *Syncer) sync() int {
@@ -36,7 +36,7 @@ func (s *Syncer) sync() int {
 	}
 
 	//get craftTemplates
-	templates := []viewpoint.CraftTemplate{}
+	templates := []db.CraftTemplate{}
 	err = s.viewpoint.DB.Select(&templates, syncAllCraftTemplates)
 	if err != nil {
 		s.logger.Error("failed to get vp craft templates", "err", err.Error())
@@ -69,7 +69,7 @@ func (s *Syncer) sync() int {
 	}
 
 	//get jobs
-	jobs := []viewpoint.Job{}
+	jobs := []db.Job{}
 	err = s.viewpoint.DB.Select(&jobs, syncAllJobs)
 	if err != nil {
 		s.logger.Error("failed to get vp jobs", "err", err.Error())
@@ -102,7 +102,7 @@ func (s *Syncer) sync() int {
 	}
 
 	//get phases
-	phases := []viewpoint.Phase{}
+	phases := []db.Phase{}
 	err = s.viewpoint.DB.Select(&phases, syncAllPhases)
 	if err != nil {
 		s.logger.Error("failed to get vp phases", "err", err.Error())
@@ -135,7 +135,7 @@ func (s *Syncer) sync() int {
 	}
 
 	//get employees
-	employees := []viewpoint.Employee{}
+	employees := []db.Employee{}
 	err = s.viewpoint.DB.Select(&employees, syncAllEmployees)
 	if err != nil {
 		s.logger.Error("failed to get vp employees", "err", err.Error())
@@ -168,7 +168,7 @@ func (s *Syncer) sync() int {
 	}
 
 	//get equipment
-	equipment := []viewpoint.Equipment{}
+	equipment := []db.Equipment{}
 	err = s.viewpoint.DB.Select(&equipment, syncAllEquipment)
 	if err != nil {
 		s.logger.Error("failed to get vp equipment", "err", err.Error())

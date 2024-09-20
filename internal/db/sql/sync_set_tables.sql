@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS jobs (
     state TEXT,
     certified TEXT,
     template INTEGER,
+    department TEXT,
     active INTEGER, -- 0 is inactive, 1 is active
     FOREIGN KEY(template) REFERENCES craftClasses(template)
 );
@@ -35,6 +36,7 @@ CREATE TEMPORARY TABLE temp_jobs (
     state TEXT,
     certified TEXT,
     template INTEGER,
+    department TEXT,
     FOREIGN KEY(template) REFERENCES temp_craftClasses(template)
 );
 

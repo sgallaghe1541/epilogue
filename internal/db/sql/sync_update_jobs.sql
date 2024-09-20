@@ -1,5 +1,5 @@
-INSERT INTO jobs (job, description, state, certified, template, active)
-SELECT job, description, state, certified, template, 1
+INSERT INTO jobs (job, description, state, certified, template, department, active)
+SELECT job, description, state, certified, template, department, 1
 FROM temp_jobs
 WHERE job NOT IN (
     SELECT job

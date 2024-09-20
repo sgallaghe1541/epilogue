@@ -7,7 +7,7 @@ import (
 
 const (
 	jobListQuery = `
-		SELECT job, description, state, certified, template
+		SELECT job, description, state, certified, template, department
 		FROM Jobs
 		WHERE active = 1
 		AND job LIKE ?
@@ -20,10 +20,11 @@ type Job struct {
 	State         string         `db:"state"`
 	Certified     string         `db:"certified"`
 	CraftTemplate sql.NullInt64  `db:"template"`
+	Department    sql.NullString `db:"department"`
 }
 
 func (j Job) SelectValue() string {
-	return fmt.Sprintf("%s -- %s", j.Job, j.Description.String)
+	return fmt.Sprintf(j.Job)
 }
 
 func (j Job) SelectString() string {
@@ -44,7 +45,7 @@ const (
 	phasesByJob = `
 		SELECT job, phase, description
 		FROM Phase
-		AND job = ?
+		WHERE job = ?
 	`
 )
 

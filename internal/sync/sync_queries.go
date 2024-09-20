@@ -2,7 +2,18 @@ package sync
 
 const (
 	syncAllJobs = `
-		SELECT Job AS job, Description AS description, PRStateCode AS state, Certified AS certified, CraftTemplate AS template
+		SELECT 
+				TRIM(Job) AS job, 
+				Description AS description, 
+				PRStateCode AS state, 
+				Certified AS certified, 
+				CraftTemplate AS template, 
+			CASE 
+				WHEN Job LIKE '%.01' THEN '01'
+				WHEN Job LIKE '%.02' THEN '02'
+				WHEN Job LIKE '%.06' THEN '06'
+				WHEN TRIM(Job) IN ('3.', '5.', '8.') THEN '30'
+			END as department
 		FROM JCJM 
 		WHERE JCCo=1 
 		AND JobStatus=1 
@@ -68,13 +79,14 @@ const (
 	)
 	`
 	insertTempTableJobs = `
-		INSERT INTO temp_jobs (job, description, state, certified, template)
+		INSERT INTO temp_jobs (job, description, state, certified, template, department)
 		VALUES (
 			:job,
 			:description,
 			:state,
 			:certified,
-			:template
+			:template,
+			:department
 		)
 	`
 	insertTempTablePhases = `

@@ -14,7 +14,7 @@ import (
 func HandleJobsSelect(logger *slog.Logger, epilogue *db.EpilogueConnection) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
-			jobs, err := epilogue.GetJobsByDivision("%.01")
+			jobs, err := epilogue.GetJobsByDepartment("%.01")
 			if err != nil {
 				fmt.Println(err.Error())
 			}

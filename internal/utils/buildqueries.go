@@ -1,4 +1,4 @@
-package viewpoint
+package utils
 
 import (
 	"fmt"
@@ -6,8 +6,12 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func BuildInQuery(querystring string, div QueryArgs) (string, []interface{}, error) {
-	query, args, err := sqlx.Named(querystring, div)
+type Arg interface {
+	Arg()
+}
+
+func BuildInQuery(querystring string, params Arg) (string, []interface{}, error) {
+	query, args, err := sqlx.Named(querystring, params)
 	if err != nil {
 		return "", nil, fmt.Errorf("failed to prep named query: %s", err)
 	}
@@ -21,8 +25,8 @@ func BuildInQuery(querystring string, div QueryArgs) (string, []interface{}, err
 	return query, args, nil
 }
 
-func BuildQuery(querystring string, div QueryArgs) (string, []interface{}, error) {
-	query, args, err := sqlx.Named(querystring, div)
+func BuildQuery(querystring string, params Arg) (string, []interface{}, error) {
+	query, args, err := sqlx.Named(querystring, params)
 	if err != nil {
 		return "", nil, fmt.Errorf("failed to prep named query: %s", err)
 	}

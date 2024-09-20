@@ -5,15 +5,6 @@ import (
 	"fmt"
 )
 
-const (
-	jobListQuery = `
-		SELECT job, description, state, certified, template, department
-		FROM Jobs
-		WHERE active = 1
-		AND job LIKE ?
-	`
-)
-
 type Job struct {
 	Job           string         `db:"job"`
 	Description   sql.NullString `db:"description"`
@@ -24,30 +15,44 @@ type Job struct {
 }
 
 func (j Job) SelectValue() string {
-	return fmt.Sprintf(j.Job)
+	return j.Job
 }
 
 func (j Job) SelectString() string {
 	return fmt.Sprintf("%s -- %s", j.Job, j.Description.String)
 }
 
-func (e *EpilogueConnection) GetJobsByDivision(jobEnding string) ([]Job, error) {
+func (e *EpilogueConnection) GetJobsByDepartment(jobEnding string) ([]Job, error) {
+	query := `
+		SELECT job, description, state, certified, template, department
+		FROM Jobs
+		WHERE active = 1
+		AND department = ?
+	`
 	jobs := []Job{}
 
-	err := e.DB.Select(&jobs, jobListQuery, jobEnding)
+	err := e.DB.Select(&jobs, query, jobEnding)
 	if err != nil {
-		return nil, err
+		return []Job{}, err
 	}
 	return jobs, nil
 }
 
-const (
-	phasesByJob = `
-		SELECT job, phase, description
-		FROM Phase
-		WHERE job = ?
+func (e *EpilogueConnection) GetJobByNumber(jobNumber string) (Job, error) {
+	query := `
+		SELECT job, description, state, certified, template, department
+		FROM Jobs
+		WHERE active = 1
+		AND job = ?
 	`
-)
+	job := Job{}
+
+	err := e.DB.Select(&job, query, jobNumber)
+	if err != nil {
+		return job, err
+	}
+	return job, nil
+}
 
 type Phase struct {
 	Job         string `db:"job"`
@@ -56,7 +61,7 @@ type Phase struct {
 }
 
 func (p Phase) SelectValue() string {
-	return fmt.Sprintf("%s -- %s", p.Phase, p.Description)
+	return p.Phase
 }
 
 func (p Phase) SelectString() string {
@@ -64,11 +69,16 @@ func (p Phase) SelectString() string {
 }
 
 func (e *EpilogueConnection) GetPhasesByJob(job Job) ([]Phase, error) {
+	query := `
+		SELECT job, phase, description
+		FROM Phase
+		WHERE job = ?
+	`
 	phases := []Phase{}
 
-	err := e.DB.Select(&phases, phasesByJob, job)
+	err := e.DB.Select(&phases, query, job)
 	if err != nil {
-		return nil, err
+		return phases, err
 	}
 	return phases, nil
 }

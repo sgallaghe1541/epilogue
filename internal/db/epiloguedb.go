@@ -19,3 +19,12 @@ func ConnectToEpilogue() (*EpilogueConnection, error) {
 
 	return &EpilogueConnection{DB: conn}, nil
 }
+
+type EpilogueArgs struct {
+	Job        string   `db:"job"`
+	Department []string `db:"department"`
+	Employee   string   `db:"employee"`
+}
+
+func (e EpilogueArgs) Args() {
+}

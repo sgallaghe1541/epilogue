@@ -17,7 +17,7 @@ type CraftClass struct {
 }
 
 func (c CraftClass) SelectValue() string {
-	return fmt.Sprintf("%s -- %s", c.Class, c.Description)
+	return c.Class
 }
 
 func (c CraftClass) SelectString() string {
@@ -33,7 +33,7 @@ func (e *EpilogueConnection) GetCraftClassByJob(job Job) ([]CraftClass, error) {
 
 	err := e.DB.Select(&classes, classesByJob, job.CraftTemplate.Int64)
 	if err != nil {
-		return nil, err
+		return classes, err
 	}
 	return classes, nil
 }

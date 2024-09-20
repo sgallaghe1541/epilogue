@@ -1,5 +1,5 @@
-CREATE TABLE IF NOT EXISTS divisions (
-    divisionid TEXT PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS departments (
+    departmentid TEXT PRIMARY KEY,
     description TEXT KEY
 );
 
@@ -17,12 +17,12 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS user_permissions (
     userid INTEGER,
-    division TEXT,
+    department TEXT,
     roleid INTEGER,
     FOREIGN KEY(userid) REFERENCES users(userid),
-    FOREIGN KEY(division) REFERENCES divisions(divisionid),
+    FOREIGN KEY(department) REFERENCES departments(departmentid),
     FOREIGN KEY(roleid) REFERENCES roles(roleid),
-    PRIMARY KEY(userid, division, roleid)
+    PRIMARY KEY(userid, department, roleid)
 );
 
 CREATE TABLE IF NOT EXISTS resource_types (
@@ -39,12 +39,12 @@ CREATE TABLE IF NOT EXISTS resources (
 
 CREATE TABLE IF NOT EXISTS resource_permissions (
     resourceid INTEGER,
-    divisionid TEXT,
+    department TEXT,
     roleid INTEGER,
     FOREIGN KEY(resourceid) REFERENCES resources(resourceid),
-    FOREIGN KEY(divisionid) REFERENCES divisions(divisionid),
+    FOREIGN KEY(department) REFERENCES departments(departmentid),
     FOREIGN KEY(roleid) REFERENCES roles(roleid),
-    PRIMARY KEY(resourceid, divisionid, roleid)
+    PRIMARY KEY(resourceid, department, roleid)
 );
 
 CREATE TABLE IF NOT EXISTS parameter_types (

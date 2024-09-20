@@ -12,7 +12,7 @@ type EpilogueConnection struct {
 }
 
 func ConnectToEpilogue() (*EpilogueConnection, error) {
-	conn, err := sqlx.Connect("sqlite3", "internal/db/epilogue.db")
+	conn, err := sqlx.Connect("sqlite3", "internal/db/sql/epilogue.db")
 	if err != nil {
 		return nil, fmt.Errorf("epilogue connection failed: %s", err.Error())
 	}

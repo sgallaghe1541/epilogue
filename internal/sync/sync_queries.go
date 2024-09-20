@@ -32,7 +32,7 @@ const (
 				WHEN PRDept IN ('014','013','043','044') THEN '01'
 				WHEN PRDept IN ('023', '024') THEN '02'
 				WHEN PRDept IN ('062', '063', '064') THEN '06'
-			END AS prdept
+			END AS department
 		FROM PREH
 		WHERE ActiveYN='Y'
 		AND PRGroup=1
@@ -60,7 +60,7 @@ const (
 		AND PRCo=1
 	`
 	insertTempTableTemplates = `
-	INSERT INTO temp_craftTemplates (template, class, description)
+	INSERT INTO temp_craftClasses (template, class, description)
 	VALUES (
 		:template,
 		:class,
@@ -92,7 +92,7 @@ const (
 			:name,
 			:class,
 			:salaried,
-			:prdept
+			:department
 		)
 	`
 	insertTempTableEquipment = `

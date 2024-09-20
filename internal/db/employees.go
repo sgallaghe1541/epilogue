@@ -3,13 +3,11 @@ package db
 import "fmt"
 
 const (
-	employeesByDivision = `
-		SELECT Employee AS employee, CONCAT(FirstName, " ", LastName) AS name
-		FROM PREH
-		WHERE ActiveYN = 'Y'
-		AND PRGroup = 1
-		AND PRCo = 1
-		AND PRDept IN (:payrolldepts)
+	employeesByDepartment = `
+		SELECT employee, name, class, salaried, department
+		FROM employees
+		WHERE active = 1
+		AND department = ?
 	`
 )
 
@@ -18,7 +16,7 @@ type Employee struct {
 	Name       string `db:"name"`
 	Class      string `db:"class"`
 	Salaried   int64  `db:"salaried"`
-	Department string `db:"prdept"`
+	Department string `db:"department"`
 }
 
 func (e Employee) SelectValue() string {

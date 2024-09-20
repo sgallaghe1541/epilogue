@@ -36,22 +36,22 @@ func (s *Syncer) sync() int {
 	}
 
 	//get craftTemplates
-	templates := []db.CraftTemplate{}
-	err = s.viewpoint.DB.Select(&templates, syncAllCraftTemplates)
+	classes := []db.CraftClass{}
+	err = s.viewpoint.DB.Select(&classes, syncAllCraftTemplates)
 	if err != nil {
-		s.logger.Error("failed to get vp craft templates", "err", err.Error())
+		s.logger.Error("failed to get vp craft classes", "err", err.Error())
 		tx.Rollback()
 		return 1
 	}
 
-	_, err = tx.NamedExec(insertTempTableTemplates, templates)
+	_, err = tx.NamedExec(insertTempTableTemplates, classes)
 	if err != nil {
-		s.logger.Error("failed to insert templates", "err", err.Error())
+		s.logger.Error("failed to insert classes", "err", err.Error())
 		tx.Rollback()
 		return 1
 	}
 
-	file, err = os.ReadFile("internal/db/sql/sync_update_craft_templates.sql")
+	file, err = os.ReadFile("internal/db/sql/sync_update_craft_classes.sql")
 	if err != nil {
 		s.logger.Error("failed to read file", "err", err.Error())
 		tx.Rollback()
@@ -62,7 +62,7 @@ func (s *Syncer) sync() int {
 	for _, command := range commands {
 		_, err = tx.Exec(command)
 		if err != nil {
-			s.logger.Error("failed to execute sql statement", "err", err.Error(), "file", "sync_update_craft_templates.sql")
+			s.logger.Error("failed to execute sql statement", "err", err.Error(), "file", "sync_update_craft_classes.sql")
 			tx.Rollback()
 			return 1
 		}

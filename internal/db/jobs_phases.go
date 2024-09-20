@@ -30,12 +30,6 @@ func (j Job) SelectString() string {
 	return fmt.Sprintf("%s -- %s", j.Job, j.Description.String)
 }
 
-type CraftTemplate struct {
-	Template    int64  `db:"template"`
-	Class       string `db:"class"`
-	Description string `db:"description"`
-}
-
 func (e *EpilogueConnection) GetJobsByDivision(jobEnding string) ([]Job, error) {
 	jobs := []Job{}
 
@@ -44,4 +38,36 @@ func (e *EpilogueConnection) GetJobsByDivision(jobEnding string) ([]Job, error) 
 		return nil, err
 	}
 	return jobs, nil
+}
+
+const (
+	phasesByJob = `
+		SELECT job, phase, description
+		FROM Phase
+		AND job = ?
+	`
+)
+
+type Phase struct {
+	Job         string `db:"job"`
+	Phase       string `db:"phase"`
+	Description string `db:"description"`
+}
+
+func (p Phase) SelectValue() string {
+	return fmt.Sprintf("%s -- %s", p.Phase, p.Description)
+}
+
+func (p Phase) SelectString() string {
+	return fmt.Sprintf("%s -- %s", p.Phase, p.Description)
+}
+
+func (e *EpilogueConnection) GetPhasesByJob(job Job) ([]Phase, error) {
+	phases := []Phase{}
+
+	err := e.DB.Select(&phases, phasesByJob, job)
+	if err != nil {
+		return nil, err
+	}
+	return phases, nil
 }

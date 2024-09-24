@@ -5,12 +5,12 @@ import (
 )
 
 type Permission struct {
-	Division string `db:"division" json:"division"`
-	Role     string `db:"roleid" json:"roleid"`
+	Department string `db:"department" json:"department"`
+	Role       string `db:"roleid" json:"roleid"`
 }
 
 func (p Permission) Stringify() string {
-	return fmt.Sprintf("%s|%s,", p.Division, p.Role)
+	return fmt.Sprintf("%s|%s,", p.Department, p.Role)
 }
 
 type User struct {
@@ -51,7 +51,7 @@ func (e *EpilogueConnection) GetUser(email string) (*User, error) {
 	if user.Active == 0 {
 		return nil, ErrInactiveUser
 	}
-	err = e.DB.Select(&permissions, "SELECT division, roleid FROM user_permissions WHERE userid=?", user.ID)
+	err = e.DB.Select(&permissions, "SELECT department, roleid FROM user_permissions WHERE userid=?", user.ID)
 	if err != nil {
 		return nil, err
 	}

@@ -1,0 +1,89 @@
+package timeentry
+
+import (
+    "time"
+
+    "github.com/sgallaghe1541/epilogue/internal/db"
+)
+
+templ SelectList(item SelectOption) {
+    <option value={ item.SelectValue() }>{ item.SelectString() }</option>
+}
+
+templ DayofWeek(date time.Time) {
+    if date.IsZero() {
+        <label for="dayofweek">Day:</label>
+        <input type="text" id="dayofweek" name="dayofweek" disabled>
+
+    } else {
+        <label for="dayofweek">Day:</label>
+        <input type="text" id="dayofweek" name="dayofweek" value={ date.Weekday().String() } disabled>
+    }
+}
+
+templ JobStateCertified(job *db.Job) {
+    if job != nil {
+        <label for="state">State:</label>
+        <input type="text" id="state" name="state" value={ job.State } disabled>
+        <label for="certified">Certified:</label>
+        <input type="text" id="certified" name="certified" value={ job.Certified } disabled>
+    } else {
+        <label for="state">State:</label>
+        <input type="text" id="state" name="state" disabled>
+        <label for="certified">Certified:</label>
+        <input type="text" id="certified" name="certified" disabled>
+
+    }
+}
+
+
+templ Phases() {
+    <select id="phase1" name="phase1" hx-get="/vp/phaseselect" hx-swap="innerHTML" hx-trigger="load" hx-include="previous #job" _="on change if my @value != '' remove @disabled from #phase2 else add @disabled to #phase2"></select>
+    <select id="phase2" name="phase2" hx-get="/vp/phaseselect" hx-swap="innerHTML" hx-trigger="click once" hx-include="previous #job" disabled></select>
+    <select id="phase3" name="phase3" hx-get="/vp/phaseselect" hx-swap="innerHTML" hx-trigger="click once" hx-include="previous #job" disabled></select>
+    <select id="phase4" name="phase4" hx-get="/vp/phaseselect" hx-swap="innerHTML" hx-trigger="click once" hx-include="previous #job" disabled></select>
+    <select id="phase5" name="phase5" hx-get="/vp/phaseselect" hx-swap="innerHTML" hx-trigger="click once" hx-include="previous #job" disabled></select>
+}
+
+templ TimeCardForm(header *TimeCardHeaderForm, detail *TimeCardDetailForm) {
+    // header.job and job have to be the same otherwise this breaks...
+    <form>
+      <div id="header">
+      <div hx-get="/vp/jobselect" hx-swap="beforeend" hx-target="#job" hx-trigger="load once"></div>
+        if !header.WorkDate.IsZero() {
+            <label for="workdate">Date:</label>
+            <input type="date" id="workdate" name="workdate" value={ header.WorkDate.Format("2006-01-02") } _="on input send dateSelected to dayofweek">
+        } else {
+            <label for="workdate">Date:</label>
+            <input type="date" id="workdate" name="workdate" value="" _="on input send dateSelected to #dayofweek-div">
+        }
+        <div id="dayofweek-div" name="dayofweek-div" hx-get="/utils/weekday" hx-include="#workdate" hx-trigger="dateSelected">
+          @DayofWeek(header.WorkDate)
+        </div>
+
+        if header.Job != nil {
+            <label for="job">Job:</label>
+            <select id="job" name="job" hx-get="/vp/jobinfo" hx-target="#jobinfo">
+            <option value={ header.Job.SelectValue() } selected>{ header.Job.SelectString() }</option>
+            </select>
+        } else {
+            <label for="job">Job:</label>
+            <select id="job" name="job" hx-get="/vp/jobinfo" hx-target="#jobinfo">
+            <option value="" selected></option>
+            </select>
+        }
+        <div id="jobinfo" name="jobinfo">
+          @JobStateCertified(header.Job)
+        </div>
+      </div>
+
+      <div id="phases" hx-get="/vp/clearphases" hx-swap="innerHTML" hx-trigger="jobSelected from:body">
+        @Phases()
+      </div>
+
+      <div id="employees">
+      </div>
+      <div id="equipment">
+      </div>
+    </form>
+}

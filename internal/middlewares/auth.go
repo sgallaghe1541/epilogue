@@ -13,7 +13,7 @@ import (
 type contextKey string
 
 const (
-	isAuthenticatedContextKey = contextKey("authenticatedUserID")
+	IsAuthenticatedContextKey = contextKey("authenticatedUserID")
 )
 
 func RequireAuthentication(next http.Handler) http.Handler {
@@ -40,7 +40,7 @@ func NewAuthMiddleware(epilogue *db.EpilogueConnection, sessionManager *scs.Sess
 				return
 			}
 			if active {
-				ctx := context.WithValue(r.Context(), isAuthenticatedContextKey, true)
+				ctx := context.WithValue(r.Context(), IsAuthenticatedContextKey, id)
 				r = r.WithContext(ctx)
 			}
 			next.ServeHTTP(w, r)

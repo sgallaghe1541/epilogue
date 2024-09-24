@@ -14,7 +14,7 @@ import (
 func HandleJobsSelect(logger *slog.Logger, epilogue *db.EpilogueConnection) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
-			jobs, err := epilogue.GetJobsByDepartment("%.01")
+			jobs, err := epilogue.GetJobsByDepartment("01")
 			if err != nil {
 				fmt.Println(err.Error())
 			}
@@ -25,9 +25,28 @@ func HandleJobsSelect(logger *slog.Logger, epilogue *db.EpilogueConnection) http
 		})
 }
 
+func HandleJobInfo(logger *slog.Logger, epilogue *db.EpilogueConnection) http.Handler {
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			vals := r.URL.Query()
+			job, err := epilogue.GetJobByNumber(vals.Get("job"))
+			if err != nil {
+				fmt.Println(err.Error())
+			}
+			w.Header().Set("Content-Type", "text/html")
+			w.Header().Set("HX-Trigger", "jobSelected")
+			timeentry.JobStateCertified(&job).Render(context.Background(), w)
+		})
+}
+
 func HandlePhaseSelect(logger *slog.Logger, viewpoint *viewpoint.ViewpointConnection) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 
 		})
+}
+
+func HandleClearPhases(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html")
+	timeentry.Phases().Render(context.Background(), w)
 }

@@ -3,9 +3,6 @@ package middlewares
 import "net/http"
 
 func isAuthenticated(r *http.Request) bool {
-	isAuthenticated, ok := r.Context().Value(isAuthenticatedContextKey).(bool)
-	if !ok {
-		return false
-	}
-	return isAuthenticated
+	_, ok := r.Context().Value(IsAuthenticatedContextKey).(int)
+	return ok
 }

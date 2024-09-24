@@ -3,8 +3,6 @@ package db
 import (
 	"database/sql"
 	"time"
-
-	"github.com/sgallaghe1541/epilogue/internal/utils"
 )
 
 type TimeCardHeader struct {
@@ -62,32 +60,20 @@ func (e *EpilogueConnection) GetTimecardByID(tcID int) (TimeCardHeader, error) {
 	return timecard, nil
 }
 
-func (e *EpilogueConnection) NewTimecard(job string, date time.Time, userid int) (int64, error) {
-	wedate := utils.GetWEDate(date)
-
-	jobNum, jobDesc, err := utils.Split(job)
-	if err != nil {
-		return 0, err
-	}
+func (e *EpilogueConnection) NewTimecard(userid int) (int64, error) {
 
 	vals := map[string]interface{}{
-		"job":            jobNum,
-		"jobdescription": jobDesc,
-		"workdate":       date,
-		"wedate":         wedate,
-		"createdby":      userid,
-		"tcstatus":       "new",
-		"lastmodified":   time.Now(),
-		"modifiedby":     userid,
+		"createdby":    userid,
+		"tcstatus":     "new",
+		"lastmodified": time.Now(),
+		"modifiedby":   userid,
 	}
 
 	result, err := e.DB.NamedExec(`
 		INSERT INTO time_card_headers (
-			job, jobdescription, workdate, wedate, createdby, 
-			tcstatus, lastmodified, modifiedby)
+			createdby, tcstatus, lastmodified, modifiedby)
 		VALUES (
-			:job, :jobdescription, :workdate, :wedate, :createdby, 
-			:tcstatus, :lastmodified, :modifiedby
+			:createdby, :tcstatus, :lastmodified, :modifiedby
 		)`, vals)
 	if err != nil {
 		return 0, err

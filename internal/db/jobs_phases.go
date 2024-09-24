@@ -47,7 +47,7 @@ func (e *EpilogueConnection) GetJobByNumber(jobNumber string) (Job, error) {
 	`
 	job := Job{}
 
-	err := e.DB.Select(&job, query, jobNumber)
+	err := e.DB.Get(&job, query, jobNumber)
 	if err != nil {
 		return job, err
 	}

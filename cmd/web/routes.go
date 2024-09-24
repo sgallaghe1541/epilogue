@@ -34,14 +34,19 @@ func (a *app) routes() http.Handler {
 	// mux.Handle("GET /reports", protectedMiddle.ThenFunc(app.handleReports))
 	// mux.Handle("GET /reports/{reportname}", protectedMiddle.ThenFunc(app.handleReportParams))
 
-	mux.Handle("GET /timeentry", sessionMiddle.ThenFunc(handlers.HandleTimeEntry))
-	mux.Handle("GET /timeentry/newtime", htmxMiddle.ThenFunc(handlers.HandleNewTimeEntry))
-	mux.Handle("POST /timeentry/newtime", htmxMiddle.Then(handlers.HandlePostNewTimeHeader(a.logger, a.epilogue, a.viewpoint, a.sessionManager)))
-	mux.Handle("GET /timeentry/timecard/{id}", protectedMiddle.Then(handlers.HandleTimeCards(a.logger, a.epilogue)))
+	// mux.Handle("GET /timeentry", sessionMiddle.ThenFunc(handlers.HandleTimeEntry))
+	mux.Handle("GET /timeentry", htmxMiddle.Then(handlers.HandleTimeCards(a.logger, a.epilogue, a.sessionManager)))
+	// mux.Handle("GET /timeentry/newtime", htmxMiddle.ThenFunc(handlers.HandleNewTimeCard))
+	// mux.Handle("POST /timeentry/newtime", htmxMiddle.Then(handlers.HandlePostNewTimeHeader(a.logger, a.epilogue, a.viewpoint, a.sessionManager)))
+	// mux.Handle("GET /timeentry/timecard/{id}", protectedMiddle.Then(handlers.HandleTimeCards(a.logger, a.epilogue)))
 	// mux.Handle("GET /vp/alljobhours", htmxMiddle.ThenFunc(app.handleAllJobHours))
 	mux.Handle("GET /vp/jobselect", htmxMiddle.Then(handlers.HandleJobsSelect(a.logger, a.epilogue)))
+	mux.Handle("GET /vp/jobinfo", htmxMiddle.Then(handlers.HandleJobInfo(a.logger, a.epilogue)))
+	mux.Handle("GET /vp/clearphases", htmxMiddle.ThenFunc(handlers.HandleClearPhases))
 	// mux.Handle("GET /vp/employeesforfringe", htmxMiddle.ThenFunc(app.handleEmployeesForFringe))
 	// mux.Handle("GET /vp/fhwabygroup", htmxMiddle.ThenFunc(app.handleFHWAGroup))
+
+	mux.Handle("GET /utils/weekday", htmxMiddle.Then(handlers.HandleWeekDay(a.logger)))
 
 	// mux.Handle("GET /downloads/{fname}", protectedMiddle.ThenFunc(app.handleDownloads))
 	return standardMiddle.Then(mux)

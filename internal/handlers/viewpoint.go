@@ -8,7 +8,6 @@ import (
 
 	"github.com/sgallaghe1541/epilogue/internal/db"
 	"github.com/sgallaghe1541/epilogue/internal/timeentry"
-	"github.com/sgallaghe1541/epilogue/internal/viewpoint"
 )
 
 func HandleJobsSelect(logger *slog.Logger, epilogue *db.EpilogueConnection) http.Handler {
@@ -32,6 +31,7 @@ func HandleJobInfo(logger *slog.Logger, epilogue *db.EpilogueConnection) http.Ha
 			job, err := epilogue.GetJobByNumber(vals.Get("job"))
 			if err != nil {
 				fmt.Println(err.Error())
+				return
 			}
 			w.Header().Set("Content-Type", "text/html")
 			w.Header().Set("HX-Trigger", "jobSelected")
@@ -39,10 +39,20 @@ func HandleJobInfo(logger *slog.Logger, epilogue *db.EpilogueConnection) http.Ha
 		})
 }
 
-func HandlePhaseSelect(logger *slog.Logger, viewpoint *viewpoint.ViewpointConnection) http.Handler {
+func HandlePhaseSelect(logger *slog.Logger, epilogue *db.EpilogueConnection) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
+			vals := r.URL.Query()
+			phases, err := epilogue.GetPhasesByJob(vals.Get("job"))
+			if err != nil {
+				fmt.Println(err.Error())
+				return
+			}
 
+			w.Header().Set("Content-Type", "text/html")
+			for _, phase := range phases {
+				timeentry.SelectList(phase).Render(context.Background(), w)
+			}
 		})
 }
 

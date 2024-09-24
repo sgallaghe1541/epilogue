@@ -38,11 +38,29 @@ templ JobStateCertified(job *db.Job) {
 
 
 templ Phases() {
-    <select id="phase1" name="phase1" hx-get="/vp/phaseselect" hx-swap="innerHTML" hx-trigger="load" hx-include="previous #job" _="on change if my @value != '' remove @disabled from #phase2 else add @disabled to #phase2"></select>
-    <select id="phase2" name="phase2" hx-get="/vp/phaseselect" hx-swap="innerHTML" hx-trigger="click once" hx-include="previous #job" disabled></select>
-    <select id="phase3" name="phase3" hx-get="/vp/phaseselect" hx-swap="innerHTML" hx-trigger="click once" hx-include="previous #job" disabled></select>
-    <select id="phase4" name="phase4" hx-get="/vp/phaseselect" hx-swap="innerHTML" hx-trigger="click once" hx-include="previous #job" disabled></select>
-    <select id="phase5" name="phase5" hx-get="/vp/phaseselect" hx-swap="innerHTML" hx-trigger="click once" hx-include="previous #job" disabled></select>
+    <select _="on change if my value is not empty remove @disabled from next <select/> else send clear to the next <select/> end" 
+      id="phase1" name="phase1" hx-get="/vp/phaseselect" hx-swap="beforeend" hx-trigger="click once" hx-include="previous #job">
+      <option value=""></option>
+    </select>
+    <select _="on change if my value is not empty remove @disabled from next <select/> else send clear to the next <select/> end
+               on clear set my value to empty add @disabled to me send clear to the next <select/> end" 
+      id="phase2" name="phase2" hx-get="/vp/phaseselect" hx-swap="beforeend" hx-trigger="click once" hx-include="previous #job" disabled>
+      <option value=""></option>
+    </select>
+    <select _="on change if my value is not empty remove @disabled from next <select/> else send clear to the next <select/> end
+               on clear set my value to empty add @disabled to me send clear to the next <select/> end" 
+      id="phase3" name="phase3" hx-get="/vp/phaseselect" hx-swap="beforeend" hx-trigger="click once" hx-include="previous #job" disabled>
+      <option value=""></option>
+    </select>
+    <select _="on change if my value is not empty remove @disabled from next <select/> else send clear to the next <select/> end
+               on clear set my value to empty add @disabled to me send clear to the next <select/> end" 
+      id="phase4" name="phase4" hx-get="/vp/phaseselect" hx-swap="beforeend" hx-trigger="click once" hx-include="previous #job" disabled>
+      <option value=""></option>
+    </select>
+    <select _="on clear set my value to empty add @disabled to me end" 
+      id="phase5" name="phase5" hx-get="/vp/phaseselect" hx-swap="beforeend" hx-trigger="click once" hx-include="previous #job" disabled>
+      <option value=""></option>
+    </select>
 }
 
 templ TimeCardForm(header *TimeCardHeaderForm, detail *TimeCardDetailForm) {
@@ -63,8 +81,9 @@ templ TimeCardForm(header *TimeCardHeaderForm, detail *TimeCardDetailForm) {
 
         if header.Job != nil {
             <label for="job">Job:</label>
-            <select id="job" name="job" hx-get="/vp/jobinfo" hx-target="#jobinfo">
-            <option value={ header.Job.SelectValue() } selected>{ header.Job.SelectString() }</option>
+            <select _="on change if my value is not empty send getInfo to me"
+            id="job" name="job" hx-get="/vp/jobinfo" hx-target="#jobinfo" hx-trigger="getInfo">
+              <option value={ header.Job.SelectValue() } selected>{ header.Job.SelectString() }</option>
             </select>
         } else {
             <label for="job">Job:</label>

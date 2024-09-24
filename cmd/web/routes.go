@@ -43,6 +43,7 @@ func (a *app) routes() http.Handler {
 	mux.Handle("GET /vp/jobselect", htmxMiddle.Then(handlers.HandleJobsSelect(a.logger, a.epilogue)))
 	mux.Handle("GET /vp/jobinfo", htmxMiddle.Then(handlers.HandleJobInfo(a.logger, a.epilogue)))
 	mux.Handle("GET /vp/clearphases", htmxMiddle.ThenFunc(handlers.HandleClearPhases))
+	mux.Handle("GET /vp/phaseselect", htmxMiddle.Then(handlers.HandlePhaseSelect(a.logger, a.epilogue)))
 	// mux.Handle("GET /vp/employeesforfringe", htmxMiddle.ThenFunc(app.handleEmployeesForFringe))
 	// mux.Handle("GET /vp/fhwabygroup", htmxMiddle.ThenFunc(app.handleFHWAGroup))
 

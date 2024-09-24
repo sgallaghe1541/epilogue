@@ -68,10 +68,10 @@ func (p Phase) SelectString() string {
 	return fmt.Sprintf("%s -- %s", p.Phase, p.Description)
 }
 
-func (e *EpilogueConnection) GetPhasesByJob(job Job) ([]Phase, error) {
+func (e *EpilogueConnection) GetPhasesByJob(job string) ([]Phase, error) {
 	query := `
 		SELECT job, phase, description
-		FROM Phase
+		FROM phases
 		WHERE job = ?
 	`
 	phases := []Phase{}

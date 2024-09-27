@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"strconv"
 
 	"github.com/alexedwards/scs/v2"
 	"github.com/sgallaghe1541/epilogue/internal/db"
@@ -176,5 +177,25 @@ func HandlePhaseSelect(logger *slog.Logger, epilogue *db.EpilogueConnection) htt
 			for _, phase := range phases {
 				timeentry.SelectList(phase).Render(context.Background(), w)
 			}
+		})
+}
+
+func HandleAddEmployeeRow(logger *slog.Logger) http.Handler {
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			vals := r.URL.Query()
+			empCountString := vals.Get("employeecount")
+			if empCountString == "" {
+				logger.Error("no employeecount received...")
+				return
+			}
+			empCount, err := strconv.Atoi(empCountString)
+			if err != nil {
+				logger.Error("malformed employeecount received...")
+				return
+			}
+			w.Header().Set("Content-Type", "text/html")
+			w.Header().Set("HX-Trigger", "employeeAdded")
+			timeentry.EmployeeRow([]string{}, empCount+1).Render(context.Background(), w)
 		})
 }

@@ -15,7 +15,6 @@ templ DayofWeek(date time.Time) {
     if date.IsZero() {
         <label for="dayofweek">Day:</label>
         <input type="text" id="dayofweek" name="dayofweek" disabled>
-
     } else {
         <label for="dayofweek">Day:</label>
         <input type="text" id="dayofweek" name="dayofweek" value={ date.Weekday().String() } disabled>
@@ -33,7 +32,6 @@ templ JobStateCertified(job *db.Job) {
         <input type="text" id="state" name="state" disabled>
         <label for="certified">Certified:</label>
         <input type="text" id="certified" name="certified" disabled>
-
     }
 }
 
@@ -43,13 +41,13 @@ templ Phases(phases []string) {
         if i == 1 {
           <select _="on change if my value is not empty remove @disabled from next <select/> else send clearPhase to the next <select/> end
             on clearPhase set my value to empty add @disabled to me send clearPhase to the next <select/> end" 
-            id={ fmt.Sprintf("phase%d", i) } name={ fmt.Sprintf("phase%d", i) } hx-get="/vp/phaseselect" hx-swap="beforeend" hx-trigger="click once" hx-include="previous #job">
+            id={ fmt.Sprintf("phase%d", i) } name={ fmt.Sprintf("phase%d", i) } hx-get="/tc/phaseselect" hx-swap="beforeend" hx-trigger="click once" hx-include="previous #job">
             <option value=""></option>
           </select>
         } else {
           <select _="on change if my value is not empty remove @disabled from next <select/> else send clearPhase to the next <select/> end
             on clearPhase set my value to empty add @disabled to me send clearPhase to the next <select/> end" 
-            id={ fmt.Sprintf("phase%d", i) } name={ fmt.Sprintf("phase%d", i) } hx-get="/vp/phaseselect" hx-swap="beforeend" hx-trigger="click once" hx-include="previous #job" disabled>
+            id={ fmt.Sprintf("phase%d", i) } name={ fmt.Sprintf("phase%d", i) } hx-get="/tc/phaseselect" hx-swap="beforeend" hx-trigger="click once" hx-include="previous #job" disabled>
             <option value=""></option>
           </select>
         }
@@ -59,13 +57,13 @@ templ Phases(phases []string) {
         if len(phases) >= i {
           <select _="on change if my value is not empty remove @disabled from next <select/> else send clearPhase to the next <select/> end0
             on clearPhase set my value to empty add @disabled to me send clearPhase to the next <select/> end"  
-            id={ fmt.Sprintf("phase%d", i) } name={ fmt.Sprintf("phase%d", i) } hx-get="/vp/phaseselect" hx-swap="beforeend" hx-trigger="click once" hx-include="previous #job">
+            id={ fmt.Sprintf("phase%d", i) } name={ fmt.Sprintf("phase%d", i) } hx-get="/tc/phaseselect" hx-swap="beforeend" hx-trigger="click once" hx-include="previous #job">
             <option value={ phases[i-1] }>{ phases[i-1] }</option>
           </select>
         } else {
           <select _="on change if my value is not empty remove @disabled from next <select/> else send clearPhase to the next <select/> end
             on clearPhase set my value to empty add @disabled to me send clearPhase to the next <select/> end" 
-            id={ fmt.Sprintf("phase%d", i) } name={ fmt.Sprintf("phase%d", i) } hx-get="/vp/phaseselect" hx-swap="beforeend" hx-trigger="click once" hx-include="previous #job" disabled>
+            id={ fmt.Sprintf("phase%d", i) } name={ fmt.Sprintf("phase%d", i) } hx-get="/tc/phaseselect" hx-swap="beforeend" hx-trigger="click once" hx-include="previous #job" disabled>
             <option value=""></option>
           </select>
         }
@@ -75,11 +73,51 @@ templ Phases(phases []string) {
 
 templ Employees(employees [][]string) {
   if len(employees) != 0 {
-    <input type="hidden" id="employeecount" name="employeecount" value={ fmt.Sprintf("%d",len(employees)) }>
+    <input _="on employeeAdded from <body/> increment my value end"
+      type="hidden" id="employeecount" name="employeecount" value={ fmt.Sprintf("%d",len(employees)) }>
+    for i, employee := range employees {
+      @EmployeeRow(employee, i)
+    }
   } else {
-    <input type="hidden" id="employeecount" name="employeecount" value="0">
+    <input _="on employeeAdded from <body/> increment my value end"
+      type="hidden" id="employeecount" name="employeecount" value="0">
   }
-  <button type="button" hx-get="views/addemployeerow" hx-swap="beforebegin" hx-include="#employeecount">Add Employee</button>
+  <button type="button" hx-get="/tc/addemployeerow" hx-swap="beforebegin" hx-include="#employeecount">Add Employee</button>
+}
+
+templ EmployeeRow(employeeHours []string, count int) {
+  if len(employeeHours) == 0 {
+    <div>
+      <select id={ fmt.Sprintf("employee%d", count) } name={ fmt.Sprintf("employee%d", count) } hx-get="tc/employeeselect" hx-swap="beforeend" hx-trigger="load" hx-params="none">
+        <option value=""></option>
+      </select>
+      // <select id={ fmt.Sprintf("employee%dearn", count) } name={ fmt.Sprintf("employee%dearn", count) } hx-get"tc/earncode" hx-swap="beforend" hx-trigger="load">
+      //   <option value=""></option>
+      // </select>
+      // <select _="on certifiedJobSelected remove @disabled from me"
+      //   id={ fmt.Sprintf("employee%dclass", count) } name={ fmt.Sprintf("employee%dclass", count) } hx-get="tc/classes" hx-swap="beforend" hx-trigger="jobSelected from:body">
+      // </select>
+      for i := 1; i < 6; i++ {
+        <input type="number" id={ fmt.Sprintf("employee%dhours%d", count, i) } name={ fmt.Sprintf("employee%dhours%d", count, i) } max="14" step=".50">
+      }
+    </div>
+  } else {
+    <div>
+      <select id={ fmt.Sprintf("employee%d", count) } name={ fmt.Sprintf("employee%d", count) } hx-get="tc/employeeselect" hx-swap="beforeend" hx-trigger="load">
+        <option value=""></option>
+      </select>
+      // <select id={ fmt.Sprintf("employee%dearn", count) } name={ fmt.Sprintf("employee%dearn", count) } hx-get"tc/earncode" hx-swap="beforend" hx-trigger="load">
+      //   <option value=""></option>
+      // </select>
+      // <select _="on certifiedJobSelected remove @disabled from me"
+      //   id={ fmt.Sprintf("employee%dclass", count) } name={ fmt.Sprintf("employee%dclass", count) } hx-get="tc/classes" hx-swap="beforend" hx-trigger="jobSelected from:body">
+      // </select>
+      for i := 1; i < 6; i++ {
+        <input _="on load"
+          type="number" id={ fmt.Sprintf("employee%dhours%d", count, i) } name={ fmt.Sprintf("employee%dhours%d", count, i) } max="14" step=".50">
+      }
+    </div>
+  }
 }
 
 templ Equipment(equipment [][]string) {
@@ -95,7 +133,7 @@ templ TimeCardForm(header *TimeCardHeaderForm, detail *TimeCardDetailForm) {
     // header.job and job have to be the same otherwise this breaks...
     <form>
       <div id="header">
-      <div hx-get="/vp/jobselect" hx-swap="beforeend" hx-target="#job" hx-trigger="load once"></div>
+      <div hx-get="/tc/jobselect" hx-swap="beforeend" hx-target="#job" hx-trigger="load once"></div>
         if !header.WorkDate.IsZero() {
             <label for="workdate">Date:</label>
             <input type="date" id="workdate" name="workdate" value={ header.WorkDate.Format("2006-01-02") } _="on input send dateSelected to dayofweek">
@@ -110,12 +148,12 @@ templ TimeCardForm(header *TimeCardHeaderForm, detail *TimeCardDetailForm) {
         if header.Job != nil {
             <label for="job">Job:</label>
             <select _="on change if my value is not empty send getInfo to me"
-            id="job" name="job" hx-get="/vp/jobinfo" hx-target="#jobinfo" hx-trigger="getInfo">
+            id="job" name="job" hx-get="/tc/jobinfo" hx-target="#jobinfo" hx-trigger="getInfo">
               <option value={ header.Job.SelectValue() } selected>{ header.Job.SelectString() }</option>
             </select>
         } else {
             <label for="job">Job:</label>
-            <select id="job" name="job" hx-get="/vp/jobinfo" hx-target="#jobinfo">
+            <select id="job" name="job" hx-get="/tc/jobinfo" hx-target="#jobinfo">
             <option value="" selected></option>
             </select>
         }
@@ -124,7 +162,7 @@ templ TimeCardForm(header *TimeCardHeaderForm, detail *TimeCardDetailForm) {
         </div>
       </div>
 
-      <div id="phases" hx-get="/vp/clearPhasephases" hx-swap="innerHTML" hx-trigger="jobSelected from:body">
+      <div id="phases" hx-get="/tc/clearphases" hx-swap="innerHTML" hx-trigger="jobSelected from:body">
         @Phases(detail.Phases)
       </div>
 

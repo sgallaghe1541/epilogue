@@ -3,11 +3,11 @@ package sync
 const (
 	syncAllJobs = `
 		SELECT 
-				TRIM(Job) AS job, 
-				Description AS description, 
-				PRStateCode AS state, 
-				Certified AS certified, 
-				CraftTemplate AS template, 
+			TRIM(Job) AS job, 
+			Description AS description, 
+			PRStateCode AS state, 
+			Certified AS certified, 
+			CraftTemplate AS template, 
 			CASE 
 				WHEN Job LIKE '%.01' THEN '01'
 				WHEN Job LIKE '%.02' THEN '02'
@@ -20,7 +20,10 @@ const (
 		AND udFMTS='Y'
 	`
 	syncAllPhases = `
-		SELECT Job AS job, Phase AS phase, Description AS description
+		SELECT 
+			TRIM(Job) AS job, 
+			TRIM(Phase) AS phase, 
+			Description AS description
 		FROM JCJP WHERE udFMTS='Y'
 		AND Job IN (
 			SELECT Job

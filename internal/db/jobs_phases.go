@@ -15,7 +15,7 @@ type Job struct {
 }
 
 func (j Job) SelectValue() string {
-	return j.Job
+	return fmt.Sprintf("%s -- %s", j.Job, j.Description.String)
 }
 
 func (j Job) SelectString() string {
@@ -61,7 +61,7 @@ type Phase struct {
 }
 
 func (p Phase) SelectValue() string {
-	return p.Phase
+	return fmt.Sprintf("%s -- %s", p.Phase, p.Description)
 }
 
 func (p Phase) SelectString() string {

@@ -1,6 +1,7 @@
 package timeentry
 
 import (
+    "fmt"
     "time"
 
     "github.com/sgallaghe1541/epilogue/internal/db"
@@ -36,31 +37,58 @@ templ JobStateCertified(job *db.Job) {
     }
 }
 
+templ Phases(phases []string) {
+    if phases == nil {
+      for i := 1; i < 6; i++ {
+        if i == 1 {
+          <select _="on change if my value is not empty remove @disabled from next <select/> else send clearPhase to the next <select/> end
+            on clearPhase set my value to empty add @disabled to me send clearPhase to the next <select/> end" 
+            id={ fmt.Sprintf("phase%d", i) } name={ fmt.Sprintf("phase%d", i) } hx-get="/vp/phaseselect" hx-swap="beforeend" hx-trigger="click once" hx-include="previous #job">
+            <option value=""></option>
+          </select>
+        } else {
+          <select _="on change if my value is not empty remove @disabled from next <select/> else send clearPhase to the next <select/> end
+            on clearPhase set my value to empty add @disabled to me send clearPhase to the next <select/> end" 
+            id={ fmt.Sprintf("phase%d", i) } name={ fmt.Sprintf("phase%d", i) } hx-get="/vp/phaseselect" hx-swap="beforeend" hx-trigger="click once" hx-include="previous #job" disabled>
+            <option value=""></option>
+          </select>
+        }
+      }
+    } else {
+      for i := 1; i < 6; i++ {
+        if len(phases) >= i {
+          <select _="on change if my value is not empty remove @disabled from next <select/> else send clearPhase to the next <select/> end0
+            on clearPhase set my value to empty add @disabled to me send clearPhase to the next <select/> end"  
+            id={ fmt.Sprintf("phase%d", i) } name={ fmt.Sprintf("phase%d", i) } hx-get="/vp/phaseselect" hx-swap="beforeend" hx-trigger="click once" hx-include="previous #job">
+            <option value={ phases[i-1] }>{ phases[i-1] }</option>
+          </select>
+        } else {
+          <select _="on change if my value is not empty remove @disabled from next <select/> else send clearPhase to the next <select/> end
+            on clearPhase set my value to empty add @disabled to me send clearPhase to the next <select/> end" 
+            id={ fmt.Sprintf("phase%d", i) } name={ fmt.Sprintf("phase%d", i) } hx-get="/vp/phaseselect" hx-swap="beforeend" hx-trigger="click once" hx-include="previous #job" disabled>
+            <option value=""></option>
+          </select>
+        }
+      }
+    }
+}
 
-templ Phases() {
-    <select _="on change if my value is not empty remove @disabled from next <select/> else send clear to the next <select/> end" 
-      id="phase1" name="phase1" hx-get="/vp/phaseselect" hx-swap="beforeend" hx-trigger="click once" hx-include="previous #job">
-      <option value=""></option>
-    </select>
-    <select _="on change if my value is not empty remove @disabled from next <select/> else send clear to the next <select/> end
-               on clear set my value to empty add @disabled to me send clear to the next <select/> end" 
-      id="phase2" name="phase2" hx-get="/vp/phaseselect" hx-swap="beforeend" hx-trigger="click once" hx-include="previous #job" disabled>
-      <option value=""></option>
-    </select>
-    <select _="on change if my value is not empty remove @disabled from next <select/> else send clear to the next <select/> end
-               on clear set my value to empty add @disabled to me send clear to the next <select/> end" 
-      id="phase3" name="phase3" hx-get="/vp/phaseselect" hx-swap="beforeend" hx-trigger="click once" hx-include="previous #job" disabled>
-      <option value=""></option>
-    </select>
-    <select _="on change if my value is not empty remove @disabled from next <select/> else send clear to the next <select/> end
-               on clear set my value to empty add @disabled to me send clear to the next <select/> end" 
-      id="phase4" name="phase4" hx-get="/vp/phaseselect" hx-swap="beforeend" hx-trigger="click once" hx-include="previous #job" disabled>
-      <option value=""></option>
-    </select>
-    <select _="on clear set my value to empty add @disabled to me end" 
-      id="phase5" name="phase5" hx-get="/vp/phaseselect" hx-swap="beforeend" hx-trigger="click once" hx-include="previous #job" disabled>
-      <option value=""></option>
-    </select>
+templ Employees(employees [][]string) {
+  if len(employees) != 0 {
+    <input type="hidden" id="employeecount" name="employeecount" value={ fmt.Sprintf("%d",len(employees)) }>
+  } else {
+    <input type="hidden" id="employeecount" name="employeecount" value="0">
+  }
+  <button type="button" hx-get="views/addemployeerow" hx-swap="beforebegin" hx-include="#employeecount">Add Employee</button>
+}
+
+templ Equipment(equipment [][]string) {
+  if len(equipment) != 0 {
+    <input type="hidden" id="equipmentcount" name="equipmentcount" value={ fmt.Sprintf("%d",len(equipment)) }>
+  } else {
+    <input type="hidden" id="equipmentcount" name="equipmentcount" value="0">
+  }
+  <button type="button" hx-get="views/addequipmentrow" hx-swap="beforebegin" hx-include="#equipmentcount">Add Equipment</button>
 }
 
 templ TimeCardForm(header *TimeCardHeaderForm, detail *TimeCardDetailForm) {
@@ -96,13 +124,16 @@ templ TimeCardForm(header *TimeCardHeaderForm, detail *TimeCardDetailForm) {
         </div>
       </div>
 
-      <div id="phases" hx-get="/vp/clearphases" hx-swap="innerHTML" hx-trigger="jobSelected from:body">
-        @Phases()
+      <div id="phases" hx-get="/vp/clearPhasephases" hx-swap="innerHTML" hx-trigger="jobSelected from:body">
+        @Phases(detail.Phases)
       </div>
 
-      <div id="employees">
+      <div id="employeedetail">
+        @Employees(detail.Employees)
       </div>
-      <div id="equipment">
+
+      <div id="equipmentdetail">
+        @Equipment(detail.Equipment)
       </div>
     </form>
 }

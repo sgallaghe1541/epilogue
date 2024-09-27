@@ -21,7 +21,8 @@ type TimeCardDetailForm struct {
 	CountPhases    string
 	CountEmployees string
 	CountEquipment string
-	Phases         map[string]*db.Phase
+	Phases         []string
 	Employees      [][]string
+	Equipment      [][]string
 	FieldErrors    map[string]string
 }

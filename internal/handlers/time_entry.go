@@ -116,3 +116,65 @@ func HandleTimeCards(logger *slog.Logger, epilogue *db.EpilogueConnection, sessi
 			// timeentry.EditTimeCard(tcHeader, tcEmployees, timeentry.TimeCardDetailForm{}).Render(context.Background(), w)
 		})
 }
+
+func HandleClearPhases(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html")
+	timeentry.Phases(nil).Render(context.Background(), w)
+}
+
+func HandleJobsSelect(logger *slog.Logger, epilogue *db.EpilogueConnection) http.Handler {
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			jobs, err := epilogue.GetJobsByDepartment("01")
+			if err != nil {
+				fmt.Println(err.Error())
+			}
+			w.Header().Set("Content-Type", "text/html")
+			for _, job := range jobs {
+				timeentry.SelectList(job).Render(context.Background(), w)
+			}
+		})
+}
+
+func HandleJobInfo(logger *slog.Logger, epilogue *db.EpilogueConnection) http.Handler {
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			vals := r.URL.Query()
+			jobNum, jobDescription := utils.GetSelectNumDescription(vals.Get("job"))
+			if jobNum == "" || jobDescription == "" {
+				fmt.Println("failed to get job number")
+				return
+			}
+
+			job, err := epilogue.GetJobByNumber(jobNum)
+			if err != nil {
+				fmt.Println(err.Error())
+				return
+			}
+			w.Header().Set("Content-Type", "text/html")
+			w.Header().Set("HX-Trigger", "jobSelected")
+			timeentry.JobStateCertified(&job).Render(context.Background(), w)
+		})
+}
+
+func HandlePhaseSelect(logger *slog.Logger, epilogue *db.EpilogueConnection) http.Handler {
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			vals := r.URL.Query()
+			jobNum, jobDescription := utils.GetSelectNumDescription(vals.Get("job"))
+			if jobNum == "" || jobDescription == "" {
+				fmt.Println("failed to get job number")
+				return
+			}
+			phases, err := epilogue.GetPhasesByJob(jobNum)
+			if err != nil {
+				fmt.Println(err.Error())
+				return
+			}
+
+			w.Header().Set("Content-Type", "text/html")
+			for _, phase := range phases {
+				timeentry.SelectList(phase).Render(context.Background(), w)
+			}
+		})
+}

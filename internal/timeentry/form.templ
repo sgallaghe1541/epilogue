@@ -39,14 +39,14 @@ templ Phases(phases []string) {
     if phases == nil {
       for i := 1; i < 6; i++ {
         if i == 1 {
-          <select _="on change if my value is not empty remove @disabled from next <select/> else send clearPhase to the next <select/> end
-            on clearPhase set my value to empty add @disabled to me send clearPhase to the next <select/> end" 
+          <select _="on change if my value is not empty remove @disabled from next <select/> within #phases else send clearPhase to the next <select/> within #phases end
+            on clearPhase set my value to empty add @disabled to me send clearPhase to the next <select/> within #phases end" 
             id={ fmt.Sprintf("phase%d", i) } name={ fmt.Sprintf("phase%d", i) } hx-get="/tc/phaseselect" hx-swap="beforeend" hx-trigger="click once" hx-include="previous #job">
             <option value=""></option>
           </select>
         } else {
-          <select _="on change if my value is not empty remove @disabled from next <select/> else send clearPhase to the next <select/> end
-            on clearPhase set my value to empty add @disabled to me send clearPhase to the next <select/> end" 
+          <select _="on change if my value is not empty remove @disabled from next <select/> within #phases else send clearPhase to the next <select/> within #phases end
+            on clearPhase set my value to empty add @disabled to me send clearPhase to the next <select/> within #phases end" 
             id={ fmt.Sprintf("phase%d", i) } name={ fmt.Sprintf("phase%d", i) } hx-get="/tc/phaseselect" hx-swap="beforeend" hx-trigger="click once" hx-include="previous #job" disabled>
             <option value=""></option>
           </select>
@@ -55,14 +55,14 @@ templ Phases(phases []string) {
     } else {
       for i := 1; i < 6; i++ {
         if len(phases) >= i {
-          <select _="on change if my value is not empty remove @disabled from next <select/> else send clearPhase to the next <select/> end0
-            on clearPhase set my value to empty add @disabled to me send clearPhase to the next <select/> end"  
+          <select _="on change if my value is not empty remove @disabled from next <select/> within #phases else send clearPhase to the next next <select/> within #phases end
+            on clearPhase set my value to empty add @disabled to me send clearPhase to the next next <select/> within #phases end"  
             id={ fmt.Sprintf("phase%d", i) } name={ fmt.Sprintf("phase%d", i) } hx-get="/tc/phaseselect" hx-swap="beforeend" hx-trigger="click once" hx-include="previous #job">
             <option value={ phases[i-1] }>{ phases[i-1] }</option>
           </select>
         } else {
-          <select _="on change if my value is not empty remove @disabled from next <select/> else send clearPhase to the next <select/> end
-            on clearPhase set my value to empty add @disabled to me send clearPhase to the next <select/> end" 
+          <select _="on change if my value is not empty remove @disabled from next <select/> within #phases else send clearPhase to the next <select/> within #phases end
+            on clearPhase set my value to empty add @disabled to me send clearPhase to the next <select/> within #phases end" 
             id={ fmt.Sprintf("phase%d", i) } name={ fmt.Sprintf("phase%d", i) } hx-get="/tc/phaseselect" hx-swap="beforeend" hx-trigger="click once" hx-include="previous #job" disabled>
             <option value=""></option>
           </select>
@@ -87,7 +87,7 @@ templ Employees(employees [][]string) {
 
 templ EmployeeRow(employeeHours []string, count int) {
   if len(employeeHours) == 0 {
-    <div>
+    <div _="on phase1Cleared from #employeeDetail ">
       <select id={ fmt.Sprintf("employee%d", count) } name={ fmt.Sprintf("employee%d", count) } hx-get="tc/employeeselect" hx-swap="beforeend" hx-trigger="load" hx-params="none">
         <option value=""></option>
       </select>
@@ -136,7 +136,7 @@ templ TimeCardForm(header *TimeCardHeaderForm, detail *TimeCardDetailForm) {
       <div hx-get="/tc/jobselect" hx-swap="beforeend" hx-target="#job" hx-trigger="load once"></div>
         if !header.WorkDate.IsZero() {
             <label for="workdate">Date:</label>
-            <input type="date" id="workdate" name="workdate" value={ header.WorkDate.Format("2006-01-02") } _="on input send dateSelected to dayofweek">
+            <input type="date" id="workdate" name="workdate" value={ header.WorkDate.Format("2006-01-02") } _="on input send dateSelected to #dayofweek-div">
         } else {
             <label for="workdate">Date:</label>
             <input type="date" id="workdate" name="workdate" value="" _="on input send dateSelected to #dayofweek-div">
@@ -147,13 +147,14 @@ templ TimeCardForm(header *TimeCardHeaderForm, detail *TimeCardDetailForm) {
 
         if header.Job != nil {
             <label for="job">Job:</label>
-            <select _="on change if my value is not empty send getInfo to me"
-            id="job" name="job" hx-get="/tc/jobinfo" hx-target="#jobinfo" hx-trigger="getInfo">
+            <select _="on change send jobSelected to #phases then if my value is not empty send getInfo to me"
+              id="job" name="job" hx-get="/tc/jobinfo" hx-target="#jobinfo" hx-trigger="getInfo">
               <option value={ header.Job.SelectValue() } selected>{ header.Job.SelectString() }</option>
             </select>
         } else {
             <label for="job">Job:</label>
-            <select id="job" name="job" hx-get="/tc/jobinfo" hx-target="#jobinfo">
+            <select _="on change send jobSelected to #phases then if my value is not empty send getInfo to me"
+              id="job" name="job" hx-get="/tc/jobinfo" hx-target="#jobinfo">
             <option value="" selected></option>
             </select>
         }
@@ -162,15 +163,15 @@ templ TimeCardForm(header *TimeCardHeaderForm, detail *TimeCardDetailForm) {
         </div>
       </div>
 
-      <div id="phases" hx-get="/tc/clearphases" hx-swap="innerHTML" hx-trigger="jobSelected from:body">
+      <div id="phases" hx-get="/tc/clearphases" hx-swap="innerHTML" hx-trigger="jobSelected">
         @Phases(detail.Phases)
       </div>
 
-      <div id="employeedetail">
+      <div id="employeeDetail">
         @Employees(detail.Employees)
       </div>
 
-      <div id="equipmentdetail">
+      <div id="equipmentDetail">
         @Equipment(detail.Equipment)
       </div>
     </form>

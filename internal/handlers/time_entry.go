@@ -153,7 +153,7 @@ func HandleJobInfo(logger *slog.Logger, epilogue *db.EpilogueConnection) http.Ha
 				return
 			}
 			w.Header().Set("Content-Type", "text/html")
-			w.Header().Set("HX-Trigger", "jobSelected")
+			// w.Header().Set("HX-Trigger", "jobSelected")
 			timeentry.JobStateCertified(&job).Render(context.Background(), w)
 		})
 }

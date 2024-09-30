@@ -69,22 +69,24 @@ templ Phases(phases []string) {
 
 templ Employees(employees [][]string) {
   if len(employees) != 0 {
-    <input _="on employeeAdded from <body/> increment my value end"
+    <input _="on employeeAdded from <body/> increment my value end on employeeRemoved decrement my value by 1 end"
       type="hidden" id="employeecount" name="employeecount" value={ fmt.Sprintf("%d",len(employees)) }>
+    <input _="on employeeAdded from <body/> increment my value by 1" type="hidden" id="employeerownumber" name="employeerownumber" value={ fmt.Sprintf("%d",len(employees)) }>
     for i, employee := range employees {
       @EmployeeRow(employee, i)
     }
   } else {
-    <input _="on employeeAdded from <body/> increment my value end"
+    <input _="on employeeAdded from <body/> increment my value end on employeeRemoved decrement my value by 1 end"
       type="hidden" id="employeecount" name="employeecount" value="0">
+    <input _="on employeeAdded from <body/> increment my value by 1" type="hidden" id="employeerownumber" name="employeerownumber" value="0">
   }
-  <button type="button" hx-get="/tc/addemployeerow" hx-swap="beforebegin" hx-include="#employeecount">Add Employee</button>
+  <button type="button" hx-get="/tc/addemployeerow" hx-swap="beforebegin" hx-include="#employeerownumber">Add Employee</button>
 }
 
 templ EmployeeRow(employeeHours []string, count int) {
   if len(employeeHours) == 0 {
     <div>
-      <select id={ fmt.Sprintf("employee%d", count) } name={ fmt.Sprintf("employee%d", count) } hx-get="tc/employeeselect" hx-swap="beforeend" hx-trigger="load" hx-params="none">
+      <select id={ fmt.Sprintf("employee%d", count) } name={ fmt.Sprintf("employee%d", count) } hx-get="/tc/employeeselect" hx-swap="beforeend" hx-trigger="load" hx-params="none">
         <option value=""></option>
       </select>
       // <select id={ fmt.Sprintf("employee%dearn", count) } name={ fmt.Sprintf("employee%dearn", count) } hx-get"tc/earncode" hx-swap="beforend" hx-trigger="load">
@@ -96,10 +98,11 @@ templ EmployeeRow(employeeHours []string, count int) {
       for i := 1; i < 6; i++ {
         <input _={ fmt.Sprintf(employeeHoursScript, i, i) } type="number" id={ fmt.Sprintf("employee%dhours%d", count, i) } name={ fmt.Sprintf("employee%dhours%d", count, i) } max="14" step=".50" disabled>
       }
+      <button _="on click remove the closest <div/> then send employeeRemoved to #employeecount">Delete</button>
     </div>
   } else {
     <div>
-      <select id={ fmt.Sprintf("employee%d", count) } name={ fmt.Sprintf("employee%d", count) } hx-get="tc/employeeselect" hx-swap="beforeend" hx-trigger="load">
+      <select id={ fmt.Sprintf("employee%d", count) } name={ fmt.Sprintf("employee%d", count) } hx-get="/tc/employeeselect" hx-swap="beforeend" hx-trigger="load">
         <option value=""></option>
       </select>
       // <select id={ fmt.Sprintf("employee%dearn", count) } name={ fmt.Sprintf("employee%dearn", count) } hx-get"tc/earncode" hx-swap="beforend" hx-trigger="load">
@@ -112,17 +115,45 @@ templ EmployeeRow(employeeHours []string, count int) {
         <input _={ fmt.Sprintf(employeeHoursScript, i, i) }
           type="number" id={ fmt.Sprintf("employee%dhours%d", count, i) } name={ fmt.Sprintf("employee%dhours%d", count, i) } max="14" step=".50">
       }
+      <button _="on click remove the closest <div/> then send employeeRemoved to #employeecount">Delete</button>
     </div>
   }
 }
 
 templ Equipment(equipment [][]string) {
   if len(equipment) != 0 {
-    <input type="hidden" id="equipmentcount" name="equipmentcount" value={ fmt.Sprintf("%d",len(equipment)) }>
+    <input _="on equipmentAdded from <body/> increment my value by 1 end on equipmentRemoved decrement my value by 1 end" type="hidden" id="equipmentcount" name="equipmentcount" value={ fmt.Sprintf("%d",len(equipment)) }>
+    <input _="on equipmentAdded from <body/> increment my value by 1" type="hidden" id="equipmentrownumber" name="equipmentrownumber" value={ fmt.Sprintf("%d",len(equipment)) }>
   } else {
-    <input type="hidden" id="equipmentcount" name="equipmentcount" value="0">
+    <input _="on equipmentAdded from <body/> increment my value by 1 end on equipmentRemoved decrement my value by 1 end" type="hidden" id="equipmentcount" name="equipmentcount" value="0">
+    <input _="on equipmentAdded from <body/> increment my value by 1" type="hidden" id="equipmentrownumber" name="equipmentrownumber" value="0">
   }
-  <button type="button" hx-get="views/addequipmentrow" hx-swap="beforebegin" hx-include="#equipmentcount">Add Equipment</button>
+  <button type="button" hx-get="/tc/addequipmentrow" hx-swap="beforebegin" hx-include="#equipmentrownumber">Add Equipment</button>
+}
+
+templ EquipmentRow(equipmentHours []string, count int) {
+  if len(equipmentHours) == 0 {
+    <div>
+      <select id={ fmt.Sprintf("equipment%d", count) } name={ fmt.Sprintf("equipment%d", count) } hx-get="/tc/equipmenteselect" hx-swap="beforeend" hx-trigger="load" hx-params="none">
+        <option value=""></option>
+      </select>
+      for i := 1; i < 6; i++ {
+        <input _={ fmt.Sprintf(equipmentHoursScript, i, i) } type="number" id={ fmt.Sprintf("equipment%dhours%d", count, i) } name={ fmt.Sprintf("equipment%dhours%d", count, i) } max="14" step=".50" disabled>
+      }
+      <button _="on click remove the closest <div/> then send equipmentRemoved to #equipmentcount">Delete</button>
+    </div>
+  } else {
+    <div>
+      <select id={ fmt.Sprintf("equipment%d", count) } name={ fmt.Sprintf("equipment%d", count) } hx-get="/tc/equipmenteselect" hx-swap="beforeend" hx-trigger="load">
+        <option value=""></option>
+      </select>
+      for i := 1; i < 6; i++ {
+        <input _={ fmt.Sprintf(equipmentHoursScript, i, i) }
+          type="number" id={ fmt.Sprintf("equipment%dhours%d", count, i) } name={ fmt.Sprintf("equipment%dhours%d", count, i) } max="14" step=".50">
+      }
+      <button _="on click remove the closest <div/> then send equipmentRemoved to #equipmentcount">Delete</button>
+    </div>
+  }
 }
 
 templ TimeCardForm(header *TimeCardHeaderForm, detail *TimeCardDetailForm) {
@@ -162,13 +193,14 @@ templ TimeCardForm(header *TimeCardHeaderForm, detail *TimeCardDetailForm) {
       <div id="phases" hx-get="/tc/clearphases" hx-swap="innerHTML" hx-trigger="jobSelected">
         @Phases(detail.Phases)
       </div>
+      <div id="hours" name="hours">
+        <div id="employeeDetail">
+          @Employees(detail.Employees)
+        </div>
 
-      <div id="employeeDetail">
-        @Employees(detail.Employees)
-      </div>
-
-      <div id="equipmentDetail">
-        @Equipment(detail.Equipment)
+        <div id="equipmentDetail">
+          @Equipment(detail.Equipment)
+        </div>
       </div>
     </form>
 }

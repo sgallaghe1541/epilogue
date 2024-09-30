@@ -184,18 +184,38 @@ func HandleAddEmployeeRow(logger *slog.Logger) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			vals := r.URL.Query()
-			empCountString := vals.Get("employeecount")
+			empCountString := vals.Get("employeerownumber")
 			if empCountString == "" {
-				logger.Error("no employeecount received...")
+				logger.Error("no employeerownumber received...")
 				return
 			}
 			empCount, err := strconv.Atoi(empCountString)
 			if err != nil {
-				logger.Error("malformed employeecount received...")
+				logger.Error("malformed employeerownumber received...")
 				return
 			}
 			w.Header().Set("Content-Type", "text/html")
 			w.Header().Set("HX-Trigger", "employeeAdded")
 			timeentry.EmployeeRow([]string{}, empCount+1).Render(context.Background(), w)
+		})
+}
+
+func HandleAddEquipmentRow(logger *slog.Logger) http.Handler {
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			vals := r.URL.Query()
+			equipCountString := vals.Get("equipmentrownumber")
+			if equipCountString == "" {
+				logger.Error("no equipmentrownumber received...")
+				return
+			}
+			equipCount, err := strconv.Atoi(equipCountString)
+			if err != nil {
+				logger.Error("malformed equipmentrownumber received...")
+				return
+			}
+			w.Header().Set("Content-Type", "text/html")
+			w.Header().Set("HX-Trigger", "equipmentAdded")
+			timeentry.EquipmentRow([]string{}, equipCount+1).Render(context.Background(), w)
 		})
 }

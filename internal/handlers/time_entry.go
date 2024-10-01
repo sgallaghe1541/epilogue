@@ -180,6 +180,22 @@ func HandlePhaseSelect(logger *slog.Logger, epilogue *db.EpilogueConnection) htt
 		})
 }
 
+func HandleEmployeeSelect(logger *slog.Logger, epilogue *db.EpilogueConnection) http.Handler {
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			emps, err := epilogue.GetEmployeesByDepartment("01")
+			if err != nil {
+				logger.Error(err.Error())
+				return
+			}
+
+			w.Header().Set("Content-Type", "text/html")
+			for _, emp := range emps {
+				timeentry.SelectList(emp).Render(context.Background(), w)
+			}
+		})
+}
+
 func HandleAddEmployeeRow(logger *slog.Logger) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
@@ -197,6 +213,21 @@ func HandleAddEmployeeRow(logger *slog.Logger) http.Handler {
 			w.Header().Set("Content-Type", "text/html")
 			w.Header().Set("HX-Trigger", "employeeAdded")
 			timeentry.EmployeeRow([]string{}, empCount+1).Render(context.Background(), w)
+		})
+}
+
+func HandleEquipmentSelect(logger *slog.Logger, epilogue *db.EpilogueConnection) http.Handler {
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			equipments, err := epilogue.GetEquipmentByDepartment("01")
+			if err != nil {
+				logger.Error(err.Error())
+				return
+			}
+			w.Header().Set("Content-Type", "text/html")
+			for _, equip := range equipments {
+				timeentry.SelectList(equip).Render(context.Background(), w)
+			}
 		})
 }
 

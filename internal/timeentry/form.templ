@@ -39,12 +39,12 @@ templ Phases(phases []string) {
     if phases == nil {
       for i := 1; i < 6; i++ {
         if i == 1 {
-          <select _={ fmt.Sprintf(phaseScript, i, i, i) }
+          <select _={ fmt.Sprintf(phaseScript, i, i, i, i, i) }
             id={ fmt.Sprintf("phase%d", i) } name={ fmt.Sprintf("phase%d", i) } hx-get="/tc/phaseselect" hx-swap="beforeend" hx-trigger="click once" hx-include="previous #job">
             <option value=""></option>
           </select>
         } else {
-          <select _={ fmt.Sprintf(phaseScript, i, i, i) }
+          <select _={ fmt.Sprintf(phaseScript, i, i, i, i, i) }
             id={ fmt.Sprintf("phase%d", i) } name={ fmt.Sprintf("phase%d", i) } hx-get="/tc/phaseselect" hx-swap="beforeend" hx-trigger="click once" hx-include="previous #job" disabled>
             <option value=""></option>
           </select>
@@ -53,12 +53,12 @@ templ Phases(phases []string) {
     } else {
       for i := 1; i < 6; i++ {
         if len(phases) >= i {
-          <select _={ fmt.Sprintf(phaseScript, i, i, i) }
+          <select _={ fmt.Sprintf(phaseScript, i, i, i, i, i) }
             id={ fmt.Sprintf("phase%d", i) } name={ fmt.Sprintf("phase%d", i) } hx-get="/tc/phaseselect" hx-swap="beforeend" hx-trigger="click once" hx-include="previous #job">
             <option value={ phases[i-1] }>{ phases[i-1] }</option>
           </select>
         } else {
-          <select _={ fmt.Sprintf(phaseScript, i, i, i) }
+          <select _={ fmt.Sprintf(phaseScript, i, i, i, i, i) }
             id={ fmt.Sprintf("phase%d", i) } name={ fmt.Sprintf("phase%d", i) } hx-get="/tc/phaseselect" hx-swap="beforeend" hx-trigger="click once" hx-include="previous #job" disabled>
             <option value=""></option>
           </select>
@@ -85,7 +85,7 @@ templ Employees(employees [][]string) {
 
 templ EmployeeRow(employeeHours []string, count int) {
   if len(employeeHours) == 0 {
-    <div>
+    <div _="on load send empEquipAdded to #phases">
       <select id={ fmt.Sprintf("employee%d", count) } name={ fmt.Sprintf("employee%d", count) } hx-get="/tc/employeeselect" hx-swap="beforeend" hx-trigger="load" hx-params="none">
         <option value=""></option>
       </select>
@@ -133,8 +133,8 @@ templ Equipment(equipment [][]string) {
 
 templ EquipmentRow(equipmentHours []string, count int) {
   if len(equipmentHours) == 0 {
-    <div>
-      <select id={ fmt.Sprintf("equipment%d", count) } name={ fmt.Sprintf("equipment%d", count) } hx-get="/tc/equipmenteselect" hx-swap="beforeend" hx-trigger="load" hx-params="none">
+    <div _="on load send empEquipAdded to #phases">
+      <select id={ fmt.Sprintf("equipment%d", count) } name={ fmt.Sprintf("equipment%d", count) } hx-get="/tc/equipmentselect" hx-swap="beforeend" hx-trigger="load" hx-params="none">
         <option value=""></option>
       </select>
       for i := 1; i < 6; i++ {
@@ -144,7 +144,7 @@ templ EquipmentRow(equipmentHours []string, count int) {
     </div>
   } else {
     <div>
-      <select id={ fmt.Sprintf("equipment%d", count) } name={ fmt.Sprintf("equipment%d", count) } hx-get="/tc/equipmenteselect" hx-swap="beforeend" hx-trigger="load">
+      <select id={ fmt.Sprintf("equipment%d", count) } name={ fmt.Sprintf("equipment%d", count) } hx-get="/tc/equipmentselect" hx-swap="beforeend" hx-trigger="load">
         <option value=""></option>
       </select>
       for i := 1; i < 6; i++ {

@@ -210,9 +210,19 @@ func HandleAddEmployeeRow(logger *slog.Logger) http.Handler {
 				logger.Error("malformed employeerownumber received...")
 				return
 			}
+			phaseCountString := vals.Get("phasecount")
+			if phaseCountString == "" {
+				logger.Error("no phasecount received...")
+				return
+			}
+			phaseCount, err := strconv.Atoi(phaseCountString)
+			if err != nil {
+				logger.Error("malformed phasecount received...")
+				return
+			}
 			w.Header().Set("Content-Type", "text/html")
 			w.Header().Set("HX-Trigger", "employeeAdded")
-			timeentry.EmployeeRow([]string{}, empCount+1).Render(context.Background(), w)
+			timeentry.EmployeeRow([]string{}, empCount+1, phaseCount).Render(context.Background(), w)
 		})
 }
 
@@ -245,8 +255,18 @@ func HandleAddEquipmentRow(logger *slog.Logger) http.Handler {
 				logger.Error("malformed equipmentrownumber received...")
 				return
 			}
+			phaseCountString := vals.Get("phasecount")
+			if equipCountString == "" {
+				logger.Error("no phasecount received...")
+				return
+			}
+			phaseCount, err := strconv.Atoi(phaseCountString)
+			if err != nil {
+				logger.Error("malformed phasecount received...")
+				return
+			}
 			w.Header().Set("Content-Type", "text/html")
 			w.Header().Set("HX-Trigger", "equipmentAdded")
-			timeentry.EquipmentRow([]string{}, equipCount+1).Render(context.Background(), w)
+			timeentry.EquipmentRow([]string{}, equipCount+1, phaseCount).Render(context.Background(), w)
 		})
 }

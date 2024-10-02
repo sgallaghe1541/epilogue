@@ -7,9 +7,15 @@ const (
 			else send phase%dInactive to #hours then send clearPhase to the next <select/> within #phases 
 		end 
 		on clearPhase set my value to empty add @disabled to me send phase%dInactive to #hours then send clearPhase to the next <select/> within #phases end
-		on empEquipAdded from #phases 
-			if my value is not empty send phase%dActive to #hours
-			else send phase%dInactive to #hours
+	`
+	phaseCountScript = `
+		on phase1Active from #hours or phase2Active from #hours or phase3Active from #hours or phase4Active from #hours or phase5Active from #hours or phase5Inactive from #hours
+			set :count to 0
+			set :allPhases to <select/> in #phases
+			for p in :allPhases
+				if p's value is not empty increment :count by 1
+			end
+			set my value to :count
 		end
 	`
 	employeeHoursScript = `

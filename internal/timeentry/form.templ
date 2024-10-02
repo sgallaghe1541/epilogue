@@ -175,47 +175,50 @@ templ EquipmentRow(equipmentHours []string, count, phaseCount int) {
 templ TimeCardForm(header *TimeCardHeaderForm, detail *TimeCardDetailForm) {
     // header.job and job have to be the same otherwise this breaks...
     <form>
-      <div id="header">
-      <div hx-get="/tc/jobselect" hx-swap="beforeend" hx-target="#job" hx-trigger="load once"></div>
-        if !header.WorkDate.IsZero() {
-            <label for="workdate">Date:</label>
-            <input type="date" id="workdate" name="workdate" value={ header.WorkDate.Format("2006-01-02") } _="on input send dateSelected to #dayofweek-div">
-        } else {
-            <label for="workdate">Date:</label>
-            <input type="date" id="workdate" name="workdate" value="" _="on input send dateSelected to #dayofweek-div">
-        }
-        <div id="dayofweek-div" name="dayofweek-div" hx-get="/utils/weekday" hx-include="#workdate" hx-trigger="dateSelected">
-          @DayofWeek(header.WorkDate)
+      <div class="grid gap-4 grid-cols-9 grid-rows-10">
+        <div id="header" class="grid-cols-subgrid grid-rows-subgrid">
+          <div hx-get="/tc/jobselect" hx-swap="beforeend" hx-target="#job" hx-trigger="load once"></div>
+            if !header.WorkDate.IsZero() {
+                <label for="workdate" class="col-start-1 row-start-1">Date:</label>
+                <input class="col-start-2 row-start-1" type="date" id="workdate" name="workdate" value={ header.WorkDate.Format("2006-01-02") } _="on input send dateSelected to #dayofweek-div">
+            } else {
+                <label classs="col-start-1 row-start-1" for="workdate">Date:</label>
+                <input class="col-start-2 row-start-1" type="date" id="workdate" name="workdate" value="" _="on input send dateSelected to #dayofweek-div">
+            }
+          <div class="col-start-1 row-start-2 col-span-2" id="dayofweek-div" name="dayofweek-div" hx-get="/utils/weekday" hx-include="#workdate" hx-trigger="dateSelected">
+            @DayofWeek(header.WorkDate)
+          </div>
+          <div id="jobstuff" name="jobstuff" class="col-start-3 row-start-1 col-span-3">
+          if header.Job != nil {
+              <label for="job">Job:</label>
+              <select _="on change send jobSelected to #phases then if my value is not empty send getInfo to me"
+                id="job" name="job" hx-get="/tc/jobinfo" hx-target="#jobinfo" hx-trigger="getInfo">
+                <option value={ header.Job.SelectValue() } selected>{ header.Job.SelectString() }</option>
+              </select>
+          } else {
+              <label for="job">Job:</label>
+              <select _="on change send jobSelected to #phases then if my value is not empty send getInfo to me"
+                id="job" name="job" hx-get="/tc/jobinfo" hx-target="#jobinfo">
+              <option value="" selected></option>
+              </select>
+          }
+          </div>
+          <div id="jobinfo" name="jobinfo">
+            @JobStateCertified(header.Job)
+          </div>
         </div>
 
-        if header.Job != nil {
-            <label for="job">Job:</label>
-            <select _="on change send jobSelected to #phases then if my value is not empty send getInfo to me"
-              id="job" name="job" hx-get="/tc/jobinfo" hx-target="#jobinfo" hx-trigger="getInfo">
-              <option value={ header.Job.SelectValue() } selected>{ header.Job.SelectString() }</option>
-            </select>
-        } else {
-            <label for="job">Job:</label>
-            <select _="on change send jobSelected to #phases then if my value is not empty send getInfo to me"
-              id="job" name="job" hx-get="/tc/jobinfo" hx-target="#jobinfo">
-            <option value="" selected></option>
-            </select>
-        }
-        <div id="jobinfo" name="jobinfo">
-          @JobStateCertified(header.Job)
+        <div id="phases" hx-get="/tc/clearphases" hx-swap="innerHTML" hx-trigger="jobSelected">
+          @Phases(detail.Phases)
         </div>
-      </div>
+        <div id="hours" name="hours">
+          <div id="employeeDetail">
+            @Employees(detail.Employees, len(detail.Phases))
+          </div>
 
-      <div id="phases" hx-get="/tc/clearphases" hx-swap="innerHTML" hx-trigger="jobSelected">
-        @Phases(detail.Phases)
-      </div>
-      <div id="hours" name="hours">
-        <div id="employeeDetail">
-          @Employees(detail.Employees, len(detail.Phases))
-        </div>
-
-        <div id="equipmentDetail">
-          @Equipment(detail.Equipment, len(detail.Phases))
+          <div id="equipmentDetail">
+            @Equipment(detail.Equipment, len(detail.Phases))
+          </div>
         </div>
       </div>
     </form>

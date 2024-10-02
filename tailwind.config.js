@@ -4,10 +4,11 @@ module.exports = {
   theme: {
     extend: {
       gridTemplateColumns: {
-        'mainGrid': 'theme(space.24) 1fr'
+        'main': 'theme(space.24) 1fr'
       },
       gridTemplateRows: {
-        'mainGrid': '80px 1fr 32px'
+        'main': '80px 1fr 32px',
+        'timeEntry': 'theme(space.16) theme(space.8) 1fr'
       }
     },
   },

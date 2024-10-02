@@ -175,7 +175,7 @@ templ EquipmentRow(equipmentHours []string, count, phaseCount int) {
 templ TimeCardForm(header *TimeCardHeaderForm, detail *TimeCardDetailForm) {
     // header.job and job have to be the same otherwise this breaks...
     <form>
-      <div class="grid gap-2 grid-cols-8 grid-rows-3">
+      <div class="grid gap-2 grid-cols-8 grid-rows-timeEntry h-full">
         <div id="header" class="grid grid-cols-subgrid grid-rows-2 gap-2 col-start-1 col-span-8 row-start-1 row-span-1">
           <div class="col-start-1 row-start-1 col-span-2" id="dayofweek-div" name="dayofweek-div" hx-get="/utils/weekday" hx-include="#workdate" hx-trigger="dateSelected">
             @DayofWeek(header.WorkDate)
@@ -189,18 +189,18 @@ templ TimeCardForm(header *TimeCardHeaderForm, detail *TimeCardDetailForm) {
                 <input type="date" id="workdate" name="workdate" value="" _="on input send dateSelected to #dayofweek-div">
             }
           </div>
-          <div id="jobname" name="jobname" class="col-start-3 row-start-2 col-span-4">
+          <div id="jobname" name="jobname" class="col-start-3 row-start-2 col-span-4 flex flex-row">
           if header.Job != nil {
-              <label for="job">Job:</label>
+              <label for="job" class="flex">Job:</label>
               <select _="on change send jobSelected to #phases then if my value is not empty send getInfo to me"
-                id="job" name="job" hx-get="/tc/jobinfo" hx-target="#jobinfo" hx-trigger="getInfo">
+                id="job" name="job"  class="flex" hx-get="/tc/jobinfo" hx-target="#jobinfo" hx-trigger="getInfo">
                 <option value={ header.Job.SelectValue() } selected>{ header.Job.SelectString() }</option>
               </select>
           } else {
-              <label for="job">Job:</label>
+              <label for="job" class="flex">Job:</label>
               <select _="on change send jobSelected to #phases then if my value is not empty send getInfo to me"
-                id="job" name="job" hx-get="/tc/jobinfo" hx-target="#jobinfo">
-              <option value="" selected></option>
+                id="job" name="job"  class="flex" hx-get="/tc/jobinfo" hx-target="#jobinfo" hx-trigger="getInfo">
+                <option value="" selected></option>
               </select>
           }
           </div>

@@ -175,20 +175,21 @@ templ EquipmentRow(equipmentHours []string, count, phaseCount int) {
 templ TimeCardForm(header *TimeCardHeaderForm, detail *TimeCardDetailForm) {
     // header.job and job have to be the same otherwise this breaks...
     <form>
-      <div class="grid gap-4 grid-cols-9 grid-rows-10">
-        <div id="header" class="grid-cols-subgrid grid-rows-subgrid">
-          <div hx-get="/tc/jobselect" hx-swap="beforeend" hx-target="#job" hx-trigger="load once"></div>
-            if !header.WorkDate.IsZero() {
-                <label for="workdate" class="col-start-1 row-start-1">Date:</label>
-                <input class="col-start-2 row-start-1" type="date" id="workdate" name="workdate" value={ header.WorkDate.Format("2006-01-02") } _="on input send dateSelected to #dayofweek-div">
-            } else {
-                <label classs="col-start-1 row-start-1" for="workdate">Date:</label>
-                <input class="col-start-2 row-start-1" type="date" id="workdate" name="workdate" value="" _="on input send dateSelected to #dayofweek-div">
-            }
-          <div class="col-start-1 row-start-2 col-span-2" id="dayofweek-div" name="dayofweek-div" hx-get="/utils/weekday" hx-include="#workdate" hx-trigger="dateSelected">
+      <div class="grid gap-2 grid-cols-8 grid-rows-3">
+        <div id="header" class="grid grid-cols-subgrid grid-rows-2 gap-2 col-start-1 col-span-8 row-start-1 row-span-1">
+          <div class="col-start-1 row-start-1 col-span-2" id="dayofweek-div" name="dayofweek-div" hx-get="/utils/weekday" hx-include="#workdate" hx-trigger="dateSelected">
             @DayofWeek(header.WorkDate)
           </div>
-          <div id="jobstuff" name="jobstuff" class="col-start-3 row-start-1 col-span-3">
+          <div class="col-start-1 row-start-2 col-span-2" hx-get="/tc/jobselect" hx-swap="beforeend" hx-target="#job" hx-trigger="load once">
+            if !header.WorkDate.IsZero() {
+                <label for="workdate">Date:</label>
+                <input type="date" id="workdate" name="workdate" value={ header.WorkDate.Format("2006-01-02") } _="on input send dateSelected to #dayofweek-div">
+            } else {
+                <label for="workdate">Date:</label>
+                <input type="date" id="workdate" name="workdate" value="" _="on input send dateSelected to #dayofweek-div">
+            }
+          </div>
+          <div id="jobname" name="jobname" class="col-start-3 row-start-2 col-span-4">
           if header.Job != nil {
               <label for="job">Job:</label>
               <select _="on change send jobSelected to #phases then if my value is not empty send getInfo to me"
@@ -203,15 +204,15 @@ templ TimeCardForm(header *TimeCardHeaderForm, detail *TimeCardDetailForm) {
               </select>
           }
           </div>
-          <div id="jobinfo" name="jobinfo">
+          <div id="jobinfo" name="jobinfo" class="col-start-7 col-span-2 row-start-1 row-span-2">
             @JobStateCertified(header.Job)
           </div>
         </div>
 
-        <div id="phases" hx-get="/tc/clearphases" hx-swap="innerHTML" hx-trigger="jobSelected">
+        <div id="phases" name="phases" class="grid grid-cols-subgrid grid-rows-subgrid col-start-4 col-span-5 row-start-2 row-span-1" hx-get="/tc/clearphases" hx-swap="innerHTML" hx-trigger="jobSelected">
           @Phases(detail.Phases)
         </div>
-        <div id="hours" name="hours">
+        <div id="hours" name="hours" class="grid grid-cols-subgrid grid-rows-subgrid col-start-1 col-span-9 row-start-3 row-span-1">
           <div id="employeeDetail">
             @Employees(detail.Employees, len(detail.Phases))
           </div>

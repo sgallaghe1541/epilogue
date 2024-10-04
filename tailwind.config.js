@@ -7,8 +7,9 @@ module.exports = {
         'main': 'theme(space.24) 1fr'
       },
       gridTemplateRows: {
-        'main': '80px 1fr 32px',
-        'timeEntry': 'theme(space.16) theme(space.8) 1fr'
+        'main': 'theme(space.20) calc(100vh - theme(space.8) - theme(space.20)) theme(space.8)',
+        'timeEntry': 'minmax(theme(space.16), max-content) minmax(theme(space.8), max-content) 1fr',
+        'hours': 'minmax(min-content, max-content) minmax(min-content, max-content)'
       }
     },
   },

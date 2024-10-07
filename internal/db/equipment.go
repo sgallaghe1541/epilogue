@@ -9,7 +9,7 @@ type Equipment struct {
 }
 
 func (e Equipment) SelectValue() string {
-	return e.Equipment
+	return fmt.Sprintf("%s -- %s", e.Equipment, e.Description)
 }
 
 func (e Equipment) SelectString() string {

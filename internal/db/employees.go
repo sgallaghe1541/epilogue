@@ -11,11 +11,11 @@ type Employee struct {
 }
 
 func (e Employee) SelectValue() string {
-	return e.Employee
+	return fmt.Sprintf("%s -- %s", e.Employee, e.Name)
 }
 
 func (e Employee) SelectString() string {
-	return fmt.Sprintf("%s -- %s", e.Employee, e.Name)
+	return e.Name
 }
 
 func (e *EpilogueConnection) GetEmployeesByDepartment(dept string) ([]Employee, error) {

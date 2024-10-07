@@ -49,12 +49,13 @@ templ Phases(phases []string) {
       for i := 1; i < 6; i++ {
         if i == 1 {
           <select _={ fmt.Sprintf(phaseScript, i, i, i) }
-            class="rounded-md border-stone-500 border-2 text-lg p-1"
+            class="rounded-md border-2 border-stone-200 text-lg p-1 hover:border-stone-500"
             id={ fmt.Sprintf("phase%d", i) } name={ fmt.Sprintf("phase%d", i) } hx-get="/tc/phaseselect" hx-swap="beforeend" hx-trigger="click once" hx-include="previous #job">
             <option value=""></option>
           </select>
         } else {
           <select _={ fmt.Sprintf(phaseScript, i, i, i) }
+            class="rounded-md border-2 border-stone-200 text-lg p-1 hover:border-stone-500"
             id={ fmt.Sprintf("phase%d", i) } name={ fmt.Sprintf("phase%d", i) } hx-get="/tc/phaseselect" hx-swap="beforeend" hx-trigger="click once" hx-include="previous #job" disabled>
             <option value=""></option>
           </select>
@@ -65,12 +66,13 @@ templ Phases(phases []string) {
       for i := 1; i < 6; i++ {
         if len(phases) >= i {
           <select _={ fmt.Sprintf(phaseScript, i, i, i) }
-            class="rounded-md border-stone-500 border-2 text-lg p-1"
+            class="rounded-md border-2 border-stone-200 text-lg p-1 hover:border-stone-500"
             id={ fmt.Sprintf("phase%d", i) } name={ fmt.Sprintf("phase%d", i) } hx-get="/tc/phaseselect" hx-swap="beforeend" hx-trigger="click once" hx-include="previous #job">
             <option value={ phases[i-1] }>{ phases[i-1] }</option>
           </select>
         } else {
           <select _={ fmt.Sprintf(phaseScript, i, i, i) }
+            class="rounded-md border-2 border-stone-200 text-lg p-1 hover:border-stone-500"
             id={ fmt.Sprintf("phase%d", i) } name={ fmt.Sprintf("phase%d", i) } hx-get="/tc/phaseselect" hx-swap="beforeend" hx-trigger="click once" hx-include="previous #job" disabled>
             <option value=""></option>
           </select>
@@ -103,7 +105,7 @@ templ Employees(employees [][]string, phaseCount int) {
 
 templ EmployeeRow(employeeHours []string, count, phaseCount int) {
     if len(employeeHours) == 0 {
-      <div class="grid gap-2 grid-cols-subgrid col-start-1 col-span-9 bg-stone-200">
+      <div class="grid grid-cols-subgrid col-start-1 col-span-9 rounded-md bg-stone-200">
         <select class="rounded-md border-2 border-stone-200 text-lg p-1 hover:border-stone-500" id={ fmt.Sprintf("employee%d", count) } name={ fmt.Sprintf("employee%d", count) } hx-get="/tc/employeeselect" hx-swap="beforeend" hx-trigger="load" hx-params="none">
           <option value=""></option>
         </select>
@@ -123,7 +125,7 @@ templ EmployeeRow(employeeHours []string, count, phaseCount int) {
         <button _="on click remove the closest <div/> then send employeeRemoved to #employeecount">Delete</button>
       </div>
     } else {
-      <div class="grid gap-2 grid-cols-subgrid col-start-1 col-span-9 bg-stone-200">
+      <div class="grid grid-cols-subgrid col-start-1 col-span-9 rounded-md bg-stone-200">
         <select class="rounded-md border-2 border-stone-200 text-lg p-1 hover:border-stone-500" 
           id={ fmt.Sprintf("employee%d", count) } name={ fmt.Sprintf("employee%d", count) } hx-get="/tc/employeeselect" hx-swap="beforeend" hx-trigger="load">
           <option value=""></option>
@@ -150,25 +152,25 @@ templ Equipment(equipment [][]string, phaseCount int) {
   if len(equipment) != 0 {
     <input _="on equipmentAdded from <body/> increment my value by 1 end on equipmentRemoved decrement my value by 1 end" type="hidden" id="equipmentcount" name="equipmentcount" value={ fmt.Sprintf("%d",len(equipment)) }>
     <input _="on equipmentAdded from <body/> increment my value by 1" type="hidden" id="equipmentrownumber" name="equipmentrownumber" value={ fmt.Sprintf("%d",len(equipment)) }>
-    <div class="grid gap-2 grid-cols-subgrid col-start-1 col-span-9 p-2">
+    <div class="grid grid-cols-subgrid col-start-1 col-span-9 p-2">
       for i, equip := range equipment {
         @EquipmentRow(equip, i, phaseCount)
       }
-      <button type="button" class="bg-stone-700 text-yellow-300 rounded-md p-2 hover:bg-yellow-300 hover:text-stone-700" hx-get="/tc/addequipmentrow" hx-swap="beforebegin" hx-include="#equipmentrownumber, #phasecount">Add Equipment</button>
+      <button type="button" class="hover:bg-stone-700 hover:text-yellow-300 rounded-md p-2 bg-yellow-300 text-stone-700" hx-get="/tc/addequipmentrow" hx-swap="beforebegin" hx-include="#equipmentrownumber, #phasecount">Add Equipment</button>
   </div>
   } else {
     <input _="on equipmentAdded from <body/> increment my value by 1 end on equipmentRemoved decrement my value by 1 end" type="hidden" id="equipmentcount" name="equipmentcount" value="0">
     <input _="on equipmentAdded from <body/> increment my value by 1" type="hidden" id="equipmentrownumber" name="equipmentrownumber" value="1">
-    <div class="grid gap-2 grid-cols-subgrid col-start-1 col-span-9 p-2">
+    <div class="grid grid-cols-subgrid col-start-1 col-span-9 p-2">
       @EquipmentRow([]string{}, 1, 0)
-      <button type="button" class="bg-stone-700 text-yellow-300 rounded-md p-2 hover:bg-yellow-300 hover:text-stone-700" hx-get="/tc/addequipmentrow" hx-swap="beforebegin" hx-include="#equipmentrownumber, #phasecount">Add Equipment</button>
+      <button type="button" class="hover:bg-stone-700 hover:text-yellow-300 rounded-md p-2 bg-yellow-300 text-stone-700" hx-get="/tc/addequipmentrow" hx-swap="beforebegin" hx-include="#equipmentrownumber, #phasecount">Add Equipment</button>
     </div>
   }
 }
 
 templ EquipmentRow(equipmentHours []string, count, phaseCount int) {
   if len(equipmentHours) == 0 {
-    <div class="grid gap-2 grid-cols-subgrid col-start-1 col-span-9 bg-stone-200">
+    <div class="grid grid-cols-subgrid col-start-1 col-span-9 rounded-md bg-stone-200">
       <select class="grid grid-cols-subgrid col-start-1 col-span-3 rounded-md border-2 border-stone-200 text-lg p-1 hover:border-stone-500" id={ fmt.Sprintf("equipment%d", count) } name={ fmt.Sprintf("equipment%d", count) } hx-get="/tc/equipmentselect" hx-swap="beforeend" hx-trigger="load" hx-params="none">
         <option value=""></option>
       </select>
@@ -182,7 +184,7 @@ templ EquipmentRow(equipmentHours []string, count, phaseCount int) {
       <button _="on click remove the closest <div/> then send equipmentRemoved to #equipmentcount">Delete</button>
     </div>
   } else {
-    <div class="grid gap-2 grid-cols-subgrid col-start-1 col-span-9 bg-stone-200">
+    <div class="gridgrid-cols-subgrid col-start-1 col-span-9 rounded-md bg-stone-200">
       <select class="grid grid-cols-subgrid col-start-1 col-span-3 rounded-md border-2 border-stone-200 text-lg p-1 hover:border-stone-500" id={ fmt.Sprintf("equipment%d", count) } name={ fmt.Sprintf("equipment%d", count) } hx-get="/tc/equipmentselect" hx-swap="beforeend" hx-trigger="load">
         <option value=""></option>
       </select>
@@ -200,8 +202,8 @@ templ EquipmentRow(equipmentHours []string, count, phaseCount int) {
 
 templ TimeCardForm(header *TimeCardHeaderForm, detail *TimeCardDetailForm) {
     // header.job and job have to be the same otherwise this breaks...
-    <form class="h-full max-h-full overflow-hidden">
-      <div class="grid gap-2 grid-cols-9 grid-rows-timeEntry h-full max-h-full overflow-hidden rounded-md pr-4 pl-2 pt-2 pb-2 bg-stone-200">
+    <form class="h-full max-h-full w-full max-w-full overflow-hidden">
+      <div class="grid gap-0 grid-cols-timeEntry grid-rows-timeEntry h-full max-h-full w-full max-w-full overflow-hidden rounded-md pl-2 pt-2 pb-2 bg-slate-200">
         <div id="header" class="grid grid-cols-subgrid grid-rows-2 gap-2 col-start-1 col-span-9 row-start-1 row-span-1">
           <div class="col-start-1 row-start-1 col-span-2" id="dayofweek-div" name="dayofweek-div" hx-get="/utils/weekday" hx-include="#workdate" hx-trigger="dateSelected">
             @DayofWeek(header.WorkDate)
@@ -219,14 +221,14 @@ templ TimeCardForm(header *TimeCardHeaderForm, detail *TimeCardDetailForm) {
           if header.Job != nil {
               <label for="job" class="flex">Job:</label>
               <select _="on change send jobSelected to #phases then if my value is not empty send getInfo to me"
-                class="rounded-md border-stone-500 border-2 text-lg p-1"
+                class="rounded-md border-2 border-stone-200 text-lg p-1 hover:border-stone-500"
                 id="job" name="job"  class="flex" hx-get="/tc/jobinfo" hx-target="#jobinfo" hx-trigger="getInfo">
                 <option value={ header.Job.SelectValue() } selected>{ header.Job.SelectString() }</option>
               </select>
           } else {
               <label for="job" class="flex">Job:</label>
               <select _="on change send jobSelected to #phases then if my value is not empty send getInfo to me"
-                class="rounded-md border-stone-500 border-2 text-lg p-1"
+                class="rounded-md border-2 border-stone-200 text-lg p-1 hover:border-stone-500"
                 id="job" name="job"  class="flex" hx-get="/tc/jobinfo" hx-target="#jobinfo" hx-trigger="getInfo">
                 <option value="" selected></option>
               </select>
@@ -237,16 +239,21 @@ templ TimeCardForm(header *TimeCardHeaderForm, detail *TimeCardDetailForm) {
           </div>
         </div>
 
-        <div id="phases" name="phases" class="grid grid-cols-subgrid grid-rows-subgrid col-start-4 col-span-5 row-start-2 row-span-1" hx-get="/tc/clearphases" hx-swap="innerHTML" hx-trigger="jobSelected">
-          @Phases(detail.Phases)
+        <div class="col-start-1 grid grid-cols-subgrid grid-rows-2 col-span-9 row-start-2 pl-2">
+          <div class="grid col-start-4 col-span-4">
+            <p>Phases</p>
+          </div>
+          <div class="grid grid-cols-subgrid col-start-1 col-span-3 row-start-2">
+            <p>Employee</p>
+            <p>Class</p>
+            <p>Earn Code</p>
+          </div>
+          <div id="phases" name="phases" class="grid grid-cols-subgrid grid-rows-subgrid col-start-4 col-span-5 row-start-2 row-span-1" hx-get="/tc/clearphases" hx-swap="innerHTML" hx-trigger="jobSelected">
+            @Phases(detail.Phases)
+          </div>
         </div>
-        <div id="hours" name="hours" class="grid grid-cols-subgrid grid-rows-hours col-start-1 h-full max-h-full col-span-9 row-start-3 row-span-1 overflow-x-hidden overflow-y-auto">
+        <div id="hours" name="hours" class="grid grid-cols-subgrid grid-rows-hours col-start-1 h-full max-h-full w-full max-w-full col-span-9 row-start-3 row-span-1 overflow-x-hidden overflow-y-auto">
           <div id="employeeDetail" name="employeeDetail" class="col-start-1 grid grid-cols-subgrid col-span-9 row-start-1 min-h-0">
-            <div class="col-start-1 grid grid-cols-subgrid col-span-9 pl-2">
-              <p>Employee</p>
-              <p>Class</p>
-              <p>Earn Code</p>
-            </div>
             @Employees(detail.Employees, len(detail.Phases))
           </div>
 

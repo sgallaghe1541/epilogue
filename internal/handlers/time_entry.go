@@ -144,16 +144,19 @@ func HandleJobInfo(logger *slog.Logger, epilogue *db.EpilogueConnection) http.Ha
 			jobNum, jobDescription := utils.GetSelectNumDescription(vals.Get("job"))
 			if jobNum == "" || jobDescription == "" {
 				fmt.Println("failed to get job number")
+				w.Header().Set("Content-Type", "text/html")
+				timeentry.JobStateCertified(nil).Render(context.Background(), w)
 				return
 			}
 
 			job, err := epilogue.GetJobByNumber(jobNum)
 			if err != nil {
 				fmt.Println(err.Error())
+				w.Header().Set("Content-Type", "text/html")
+				timeentry.JobStateCertified(nil).Render(context.Background(), w)
 				return
 			}
 			w.Header().Set("Content-Type", "text/html")
-			// w.Header().Set("HX-Trigger", "jobSelected")
 			timeentry.JobStateCertified(&job).Render(context.Background(), w)
 		})
 }

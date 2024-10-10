@@ -55,9 +55,14 @@ const (
 	employeeSelectScript = `
 		on change 
 			if my value is not empty
-				set inputs to <input/> in closest <div/>
+				set inputs to [<input/> in closest <div/>, <select/> in closest <div/>]
 				for i in inputs 
 					set i's @employee-selected to 'y'
+				end
+			else 
+				set inputs to [<input/> in closest <div/>, <select/> in closest <div/>]
+				for i in inputs 
+					set i's @employee-selected to 'n'
 				end
 			end
 			send employeeSelected to #hours
@@ -73,5 +78,27 @@ const (
 			end
 			send equipmentSelected to #hours
 		end 
+	`
+	jobCertifiedScript = `
+		on load 
+			if my value == 'Y'
+				send certifiedJobSelected to #employeeDetail
+			else
+				send nonCertifiedJobSelected to #employeeDetail
+			end
+		end
+	`
+	employeeClassScript = `
+		on certifiedJobSelected from #employeeDetail set @certified-selected to 'y' 
+			if @employee-selected == 'y' remove @disabled from me end 
+		end
+		on nonCertifiedJobSelected from #employeeDetail set @certified-selected to 'n' set @disabled to 'disabled' end
+		on employeeSelected from #hours 
+			if @certified-selected == 'y' and @employee-selected == 'y' 
+				remove @disabled from me
+			else 
+				set @disabled to 'disabled'
+			end
+		end
 	`
 )

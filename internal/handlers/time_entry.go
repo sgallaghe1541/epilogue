@@ -15,71 +15,6 @@ import (
 	"github.com/sgallaghe1541/epilogue/internal/utils"
 )
 
-// func HandleTimeEntry(w http.ResponseWriter, r *http.Request) {
-// 	w.Header().Set("Content-Type", "text/html")
-// 	w.Header().Set("HX-Push-Url", r.URL.Path)
-// 	timeentry.TimeEntryLinks().Render(context.Background(), w)
-// }
-
-// func HandleNewTimeCard(w http.ResponseWriter, r *http.Request) {
-// 	w.Header().Set("Content-Type", "text/html")
-// 	w.Header().Set("HX-Push-Url", r.URL.Path)
-// 	timeentry.ViewTimeCardHeader(timeentry.TimeCardHeaderForm{}).Render(context.Background(), w)
-// }
-
-// func HandlePostNewTimeHeader(logger *slog.Logger, epilogue *db.EpilogueConnection, viewpoint *viewpoint.ViewpointConnection, sessionManager *scs.SessionManager) http.Handler {
-// 	return http.HandlerFunc(
-// 		func(w http.ResponseWriter, r *http.Request) {
-// 			err := r.ParseForm()
-// 			if err != nil {
-// 				utils.ServerError(w, r, logger, err)
-// 			}
-
-// 			date, err := time.Parse("2006-01-02", r.PostForm.Get("workdate"))
-// 			if err != nil {
-// 				utils.ServerError(w, r, logger, err)
-// 				return
-// 			}
-
-// 			currentWEDate := utils.GetWEDate(date)
-// 			status := viewpoint.GetPayPeriodStatus(currentWEDate)
-
-// 			jobNumber := r.PostForm.Get("job")
-// 			job, err := epilogue.GetJobByNumber(jobNumber)
-
-// 			form := timeentry.TimeCardHeaderForm{
-// 				WorkDate:    date,
-// 				Job:         &job,
-// 				FieldErrors: map[string]string{},
-// 			}
-
-// 			if !form.WorkDate.Before(time.Now()) {
-// 				form.FieldErrors["workdate"] = "Time card date cannot be in the future."
-// 			} else if status == 1 {
-// 				form.FieldErrors["workdate"] = fmt.Sprintf("The pay period containing %s is closed.", date.Format("01/02/2006"))
-// 			}
-// 			// validate job
-
-// 			if len(form.FieldErrors) > 0 {
-// 				for k, v := range form.FieldErrors {
-// 					fmt.Printf("%s: %s\n", k, v)
-// 				}
-// 				timeentry.ViewTimeCardHeader(form).Render(context.Background(), w)
-// 				return
-// 			}
-
-// 			id, err := epilogue.NewTimecard(form.Job, form.WorkDate, sessionManager.GetInt(r.Context(), "authenticatedUserID"))
-
-// 			if err != nil {
-// 				utils.ServerError(w, r, logger, err)
-// 				return
-// 			}
-// 			redirectURL := fmt.Sprintf("/timeentry/timecard/%d", id)
-
-// 			http.Redirect(w, r, redirectURL, http.StatusSeeOther)
-// 		})
-// }
-
 func HandleTimeCards(logger *slog.Logger, epilogue *db.EpilogueConnection, sessionManager *scs.SessionManager) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
@@ -94,7 +29,7 @@ func HandleTimeCards(logger *slog.Logger, epilogue *db.EpilogueConnection, sessi
 				w.Header().Set("Content-Type", "text/html")
 				w.Header().Set("HX-Push-Url", updatedURL)
 
-				timeentry.TimeCardForm(&timeentry.TimeCardHeaderForm{}, &timeentry.TimeCardDetailForm{}).Render(context.Background(), w)
+				timeentry.NewTimeCardForm().Render(context.Background(), w)
 				return
 			}
 
@@ -223,9 +158,13 @@ func HandleAddEmployeeRow(logger *slog.Logger) http.Handler {
 				logger.Error("malformed phasecount received...")
 				return
 			}
+			certified := vals.Get("certified")
+			if certified != "N" && certified != "Y" {
+				logger.Error("invalid certified value received...")
+			}
 			w.Header().Set("Content-Type", "text/html")
 			w.Header().Set("HX-Trigger", "employeeAdded")
-			timeentry.EmployeeRow([]string{}, empCount+1, phaseCount).Render(context.Background(), w)
+			timeentry.EmployeeRow([]string{}, empCount+1, phaseCount, certified).Render(context.Background(), w)
 		})
 }
 
@@ -271,5 +210,30 @@ func HandleAddEquipmentRow(logger *slog.Logger) http.Handler {
 			w.Header().Set("Content-Type", "text/html")
 			w.Header().Set("HX-Trigger", "equipmentAdded")
 			timeentry.EquipmentRow([]string{}, equipCount+1, phaseCount).Render(context.Background(), w)
+		})
+}
+
+func HandleClassesSelect(logger *slog.Logger, epilogue *db.EpilogueConnection) http.Handler {
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			vals := r.URL.Query()
+			jobNum, jobDescription := utils.GetSelectNumDescription(vals.Get("job"))
+			if jobNum == "" || jobDescription == "" {
+				fmt.Println("failed to get job number")
+				return
+			}
+			job, err := epilogue.GetJobByNumber(jobNum)
+			if err != nil {
+				logger.Error("invalid or closed job number...", "job", jobNum)
+				return
+			}
+			classes, err := epilogue.GetCraftClassByJob(job)
+			if err != nil {
+				fmt.Println(err.Error())
+			}
+			w.Header().Set("Content-Type", "text/html")
+			for _, class := range classes {
+				timeentry.SelectList(class).Render(context.Background(), w)
+			}
 		})
 }

@@ -15,7 +15,7 @@ import (
 	"github.com/sgallaghe1541/epilogue/internal/utils"
 )
 
-func HandleTimeCards(logger *slog.Logger, epilogue *db.EpilogueConnection, sessionManager *scs.SessionManager) http.Handler {
+func HandleNewTimeCard(logger *slog.Logger, epilogue *db.EpilogueConnection, sessionManager *scs.SessionManager) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			if r.PathValue("id") == "" {
@@ -25,7 +25,7 @@ func HandleTimeCards(logger *slog.Logger, epilogue *db.EpilogueConnection, sessi
 					utils.ServerError(w, r, logger, err)
 					return
 				}
-				updatedURL, _ := url.JoinPath(r.URL.Path, fmt.Sprintf("%d", tcid))
+				updatedURL, _ := url.JoinPath(r.URL.Path, "timecard", fmt.Sprintf("%d", tcid))
 				w.Header().Set("Content-Type", "text/html")
 				w.Header().Set("HX-Push-Url", updatedURL)
 
@@ -50,6 +50,21 @@ func HandleTimeCards(logger *slog.Logger, epilogue *db.EpilogueConnection, sessi
 			// w.Header().Set("Content-Type", "text/html")
 			// w.Header().Set("HX-Push-Url", r.URL.Path)
 			// timeentry.EditTimeCard(tcHeader, tcEmployees, timeentry.TimeCardDetailForm{}).Render(context.Background(), w)
+		})
+}
+
+func HandlePutTimeCard(logger *slog.Logger, epilogue *db.EpilogueConnection, sessionManager *scs.SessionManager) http.Handler {
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			vals := r.URL.Query()
+			fmt.Println("made it")
+			for k, v := range vals {
+				fmt.Printf("%s -- %s\n", k, v)
+			}
+			r.ParseForm()
+			for k, v := range r.Form {
+				fmt.Printf("%s -- %s\n", k, v)
+			}
 		})
 }
 

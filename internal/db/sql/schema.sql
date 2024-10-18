@@ -132,3 +132,6 @@ CREATE TABLE IF NOT EXISTS time_card_employees (
     FOREIGN KEY(tchid) REFERENCES time_card_headers(id)
 );
 
+CREATE TABLE IF NOT EXISTS earn_codes (
+    description TEXT PRIMARY KEY
+);

@@ -65,14 +65,15 @@ const (
 				set inputs to [<input/> in closest <div/>, <select/> in closest <div/>]
 				for i in inputs 
 					set i's @employee-selected to 'y'
+          send employeeSelected to i
 				end
 			else 
 				set inputs to [<input/> in closest <div/>, <select/> in closest <div/>]
 				for i in inputs 
 					set i's @employee-selected to 'n'
+          send employeeSelected to i
 				end
 			end
-			send employeeSelected to #hours
 		end 
 	`
 	equipmentSelectScript = `
@@ -81,9 +82,15 @@ const (
 				set inputs to <input/> in closest <div/>
 				for i in inputs 
 					set i's @equipment-selected to 'y'
+          send equipmentSelected to i
+				end
+      else
+        set inputs to <input/> in closest <div/>
+				for i in inputs 
+					set i's @equipment-selected to 'n'
+          send equipmentSelected to i
 				end
 			end
-			send equipmentSelected to #hours
 		end 
 	`
 	jobCertifiedScript = `
@@ -97,14 +104,37 @@ const (
 	`
 	employeeClassScript = `
 		on certifiedJobSelected from #employeeDetail set @certified-selected to 'y' 
-			if @employee-selected == 'y' remove @disabled from me end 
+			if @employee-selected == 'y' 
+        remove @disabled from me 
+        send getClasses to me
+      end 
 		end
-		on nonCertifiedJobSelected from #employeeDetail set @certified-selected to 'n' set @disabled to 'disabled' end
-		on employeeSelected from #hours 
+		on nonCertifiedJobSelected from #employeeDetail 
+      set @certified-selected to 'n' 
+      set @disabled to 'disabled' 
+      set my value to ''
+    end
+		on employeeSelected 
 			if @certified-selected == 'y' and @employee-selected == 'y' 
 				remove @disabled from me
 				send getClasses to me
 			else 
+				set @disabled to 'disabled'
+			end
+		end
+	`
+  employeeEarnScript = `
+    on nonCertifiedJobSelected from #employeeDetail or certifiedJobSelected from #employeeDetail set @job-selected to 'y'
+      if @employee-selected == 'y'
+        remove @disabled from me
+        send getEarnCodes to me
+    end
+		on employeeSelected 
+			if @job-selected == 'y' and @employee-selected == 'y' 
+				remove @disabled from me
+				send getEarnCodes to me
+			else 
+        set my value to ''
 				set @disabled to 'disabled'
 			end
 		end
@@ -115,20 +145,25 @@ templ SelectList(item SelectOption) {
     <option value={ item.SelectValue() }>{ item.SelectString() }</option>
 }
 
+templ BlankOption() {
+    <option value=""></option>
+}
+
 templ DayofWeek(date time.Time) {
     <label for="dayofweek" class="m-1 justify-self-end self-center font-bold text-stone-700 text-lg">Day</label>
-    <input type="text" id="dayofweek" class="rounded-md border-2 grid border-stone-300 text-lg p-1 bg-yellow-100 w-full" name="dayofweek" value={ date.Weekday().String() } disabled>
+    <input type="text" id="dayofweek" class="rounded-md border-2 grid border-stone-300 text-lg p-1 bg-stone-100 w-full" name="dayofweek" value={ date.Weekday().String() } disabled>
 }
 
 templ JobStateCertified(job *db.Job) {
+    <input type="hidden" id="certified" name="certified" value={ job.Certified }>
+    <input type="hidden" id="state" name="state" value={ job.State }>
     <div class="col-start-1 col-span-2 row-start-1 row-span-1 grid grid-cols-subgrid p-1 m-1">
-      <label for="state" class="m-1 justify-self-end self-center font-bold text-stone-700 text-lg">State</label>
-      <input type="text" id="state" name="state" class="p-1 bg-yellow-100 w-full text-lg rounded-md text-center" value={ job.State } disabled>
+      <label for="statedisplay" class="m-1 justify-self-end self-center font-bold text-stone-700 text-lg">State</label>
+      <input type="text" id="statedisplay" name="statedisplay" class="p-1 bg-stone-100 w-full text-lg rounded-md text-center" value={ job.State } disabled>
     </div>
     <div class="col-start-1 col-span-2 row-start-2 row-span-2 grid grid-cols-subgrid p-1 m-1">
-      <input type="hidden" id="certified" name="certified" value={ job.Certified }>
-      <label for="certified" class="m-1 justify-self-end self-center font-bold text-stone-700 text-lg">Certified</label>
-      <input _={ jobCertifiedScript } type="text" id="certified" class="p-1 bg-yellow-100 w-full text-lg rounded-md text-center" name="certified" value={ job.Certified } disabled>
+      <label for="certifieddisplay" class="m-1 justify-self-end self-center font-bold text-stone-700 text-lg">Certified</label>
+      <input _={ jobCertifiedScript } type="text" id="certifieddisplay" class="p-1 bg-stone-100 w-full text-lg rounded-md text-center" name="certifieddisplay" value={ job.Certified } disabled>
     </div>
 }
 
@@ -166,44 +201,73 @@ templ Employees(employees [][]string, phaseCount int, certified string) {
     @EmployeeRow(employee, i, phaseCount, certified)
   }
     <button type="button" class="hover:bg-stone-700 hover:text-yellow-300 rounded-md p-2 bg-yellow-300 text-stone-700 m-1" 
-      hx-get="/tc/addemployeerow" hx-swap="beforebegin" hx-include="#employeerownumber, #phasecount, #certified">Add Employee</button>
+      hx-get="/tc/addemployeerow" hx-swap="beforebegin" hx-include="#employeerownumber, #phasecount, #certified, #state">Add Employee</button>
   </div>
 }
 
 templ EmployeeRow(employeeHours []string, count, phaseCount int, certified string) {
     <div class="grid grid-cols-subgrid col-start-1 col-span-9 rounded-md">
-      <select id={ fmt.Sprintf("employee%d", count) } name={ fmt.Sprintf("employee%d", count) }
+      <select id={ fmt.Sprintf("employee-%d", count) } name={ fmt.Sprintf("employee-%d", count) }
         _={ employeeSelectScript } 
         class="rounded-md border-2 border-stone-300 text-lg p-1 hover:border-stone-500" 
         hx-get="/tc/employeeselect" hx-swap="beforeend" hx-trigger="load">
         <option value=""></option>
       </select>
       if certified == "Y" {
-        <select id={ fmt.Sprintf("employee%dclass", count) } name={ fmt.Sprintf("employee%dclass", count) } 
+        <select id={ fmt.Sprintf("employee-%d-class", count) } name={ fmt.Sprintf("employee-%d-class", count) } 
           _={ employeeClassScript } 
-          class="rounded-md border-2 border-stone-300 text-lg p-1 hover:border-stone-500 disabled:bg-red-100/75"
-          hx-get="/tc/classes" hx-swap="beforeend" hx-trigger="getClasses" hx-include="#job"
+          class="rounded-md border-2 border-stone-300 text-lg p-1 hover:border-stone-500 disabled:bg-red-100"
+          hx-get="/tc/classes" hx-trigger="getClasses" hx-include="#job"
           certified-selected="y"
           disabled>
           <option value=""></option>
         </select>
-      } else {
-        <select id={ fmt.Sprintf("employee%dclass", count) } name={ fmt.Sprintf("employee%dclass", count) } 
+        <select id={ fmt.Sprintf("employee-%d-earn", count) } name={ fmt.Sprintf("employee-%d-earn", count) }
+          _={ employeeEarnScript }
+          class="rounded-md border-2 border-stone-300 text-lg p-1 hover:border-stone-500 disabled:bg-red-100"
+          hx-get="/tc/earncode" hx-trigger="getEarnCodes" hx-params="none"
+          job-selected="y"
+          disabled>
+          <option value=""></option>
+        </select>
+      } else if certified == "N" {
+        <select id={ fmt.Sprintf("employee-%d-class", count) } name={ fmt.Sprintf("employee-%d-class", count) } 
           _={ employeeClassScript } 
-          class="rounded-md border-2 border-stone-300 text-lg p-1 hover:border-stone-500 disabled:bg-red-100/75"
-          hx-get="/tc/classes" hx-swap="beforeend" hx-trigger="getClasses" hx-include="#job"
+          class="rounded-md border-2 border-stone-300 text-lg p-1 hover:border-stone-500 disabled:bg-red-100"
+          hx-get="/tc/classes" hx-trigger="getClasses" hx-include="#job"
+          certified-selected="n"
+          disabled>
+          <option value=""></option>
+        </select>
+        <select id={ fmt.Sprintf("employee-%d-earn", count) } name={ fmt.Sprintf("employee-%d-earn", count) }
+          _={ employeeEarnScript }
+          class="rounded-md border-2 border-stone-300 text-lg p-1 hover:border-stone-500 disabled:bg-red-100"
+          hx-get="/tc/earncode" hx-trigger="getEarnCodes" hx-params="none"
+          job-selected="y"
+          disabled>
+          <option value=""></option>
+        </select>
+      } else {
+        <select id={ fmt.Sprintf("employee-%d-class", count) } name={ fmt.Sprintf("employee-%d-class", count) } 
+          _={ employeeClassScript } 
+          class="rounded-md border-2 border-stone-300 text-lg p-1 hover:border-stone-500 disabled:bg-red-100"
+          hx-get="/tc/classes" hx-trigger="getClasses" hx-include="#job"
+          certified-selected="n"
+          disabled>
+          <option value=""></option>
+        </select>
+        <select id={ fmt.Sprintf("employee-%d-earn", count) } name={ fmt.Sprintf("employee-%d-earn", count) }
+          _={ employeeEarnScript }
+          class="rounded-md border-2 border-stone-300 text-lg p-1 hover:border-stone-500 disabled:bg-red-100"
+          hx-get="/tc/earncode" hx-trigger="getEarnCodes" hx-params="none"
+          job-selected="n"
           disabled>
           <option value=""></option>
         </select>
       }
-      <select id={ fmt.Sprintf("employee%dearn", count) } name={ fmt.Sprintf("employee%dearn", count) }
-        class="rounded-md border-2 border-stone-300 text-lg p-1 hover:border-stone-500"
-        hx-get="/tc/earncode" hx-swap="beforeend" hx-trigger="load">
-        <option value=""></option>
-      </select>
       for i := 1; i < 6; i++ {
         if i <= phaseCount {
-          <input id={ fmt.Sprintf("employee%dhours%d", count, i) } name={ fmt.Sprintf("employee%dhours%d", count, i) } 
+          <input id={ fmt.Sprintf("employee-%d-hours-%d", count, i) } name={ fmt.Sprintf("employee-%d-hours-%d", count, i) } 
             _={ fmt.Sprintf(employeeHoursScript, i, i) }
             class="rounded-md border-2 border-stone-300 text-lg text-center p-1 hover:border-stone-500 disabled:bg-red-100/75 invalid:border-red-600"
             type="number" max="14" step=".5"
@@ -211,7 +275,7 @@ templ EmployeeRow(employeeHours []string, count, phaseCount int, certified strin
             employee-selected="n"
             phase-selected="y">
         } else {
-          <input id={ fmt.Sprintf("employee%dhours%d", count, i) } name={ fmt.Sprintf("employee%dhours%d", count, i) } 
+          <input id={ fmt.Sprintf("employee-%d-hours-%d", count, i) } name={ fmt.Sprintf("employee-%d-hours-%d", count, i) } 
             _={ fmt.Sprintf(employeeHoursScript, i, i) }
             class="rounded-md border-2 border-stone-300 text-lg text-center p-1 hover:border-stone-500 disabled:bg-red-100/75 invalid:border-red-600"
             type="number" max="14" step=".5"
@@ -220,7 +284,8 @@ templ EmployeeRow(employeeHours []string, count, phaseCount int, certified strin
             phase-selected="n">
         }
       }
-      <div _="on click remove the closest parent <div/> then send employeeRemoved to #employeecount" class="hover:bg-red-600 hover:text-stone-50 rounded-full text-center p-1 place-self-center font-semibold font-mono w-8 bg-stone-100 text-stone-700">X</div>
+      <div _="on click remove the closest parent <div/> then send employeeRemoved to #employeecount" 
+        class="hover:bg-red-600 hover:text-stone-50 rounded-full text-center p-1 place-self-center font-semibold font-mono w-8 bg-stone-100 text-stone-700">X</div>
     </div>
 }
 
@@ -236,7 +301,7 @@ templ Equipment(equipment [][]string, phaseCount int) {
 }
 
 templ EquipmentRow(equipmentHours []string, count, phaseCount int) {
-    <div class="gridgrid-cols-subgrid col-start-1 col-span-9 rounded-md">
+    <div class="grid grid-cols-subgrid col-start-1 col-span-9 rounded-md">
       <select id={ fmt.Sprintf("equipment%d", count) } name={ fmt.Sprintf("equipment%d", count) }
         _={ equipmentSelectScript }
         class="grid grid-cols-subgrid col-start-1 col-span-3 rounded-md border-2 border-stone-300 text-lg p-1 hover:border-stone-500" 
@@ -268,7 +333,7 @@ templ EquipmentRow(equipmentHours []string, count, phaseCount int) {
 
 templ Notes() {
   <div class="col-start-1 col-span-9 rounded-b-md rounded-tr-md p-3 bg-stone-300">
-    <textarea id="dailyNotes" name="dailyNotes" class="w-full h-full rounded-md p-2 border-2 border-stone-300 hover:border-stone-500"></textarea>
+    <textarea id="dailyNotes" name="dailyNotes" rows="4" class="w-full h-full rounded-md p-4 border-2 border-stone-300 hover:border-stone-500"></textarea>
   </div>
 }
 
@@ -377,26 +442,28 @@ templ NewPhases() {
 
 templ NewEmployeeRow() {
     <div class="grid grid-cols-subgrid col-start-1 col-span-9 rounded-md">
-    <select id="employee1" name="employee1"
+    <select id="employee-1" name="employee-1"
       _={ employeeSelectScript } 
       class="rounded-md border-2 border-stone-300 text-lg p-1 hover:border-stone-500" 
       hx-get="/tc/employeeselect" hx-swap="beforeend" hx-trigger="load" hx-params="none">
       <option value=""></option>
     </select>
-    <select id="employee1class" name="employee1class"
+    <select id="employee-1-class" name="employee-1-class"
       _={ employeeClassScript } 
-      class="rounded-md border-2 border-stone-300 text-lg p-1 hover:border-stone-500 disabled:bg-red-100/75"
-      hx-get="/tc/classes" hx-swap="beforeend" hx-trigger="getClasses" hx-include="#job"
+      class="rounded-md border-2 border-stone-300 text-lg p-1 hover:border-stone-500 disabled:bg-red-100"
+      hx-get="/tc/classes" hx-trigger="getClasses" hx-include="#job"
       disabled>
       <option value=""></option>
     </select>
-    <select id="employee1earn" name="employee1earn"
-      class="rounded-md border-2 border-stone-300 text-lg p-1 hover:border-stone-500"
-      hx-get="/tc/earncode" hx-swap="beforeend" hx-trigger="click">
+    <select id="employee-1-earn" name="employee-1-earn"
+      _={ employeeEarnScript }
+      class="rounded-md border-2 border-stone-300 text-lg p-1 hover:border-stone-500 disabled:bg-red-100"
+      hx-get="/tc/earncode" hx-trigger="getEarnCodes" hx-params="none"
+      disabled>
       <option value=""></option>
     </select>
     for i := 1; i < 6; i++ {
-        <input id={ fmt.Sprintf("employee1hours%d", i) } name={ fmt.Sprintf("employee1hours%d", i) } 
+        <input id={ fmt.Sprintf("employee-1-hours-%d", i) } name={ fmt.Sprintf("employee-1-hours-%d", i) } 
           _={ fmt.Sprintf(employeeHoursScript, i, i) }
           class="rounded-md border-2 border-stone-300 text-lg text-center p-1 hover:border-stone-500 disabled:bg-red-100/75 invalid:border-red-600"
           type="number" max="14" step=".5"
@@ -437,7 +504,7 @@ templ NewTimeCardForm() {
             class="col-start-1 row-start-1 col-span-1 grid grid-cols-[theme(space.16)_1fr] bg-stone-300 p-1 pt-2 rounded-tl-md" 
             hx-get="/utils/weekday" hx-include="#workdate" hx-trigger="dateSelected">
             <label for="dayofweek" class="m-1 justify-self-end self-center font-bold text-stone-700 text-lg">Day</label>
-            <input type="text" id="dayofweek" class="rounded-md border-2 border-stone-300 text-lg p-1 bg-yellow-100 w-full" name="dayofweek" disabled>
+            <input type="text" id="dayofweek" class="rounded-md border-2 border-stone-300 text-lg p-1 bg-stone-100 w-full" name="dayofweek" disabled>
           </div>
           <div class="col-start-1 row-start-2 col-span-1 grid grid-cols-[theme(space.16)_1fr] bg-stone-300 p-1" 
             hx-get="/tc/jobselect" hx-swap="beforeend" hx-target="#job" hx-trigger="load once">
@@ -457,16 +524,16 @@ templ NewTimeCardForm() {
             </select>
           </div>
           <div id="jobinfo" name="jobinfo" class="grid col-start-8 col-span-2 row-start-1 row-span-2 grid-rows-subgrid grid-cols-[1fr_theme(space.16)] bg-stone-300 pr-2 rounded-tr-md">
+            <input type="hidden" id="certified" name="certified" value="">
+            <input type="hidden" id="state" name="state" value="">
             <div class="col-start-1 col-span-2 row-start-1 row-span-1 grid grid-cols-subgrid p-1 m-1">
-              <label for="state" class="m-1 justify-self-end self-center font-bold text-stone-700 text-lg">State</label>
-              <input type="text" id="state" name="state" class="p-1 bg-yellow-100 w-full text-lg rounded-md text-center" disabled>
+              <label for="statedisplay" class="m-1 justify-self-end self-center font-bold text-stone-700 text-lg">State</label>
+              <input type="text" id="statedisplay" name="statedisplay" class="p-1 bg-stone-100 w-full text-lg rounded-md text-center" disabled>
             </div>
             <div class="col-start-1 col-span-2 row-start-2 row-span-2 grid grid-cols-subgrid p-1 m-1">
-              <input type="hidden" id="certified" name="certified" value="N">
               <label for="certifieddisplay" class="m-1 justify-self-end self-center font-bold text-stone-700 text-lg">Certified</label>
               <input type="text" id="certifieddisplay" name="certifieddisplay" 
-                _={ jobCertifiedScript }
-                class="p-1 bg-yellow-100 w-full text-lg rounded-md text-center"
+                class="p-1 bg-stone-100 w-full text-lg rounded-md text-center"
                 disabled>
             </div>
           </div>
@@ -493,7 +560,7 @@ templ NewTimeCardForm() {
             <div class="grid grid-cols-subgrid col-start-1 col-span-9 rounded-b-md rounded-tr-md p-2 bg-stone-300">
               @NewEmployeeRow()
               <button type="button" class="hover:bg-stone-700 hover:text-yellow-300 rounded-md p-2 bg-yellow-300 text-stone-700 m-1" 
-                hx-get="/tc/addemployeerow" hx-swap="beforebegin" hx-include="#employeerownumber, #phasecount, #certified">Add Employee</button>
+                hx-get="/tc/addemployeerow" hx-swap="beforebegin" hx-include="#employeerownumber, #phasecount, #certified, #state">Add Employee</button>
             </div>
           </div>
 

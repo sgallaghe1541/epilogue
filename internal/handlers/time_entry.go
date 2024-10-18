@@ -232,8 +232,24 @@ func HandleClassesSelect(logger *slog.Logger, epilogue *db.EpilogueConnection) h
 				fmt.Println(err.Error())
 			}
 			w.Header().Set("Content-Type", "text/html")
+			timeentry.BlankOption().Render(context.Background(), w)
 			for _, class := range classes {
 				timeentry.SelectList(class).Render(context.Background(), w)
+			}
+		})
+}
+
+func HandleEarnCodeSelect(logger *slog.Logger, epilogue *db.EpilogueConnection) http.Handler {
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			earnCodes, err := epilogue.GetEarnCodes()
+			if err != nil {
+				logger.Error("could not get earncodes...", "err", err)
+			}
+			w.Header().Set("Content-Type", "text/html")
+			timeentry.BlankOption().Render(context.Background(), w)
+			for _, ec := range earnCodes {
+				timeentry.SelectList(ec).Render(context.Background(), w)
 			}
 		})
 }

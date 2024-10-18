@@ -5,7 +5,7 @@ import "fmt"
 const (
 	classesByJob = `
 		SELECT template, class, description
-		FROM craftClasses
+		FROM craft_classes
 		WHERE template = ?
 	`
 )

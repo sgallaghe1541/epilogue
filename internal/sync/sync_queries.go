@@ -74,7 +74,7 @@ const (
 		AND PRCo=1
 	`
 	insertTempTableTemplates = `
-	INSERT INTO temp_craftClasses (template, class, description)
+	INSERT INTO temp_craft_classes (template, class, description)
 	VALUES (
 		:template,
 		:class,

@@ -1,0 +1,24 @@
+package timeentry
+
+import (
+    "fmt"
+
+    "github.com/sgallaghe1541/epilogue/internal/db"
+)
+
+templ TimeCardLanding(drafts []db.TimeCardHeader) {
+    <div class="h-full max-h-full w-full max-w-full bg-stone-200 p-4">
+        <button type="button" class="hover:bg-stone-700 hover:text-yellow-300 rounded-md p-2 bg-yellow-300 text-stone-700 m-1" 
+            hx-get="/timeentry/newtime" hx-target="#contents" hx-push-url="true">New Time Card</button>
+        for _, draft := range drafts {
+            @TimeCardLink(draft.ID)
+        }
+    </div>
+}
+
+templ TimeCardLink(tcid int) {
+    <button type="button" 
+        class="hover:bg-stone-700 hover:text-yellow-300 rounded-md p-2 bg-yellow-300 text-stone-700 m-1"
+        hx-get={ fmt.Sprintf("/timeentry/timecard/%d", tcid) } hx-target="#contents" hx-push-url="true"
+        >{ fmt.Sprintf("/timeentry/timecard/%d", tcid) }</button>
+}

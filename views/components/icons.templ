@@ -1,7 +1,7 @@
 package components
 
 templ SideBarIcon(link, tooltip string, svg templ.Component) {
-    <div hx-get={ link } hx-target="#contents" class="relative flex items-center justify-center 
+    <div hx-get={ link } hx-target="#contents" hx-push-url="true" class="relative flex items-center justify-center 
     w-fit max-w-fit m-2 rounded-full bg-stone-700 group
    hover:bg-yellow-300 hover:rounded-3xl cursor-pointer">
       @svg

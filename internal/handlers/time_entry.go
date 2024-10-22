@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -15,41 +16,74 @@ import (
 	"github.com/sgallaghe1541/epilogue/internal/utils"
 )
 
+func HandleTimeEntry(logger *slog.Logger, epilogue *db.EpilogueConnection, sessionManager *scs.SessionManager) http.Handler {
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			uid := r.Context().Value(middlewares.IsAuthenticatedContextKey).(int)
+			ids, err := epilogue.GetTimecardIDsByUser(uid, "draft")
+			if err != nil {
+				utils.ServerError(w, r, logger, err)
+				return
+			}
+			w.Header().Set("Content-Type", "text/html")
+			timeentry.TimeCardLanding(ids).Render(context.Background(), w)
+		})
+}
+
 func HandleNewTimeCard(logger *slog.Logger, epilogue *db.EpilogueConnection, sessionManager *scs.SessionManager) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
-			if r.PathValue("id") == "" {
-				uid := r.Context().Value(middlewares.IsAuthenticatedContextKey).(int)
-				tcid, err := epilogue.NewTimecard(uid)
-				if err != nil {
-					utils.ServerError(w, r, logger, err)
-					return
-				}
-				updatedURL, _ := url.JoinPath(r.URL.Path, "timecard", fmt.Sprintf("%d", tcid))
-				w.Header().Set("Content-Type", "text/html")
-				w.Header().Set("HX-Push-Url", updatedURL)
+			uid := r.Context().Value(middlewares.IsAuthenticatedContextKey).(int)
+			tcid, err := epilogue.NewTimecard(uid)
+			if err != nil {
+				utils.ServerError(w, r, logger, err)
+				return
+			}
+			updatedURL, _ := url.JoinPath(r.URL.Host, "timecard", fmt.Sprintf("%d", tcid))
+			http.Redirect(w, r, updatedURL, http.StatusFound)
+		})
+}
 
-				timeentry.NewTimeCardForm().Render(context.Background(), w)
+func HandleGetTimeCard(logger *slog.Logger, epilogue *db.EpilogueConnection, sessionManager *scs.SessionManager) http.Handler {
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			tcid := r.PathValue("id")
+			if tcid == "" {
+				utils.ServerError(w, r, logger, errors.New("no timecard id found"))
+				return
+			}
+			id, err := strconv.Atoi(tcid)
+			if err != nil {
+				fmt.Println("failed to convert to int...")
+				utils.ServerError(w, r, logger, err)
+				return
+			}
+			timecardHeader, timecardEmployees, err := epilogue.LoadTimecard(id)
+			if err != nil {
+				fmt.Println("failed to load time card...")
+				utils.ServerError(w, r, logger, err)
 				return
 			}
 
-			// tcid, err := strconv.Atoi(r.PathValue("id"))
-			// if err != nil {
-			// 	utils.ServerError(w, r, logger, err)
-			// 	return
-			// }
-			// tcHeader, err := epilogue.GetTimecardByID(tcid)
-			// if err != nil {
-			// 	utils.ServerError(w, r, logger, err)
-			// 	return
-			// }
-			// tcEmployees, err := epilogue.GetTimecardEmployees(tcid)
-			// if err != nil {
-			// 	utils.ServerError(w, r, logger, err)
-			// }
-			// w.Header().Set("Content-Type", "text/html")
-			// w.Header().Set("HX-Push-Url", r.URL.Path)
-			// timeentry.EditTimeCard(tcHeader, tcEmployees, timeentry.TimeCardDetailForm{}).Render(context.Background(), w)
+			if timecardHeader.Status == "new" {
+				w.Header().Set("Content-Type", "text/html")
+				timeentry.NewTimeCardForm().Render(context.Background(), w)
+			} else {
+				headerForm, err := timeentry.PopulateTimeCardHeaderForm(timecardHeader, epilogue)
+				if err != nil {
+					fmt.Println("failed to populate header...")
+					utils.ServerError(w, r, logger, err)
+					return
+				}
+				detailForm, err := timeentry.PopulateTimeCardDetailForm(timecardEmployees)
+				if err != nil {
+					fmt.Println("failed to populate detail...")
+					utils.ServerError(w, r, logger, err)
+					return
+				}
+				w.Header().Set("Content-Type", "text/html")
+				timeentry.TimeCardForm(headerForm, detailForm).Render(context.Background(), w)
+			}
 		})
 }
 
@@ -179,7 +213,7 @@ func HandleAddEmployeeRow(logger *slog.Logger) http.Handler {
 			}
 			w.Header().Set("Content-Type", "text/html")
 			w.Header().Set("HX-Trigger", "employeeAdded")
-			timeentry.EmployeeRow([]string{}, empCount+1, phaseCount, certified).Render(context.Background(), w)
+			timeentry.EmployeeRow(timeentry.TimeCardEmployeeForm{}, empCount+1, phaseCount, nil, certified).Render(context.Background(), w)
 		})
 }
 

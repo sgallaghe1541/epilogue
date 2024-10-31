@@ -52,37 +52,25 @@ func HandleGetTimeCard(logger *slog.Logger, epilogue *db.EpilogueConnection, ses
 				utils.ServerError(w, r, logger, errors.New("no timecard id found"))
 				return
 			}
-			id, err := strconv.Atoi(tcid)
-			if err != nil {
-				fmt.Println("failed to convert to int...")
-				utils.ServerError(w, r, logger, err)
-				return
-			}
-			timecardHeader, timecardEmployees, err := epilogue.LoadTimecard(id)
+			timecard, err := epilogue.LoadTimecard(tcid, logger)
 			if err != nil {
 				fmt.Println("failed to load time card...")
 				utils.ServerError(w, r, logger, err)
 				return
 			}
 
-			if timecardHeader.Status == "new" {
+			if timecard.Status == "new" {
 				w.Header().Set("Content-Type", "text/html")
-				timeentry.NewTimeCardForm().Render(context.Background(), w)
+				timeentry.ViewNewTimeCard().Render(context.Background(), w)
 			} else {
-				headerForm, err := timeentry.PopulateTimeCardHeaderForm(timecardHeader, epilogue)
+				form, err := timeentry.TimeCardFormFromDB(timecard, epilogue)
 				if err != nil {
-					fmt.Println("failed to populate header...")
-					utils.ServerError(w, r, logger, err)
-					return
-				}
-				detailForm, err := timeentry.PopulateTimeCardDetailForm(timecardEmployees)
-				if err != nil {
-					fmt.Println("failed to populate detail...")
+					fmt.Println("failed to populate time card form...")
 					utils.ServerError(w, r, logger, err)
 					return
 				}
 				w.Header().Set("Content-Type", "text/html")
-				timeentry.TimeCardForm(headerForm, detailForm).Render(context.Background(), w)
+				timeentry.ViewTimeCard(form).Render(context.Background(), w)
 			}
 		})
 }
@@ -90,15 +78,30 @@ func HandleGetTimeCard(logger *slog.Logger, epilogue *db.EpilogueConnection, ses
 func HandlePutTimeCard(logger *slog.Logger, epilogue *db.EpilogueConnection, sessionManager *scs.SessionManager) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
-			vals := r.URL.Query()
-			fmt.Println("made it")
-			for k, v := range vals {
-				fmt.Printf("%s -- %s\n", k, v)
+			tcid := r.PathValue("id")
+			if tcid == "" {
+				utils.ServerError(w, r, logger, errors.New("no timecard id found"))
+				return
+			}
+			id, err := strconv.Atoi(tcid)
+			if err != nil {
+				utils.ServerError(w, r, logger, errors.New("invalid timecard id found"))
+				return
 			}
 			r.ParseForm()
-			for k, v := range r.Form {
-				fmt.Printf("%s -- %s\n", k, v)
+			tc, err := timeentry.TimeCardFormFromPostForm(id, r.Form, epilogue)
+			if err != nil {
+				fmt.Println(err.Error())
 			}
+
+			//validate form
+			dbModel, err := tc.ToDB(epilogue, "draft", sessionManager.GetInt(r.Context(), "authenticatedUserID"))
+			if err != nil {
+				utils.ServerError(w, r, logger, err)
+				return
+			}
+			//validate form
+
 		})
 }
 
@@ -213,7 +216,7 @@ func HandleAddEmployeeRow(logger *slog.Logger) http.Handler {
 			}
 			w.Header().Set("Content-Type", "text/html")
 			w.Header().Set("HX-Trigger", "employeeAdded")
-			timeentry.EmployeeRow(timeentry.TimeCardEmployeeForm{}, empCount+1, phaseCount, nil, certified).Render(context.Background(), w)
+			timeentry.EmployeeRow(&timeentry.TimeCardEmployeeForm{}, empCount+1, phaseCount, nil, certified).Render(context.Background(), w)
 		})
 }
 

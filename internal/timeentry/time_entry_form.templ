@@ -192,19 +192,19 @@ templ Phases(phases map[int]string) {
         if len(phases) >= i {
           <select _={ fmt.Sprintf(phaseScript, i, i, i) }
             class="rounded-md border-2 border-stone-300 text-lg p-1 hover:border-stone-500 disabled:bg-red-100"
-            id={ fmt.Sprintf("phase%d", i) } name={ fmt.Sprintf("phase%d", i) } hx-get="/tc/phaseselect" hx-swap="beforeend" hx-trigger="load" hx-include="previous #job">
+            id={ fmt.Sprintf("phase-%d", i) } name={ fmt.Sprintf("phase-%d", i) } hx-get="/tc/phaseselect" hx-swap="beforeend" hx-trigger="load" hx-include="previous #job">
             <option value={ phases[i-1] }>{ phases[i-1] }</option>
           </select>
         } else if i == 1 {
           <select _={ fmt.Sprintf(phaseScript, i, i, i) }
             class="rounded-md border-2 border-stone-300 text-lg p-1 hover:border-stone-500 disabled:bg-red-100"
-            id={ fmt.Sprintf("phase%d", i) } name={ fmt.Sprintf("phase%d", i) } hx-get="/tc/phaseselect" hx-swap="beforeend" hx-trigger="load" hx-include="previous #job">
+            id={ fmt.Sprintf("phase-%d", i) } name={ fmt.Sprintf("phase-%d", i) } hx-get="/tc/phaseselect" hx-swap="beforeend" hx-trigger="load" hx-include="previous #job">
             <option value=""></option>
           </select>
         } else {
           <select _={ fmt.Sprintf(phaseScript, i, i, i) }
             class="rounded-md border-2 border-stone-300 text-lg p-1 hover:border-stone-500 disabled:bg-red-100"
-            id={ fmt.Sprintf("phase%d", i) } name={ fmt.Sprintf("phase%d", i) } hx-get="/tc/phaseselect" hx-swap="beforeend" hx-trigger="load" hx-include="previous #job" disabled>
+            id={ fmt.Sprintf("phase-%d", i) } name={ fmt.Sprintf("phase-%d", i) } hx-get="/tc/phaseselect" hx-swap="beforeend" hx-trigger="load" hx-include="previous #job" disabled>
             <option value=""></option>
           </select>
         }
@@ -214,13 +214,13 @@ templ Phases(phases map[int]string) {
         if i == 1 {
           <select _={ fmt.Sprintf(phaseScript, i, i, i) }
             class="rounded-md border-2 border-stone-300 text-lg p-1 hover:border-stone-500 disabled:bg-red-100"
-            id={ fmt.Sprintf("phase%d", i) } name={ fmt.Sprintf("phase%d", i) } hx-get="/tc/phaseselect" hx-swap="beforeend" hx-trigger="load" hx-include="previous #job">
+            id={ fmt.Sprintf("phase-%d", i) } name={ fmt.Sprintf("phase-%d", i) } hx-get="/tc/phaseselect" hx-swap="beforeend" hx-trigger="load" hx-include="previous #job">
             <option value=""></option>
           </select>
         } else {
           <select _={ fmt.Sprintf(phaseScript, i, i, i) }
             class="rounded-md border-2 border-stone-300 text-lg p-1 hover:border-stone-500 disabled:bg-red-100"
-            id={ fmt.Sprintf("phase%d", i) } name={ fmt.Sprintf("phase%d", i) } hx-get="/tc/phaseselect" hx-swap="beforeend" hx-trigger="load" hx-include="previous #job" disabled>
+            id={ fmt.Sprintf("phase-%d", i) } name={ fmt.Sprintf("phase-%d", i) } hx-get="/tc/phaseselect" hx-swap="beforeend" hx-trigger="load" hx-include="previous #job" disabled>
             <option value=""></option>
           </select>
         }
@@ -228,7 +228,7 @@ templ Phases(phases map[int]string) {
     }
 }
 
-templ Employees(employees map[int]TimeCardEmployeeForm, phases map[int]string, phaseCount int, certified string) {
+templ Employees(employees map[int]*TimeCardEmployeeForm, phases map[int]string, phaseCount int, certified string) {
   <input _="on employeeAdded from <body/> increment my value end on employeeRemoved decrement my value by 1 end"
     type="hidden" id="employeecount" name="employeecount" value={ fmt.Sprintf("%d", len(employees)) }>
   <input _="on employeeAdded from <body/> increment my value by 1" type="hidden" id="employeerownumber" name="employeerownumber" value={ fmt.Sprintf("%d",len(employees)) }>
@@ -241,7 +241,7 @@ templ Employees(employees map[int]TimeCardEmployeeForm, phases map[int]string, p
   </div>
 }
 
-templ EmployeeRow(employee TimeCardEmployeeForm, count, phaseCount int, phases map[int]string, certified string) {
+templ EmployeeRow(employee *TimeCardEmployeeForm, count, phaseCount int, phases map[int]string, certified string) {
   if employee.Selected() {
       <div class="grid grid-cols-subgrid col-start-1 col-span-9 rounded-md">
         <select id={ fmt.Sprintf("employee-%d", count) } name={ fmt.Sprintf("employee-%d", count) }
@@ -295,7 +295,7 @@ templ EmployeeRow(employee TimeCardEmployeeForm, count, phaseCount int, phases m
               disabled="disabled"
               employee-selected="y"
               phase-selected="y"
-              value={ employee.Hours[phases[i]] }>
+              value={ fmt.Sprintf("%.2f", employee.Hours[i]) }>
           } else {
             <input id={ fmt.Sprintf("employee-%d-hours-%d", count, i) } name={ fmt.Sprintf("employee-%d-hours-%d", count, i) } 
               _={ fmt.Sprintf(employeeHoursScript, i, i) }
@@ -443,18 +443,17 @@ templ Notes() {
   </div>
 }
 
-templ TimeCardForm(header *TimeCardHeaderForm, detail *TimeCardDetailForm) {
-    // header.job and job have to be the same otherwise this breaks...
+templ ViewTimeCard(form *TimeCardForm) {
     <form class="h-full max-h-full w-full max-w-full overflow-hidden">
       <div class="grid gap-y-6 grid-cols-timeEntry grid-rows-timeEntry h-full max-h-full w-full max-w-full overflow-y-hidden overflow-x-auto p-4 bg-stone-100 rounded-md">
         <div id="header" class="grid grid-cols-subgrid grid-rows-3 gap-0 col-start-1 col-span-9 row-start-1 row-span-1">
           <div class="col-start-1 row-start-1 col-span-1 grid grid-cols-[theme(space.16)_1fr] bg-stone-300 p-1 pt-2 rounded-tl-md" id="dayofweek-div" name="dayofweek-div" hx-get="/utils/weekday" hx-include="#workdate" hx-trigger="dateSelected">
-            @DayofWeek(header.WorkDate)
+            @DayofWeek(form.WorkDate)
           </div>
           <div class="col-start-1 row-start-2 col-span-1 grid grid-cols-[theme(space.16)_1fr] bg-stone-300 p-1" hx-get="/tc/jobselect" hx-swap="beforeend" hx-target="#job" hx-trigger="load once">
-            if !header.WorkDate.IsZero() {
+            if !form.WorkDate.IsZero() {
                 <label for="workdate" class="m-1 justify-self-end self-center font-bold text-stone-700 text-lg">Date</label>
-                <input type="date" id="workdate" class="rounded-md border-2 border-stone-300 text-lg p-1 hover:border-stone-500" name="workdate" value={ header.WorkDate.Format("2006-01-02") } _="on input send dateSelected to #dayofweek-div">
+                <input type="date" id="workdate" class="rounded-md border-2 border-stone-300 text-lg p-1 hover:border-stone-500" name="workdate" value={ form.WorkDate.Format("2006-01-02") } _="on input send dateSelected to #dayofweek-div">
             } else {
                 <label for="workdate" class="m-1 justify-self-end self-center font-bold text-stone-700 text-lg">Date</label>
                 <input type="date" id="workdate" class="rounded-md border-2 border-stone-300 text-lg p-1 hover:border-stone-500" name="workdate" value="" _="on input send dateSelected to #dayofweek-div">
@@ -463,12 +462,12 @@ templ TimeCardForm(header *TimeCardHeaderForm, detail *TimeCardDetailForm) {
           <div class="col-start-2 col-span-1 row-start-1 row-span-2 bg-stone-300">
           </div>
           <div id="jobname" name="jobname" class="col-start-3 row-start-1 row-span-2 grid grid-cols-subgrid grid-rows-subgrid bg-stone-300 col-span-5 space-x-2">
-          if header.Job != nil {
+          if form.Job != nil {
               <label for="job" class="col-start-1 row-start-2 justify-self-end self-center font-bold text-stone-700 text-lg">Job:</label>
               <select _="on change send jobSelected to #phases then send getInfo to me"
                 class="col-start-2 col-span-4 row-start-2 rounded-md border-2 border-stone-300 text-lg p-1 m-1 hover:border-stone-500"
                 id="job" name="job"  class="flex" hx-get="/tc/jobinfo" hx-target="#jobinfo" hx-trigger="getInfo">
-                <option value={ header.Job.SelectValue() } selected>{ header.Job.SelectString() }</option>
+                <option value={ form.Job.SelectValue() } selected>{ form.Job.SelectString() }</option>
               </select>
           } else {
               <label for="job" class="col-start-1 row-start-2 justify-self-end self-center font-bold text-stone-700 text-lg">Job</label>
@@ -480,14 +479,14 @@ templ TimeCardForm(header *TimeCardHeaderForm, detail *TimeCardDetailForm) {
           }
           </div>
           <div id="jobinfo" name="jobinfo" class="grid col-start-8 col-span-2 row-start-1 row-span-2 grid-rows-subgrid grid-cols-[1fr_theme(space.16)] bg-stone-300 pr-2 rounded-tr-md">
-            @JobStateCertified(header.Job)
+            @JobStateCertified(form.Job)
           </div>
           <div class="col-start-1 grid grid-cols-subgrid col-span-9 row-start-3 bg-stone-300 rounded-b-md">
             <div class="col-start-1 col-span-3 grid justify-items-end items-center">
               <p class="font-bold text-stone-700 text-lg">Phases</p>
             </div>
             <div id="phases" name="phases" class="grid grid-cols-subgrid col-start-4 col-span-5 pb-2 pl-2 pr-2 pt-1" hx-get="/tc/clearphases" hx-swap="innerHTML" hx-trigger="jobSelected">
-              @Phases(detail.Phases)
+              @Phases(form.Phases)
             </div>
           </div>
         </div>
@@ -499,10 +498,10 @@ templ TimeCardForm(header *TimeCardHeaderForm, detail *TimeCardDetailForm) {
               <p class="font-bold text-stone-700 text-lg">Class</p>
               <p class="font-bold text-stone-700 text-lg">Earn</p>
             </div>
-            if header.Job != nil {
-              @Employees(detail.Employees, detail.Phases, len(detail.Phases), header.Job.Certified)
+            if form.Job != nil {
+              @Employees(form.Employees, form.Phases, len(form.Phases), form.Job.Certified)
             } else {
-              @Employees(detail.Employees, detail.Phases, len(detail.Phases), "")
+              @Employees(form.Employees, form.Phases, len(form.Phases), "")
             }
           </div>
 
@@ -510,7 +509,7 @@ templ TimeCardForm(header *TimeCardHeaderForm, detail *TimeCardDetailForm) {
             <div class="col-start-1 grid grid-cols-subgrid col-span-3 items-end justify-items-center bg-stone-300 rounded-t-md pt-2">
               <p class="font-bold text-stone-700 text-lg">Equipment</p>
             </div>
-            @Equipment(detail.Equipment, len(detail.Phases))
+            @Equipment(form.Equipment, len(form.Phases))
           </div>
           <div id="notes" name="notes" class="col-start-1 col-span-9 row-start-3 min-h-0 grid grid-cols-subgrid">
             <div class="col-start-1 grid grid-cols-subgrid col-span-3 items-end justify-items-center bg-stone-300 rounded-t-md pt-2">
@@ -533,14 +532,14 @@ templ NewPhases() {
     <input _={ phaseCountScript } type="hidden" id="phasecount" name="phasecount" value="0">
     for i := 1; i < 6; i++ {
         if i == 1 {
-            <select id={ fmt.Sprintf("phase%d", i) } name={ fmt.Sprintf("phase%d", i) }
+            <select id={ fmt.Sprintf("phase-%d", i) } name={ fmt.Sprintf("phase-%d", i) }
               _={ fmt.Sprintf(phaseScript, i, i, i) }
               class="rounded-md border-2 border-stone-300 text-lg p-1 hover:border-stone-500 disabled:bg-red-100"
               hx-get="/tc/phaseselect" hx-swap="beforeend" hx-trigger="load" hx-include="previous #job">
               <option value=""></option>
             </select>
         } else {
-            <select id={ fmt.Sprintf("phase%d", i) } name={ fmt.Sprintf("phase%d", i) }
+            <select id={ fmt.Sprintf("phase-%d", i) } name={ fmt.Sprintf("phase-%d", i) }
               _={ fmt.Sprintf(phaseScript, i, i, i) }
               class="rounded-md border-2 border-stone-300 text-lg p-1 hover:border-stone-500 disabled:bg-red-100"
               hx-get="/tc/phaseselect" hx-swap="beforeend" hx-trigger="load" hx-include="previous #job" disabled>
@@ -606,7 +605,7 @@ templ NewEquipmentRow() {
     </div>
 }
 
-templ NewTimeCardForm() {
+templ ViewNewTimeCard() {
     <form class="h-full max-h-full w-full max-w-full overflow-hidden">
       <div class="grid gap-y-6 grid-cols-timeEntry grid-rows-timeEntry h-full max-h-full w-full max-w-full overflow-y-hidden overflow-x-auto p-4 bg-stone-100 rounded-md">
         <div id="header" class="grid grid-cols-subgrid grid-rows-3 gap-0 col-start-1 col-span-9 row-start-1 row-span-1">

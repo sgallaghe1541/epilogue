@@ -4,30 +4,11 @@ DROP TABLE IF EXISTS temp_phases;
 DROP TABLE IF EXISTS temp_employees;
 DROP TABLE IF EXISTS temp_equipment;
 
-CREATE TABLE IF NOT EXISTS craft_classes (
-    template INTEGER,
-    class TEXT,
-    description TEXT,
-    active INTEGER, -- 0 is inactive, 1 is active
-    PRIMARY KEY(template, class)
-);
-
 CREATE TEMPORARY TABLE temp_craft_classes (
     template INTEGER,
     class TEXT,
     description TEXT,
     PRIMARY KEY(template, class)
-);
-
-CREATE TABLE IF NOT EXISTS jobs (
-    job TEXT NOT NULL PRIMARY KEY,
-    description TEXT,
-    state TEXT,
-    certified TEXT,
-    template INTEGER,
-    department TEXT,
-    active INTEGER, -- 0 is inactive, 1 is active
-    FOREIGN KEY(template) REFERENCES craft_classes(template)
 );
 
 CREATE TEMPORARY TABLE temp_jobs (
@@ -40,15 +21,6 @@ CREATE TEMPORARY TABLE temp_jobs (
     FOREIGN KEY(template) REFERENCES temp_craft_classes(template)
 );
 
-CREATE TABLE IF NOT EXISTS phases (
-    job TEXT NOT NULL,
-    phase TEXT NOT NULL,
-    description TEXT,
-    active INTEGER, -- 0 is inactive, 1 is active
-    PRIMARY KEY(job, phase),
-    FOREIGN KEY(job) REFERENCES jobs(job)
-);
-
 CREATE TEMPORARY TABLE temp_phases (
     job TEXT NOT NULL,
     phase TEXT NOT NULL,
@@ -57,28 +29,12 @@ CREATE TEMPORARY TABLE temp_phases (
     FOREIGN KEY(job) REFERENCES temp_jobs(job)
 );
 
-CREATE TABLE IF NOT EXISTS employees (
-    employee TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    class TEXT,
-    salaried INTEGER, -- 0 is hourly, 1 is salaried
-    department TEXT,
-    active INTEGER -- 0 is inactive, 1 is active
-);
-
 CREATE TEMPORARY TABLE temp_employees (
     employee TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     class TEXT,
     salaried INTEGER, -- 0 is hourly, 1 is salaried
     department TEXT
-);
-
-CREATE TABLE IF NOT EXISTS equipment (
-    equipment TEXT PRIMARY KEY,
-    description TEXT,
-    department TEXT,
-    active INTEGER -- 0 is inactive, 1 is active
 );
 
 CREATE TEMPORARY TABLE temp_equipment (

@@ -99,6 +99,50 @@ CREATE TABLE IF NOT EXISTS refreshtokens (
     FOREIGN KEY(userid) REFERENCES users(userid)
 );
 
+CREATE TABLE IF NOT EXISTS craft_classes (
+    template INTEGER,
+    class TEXT,
+    description TEXT,
+    active INTEGER, -- 0 is inactive, 1 is active
+    PRIMARY KEY(template, class)
+);
+
+CREATE TABLE IF NOT EXISTS jobs (
+    job TEXT NOT NULL PRIMARY KEY,
+    description TEXT,
+    state TEXT,
+    certified TEXT,
+    template INTEGER,
+    department TEXT,
+    active INTEGER, -- 0 is inactive, 1 is active
+    FOREIGN KEY(template) REFERENCES craft_classes(template)
+);
+
+CREATE TABLE IF NOT EXISTS phases (
+    job TEXT NOT NULL,
+    phase TEXT NOT NULL,
+    description TEXT,
+    active INTEGER, -- 0 is inactive, 1 is active
+    PRIMARY KEY(job, phase),
+    FOREIGN KEY(job) REFERENCES jobs(job)
+);
+
+CREATE TABLE IF NOT EXISTS employees (
+    employee TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    class TEXT,
+    salaried INTEGER, -- 0 is hourly, 1 is salaried
+    department TEXT,
+    active INTEGER -- 0 is inactive, 1 is active
+);
+
+CREATE TABLE IF NOT EXISTS equipment (
+    equipment TEXT PRIMARY KEY,
+    description TEXT,
+    department TEXT,
+    active INTEGER -- 0 is inactive, 1 is active
+);
+
 CREATE TABLE IF NOT EXISTS time_card_status (
     tcstatus TEXT PRIMARY KEY
 );
@@ -106,13 +150,12 @@ CREATE TABLE IF NOT EXISTS time_card_status (
 CREATE TABLE IF NOT EXISTS time_card_headers (
     id INTEGER PRIMARY KEY ASC,
     job TEXT,
-    jobdescription TEXT,
     workdate DATE,
-    wedate DATE,
     createdby INTEGER,
     tcstatus TEXT,
     lastmodified DATE,
     modifiedby INTEGER,
+    FOREIGN KEY(job) REFERENCES jobs(job),
     FOREIGN KEY(createdby) REFERENCES users(userid),
     FOREIGN KEY(tcstatus) REFERENCES time_card_status(tcstatus),
     FOREIGN KEY(modifiedby) REFERENCES users(userid)
@@ -129,7 +172,9 @@ CREATE TABLE IF NOT EXISTS time_card_employees (
     class TEXT,
     paycode TEXT,
     tcehours NUMERIC,
-    FOREIGN KEY(tchid) REFERENCES time_card_headers(id)
+    FOREIGN KEY(tchid) REFERENCES time_card_headers(id),
+    FOREIGN KEY(job) REFERENCES jobs(job),
+    FOREIGN KEY(employee) REFERENCES employees(employee)
 );
 
 CREATE TABLE IF NOT EXISTS earn_codes (

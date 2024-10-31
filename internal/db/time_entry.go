@@ -3,41 +3,55 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"log/slog"
 	"slices"
 	"time"
+
+	"github.com/jmoiron/sqlx"
 )
 
 type TimeCardHeader struct {
 	ID           int            `db:"id"`
-	Job          sql.NullString `db:"job"`
-	Description  sql.NullString `db:"jobdescription"`
 	Date         sql.NullTime   `db:"workdate"`
-	WEDate       sql.NullTime   `db:"wedate"`
+	Job          sql.NullString `db:"job"`
 	CreatedBy    int            `db:"createdby"`
 	Status       string         `db:"tcstatus"`
 	LastModified time.Time      `db:"lastmodified"`
 	ModifiedBy   int            `db:"modifiedby"`
+	Employees    []TimeCardEmployee
 }
 
 type TimeCardEmployee struct {
-	ID       int            `db:"tceid"`
-	TCHID    int            `db:"tchid"`
-	Employee string         `db:"employee"`
-	Name     string         `db:"fullname"`
-	Date     time.Time      `db:"workdate"`
-	Job      string         `db:"job"`
-	Phase    string         `db:"phase"`
-	Class    sql.NullString `db:"class"`
-	PayCode  string         `db:"paycode"`
-	Hours    float64        `db:"tcehours"`
+	ID       int             `db:"tceid"`
+	TCHID    int             `db:"tchid"`
+	Employee string          `db:"employee"`
+	Name     string          `db:"fullname"`
+	Date     sql.NullTime    `db:"workdate"`
+	Job      sql.NullString  `db:"job"`
+	Phase    sql.NullString  `db:"phase"`
+	Class    sql.NullString  `db:"class"`
+	PayCode  sql.NullString  `db:"paycode"`
+	Hours    sql.NullFloat64 `db:"tcehours"`
 }
 
-type TimeCardEmployees []TimeCardEmployee
+func (t *TimeCardHeader) GetEmployeesFromDB(data *sqlx.DB, logger *slog.Logger) error {
+	query := `
+		SELECT * 
+		FROM time_card_employees
+		WHERE tchid = ?
+	`
+	err := data.Select(&t.Employees, query, fmt.Sprintf("%d", t.ID))
+	if err != nil {
+		logger.Error("failed to load employees", "tchid", t.ID, "error", err.Error())
+		return err
+	}
+	return nil
+}
 
-func (emps TimeCardEmployees) GetUniqueEmployees() ([]string, []string) {
+func (tc TimeCardHeader) GetUniqueEmployees() ([]string, []string) {
 	nums := []string{}
 	names := []string{}
-	for _, emp := range emps {
+	for _, emp := range tc.Employees {
 		if slices.Contains(nums, emp.Employee) {
 			continue
 		} else {
@@ -49,13 +63,15 @@ func (emps TimeCardEmployees) GetUniqueEmployees() ([]string, []string) {
 	return nums, names
 }
 
-func (emps TimeCardEmployees) GetPhases() map[int]string {
+func (tc TimeCardHeader) GetPhases() map[int]string {
 	phases := []string{}
-	for _, emp := range emps {
-		if slices.Contains(phases, emp.Phase) {
-			continue
-		} else {
-			phases = append(phases, emp.Phase)
+	for _, emp := range tc.Employees {
+		if emp.Phase.Valid {
+			if slices.Contains(phases, string(emp.Phase.String)) {
+				continue
+			} else {
+				phases = append(phases, string(emp.Phase.String))
+			}
 		}
 	}
 	phaseMap := map[int]string{}
@@ -65,16 +81,53 @@ func (emps TimeCardEmployees) GetPhases() map[int]string {
 	return phaseMap
 }
 
-func (e *EpilogueConnection) GetTimecardsByUser(userid int, timeCardStatus string) ([]TimeCardHeader, error) {
-	args := map[string]interface{}{"userid": userid, "status": timeCardStatus}
+func (tc TimeCardHeader) UpdateTimecardEmployee(data *sqlx.DB, logger *slog.Logger) error {
+	stmt := `
+	UPDATE time_card_employees
+	SET 
+		employee = :employee,
+		fullname = :fullname,
+		workdate = :workdate,
+		job = :job,
+		phase = :phase,
+		class = :class,
+		paycode = :paycode,
+		tcehours = :tcehours
+	WHERE id = :tceid
+	`
+	tx, err := data.Beginx()
+	if err != nil {
+		return err
+	}
+
+	for _, emp := range tc.Employees {
+		_, err := tx.NamedExec(stmt, emp)
+		if err != nil {
+			logger.Error("failed to update employee record", "tceid", emp.ID, "name", emp.Name, "error", err.Error())
+			err := tx.Rollback()
+			if err != nil {
+				logger.Error("failed to rollback transaction", "error", err.Error())
+			}
+			return err
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (e *EpilogueConnection) GetTimecardsByUserStatus(userid, timeCardStatus string) ([]TimeCardHeader, error) {
 	timecards := []TimeCardHeader{}
 
 	err := e.DB.Select(&timecards, `
 		SELECT *
 		FROM time_card_headers
-		WHERE createdby = :userid
-		AND tcstatus = :status
-		`, args)
+		WHERE createdby = ?
+		AND tcstatus = ?
+		`, userid, timeCardStatus)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +149,7 @@ func (e *EpilogueConnection) GetTimecardIDsByUser(userid int, timeCardStatus str
 	return timecards, nil
 }
 
-func (e *EpilogueConnection) GetTimecardByID(tcID int) (TimeCardHeader, error) {
+func (e *EpilogueConnection) GetTimecardByID(tcID string) (TimeCardHeader, error) {
 	timecard := TimeCardHeader{}
 
 	err := e.DB.Get(&timecard, `
@@ -110,29 +163,35 @@ func (e *EpilogueConnection) GetTimecardByID(tcID int) (TimeCardHeader, error) {
 	return timecard, nil
 }
 
-func (e *EpilogueConnection) GetTimecardEmployees(timeCardHeaderID int) ([]TimeCardEmployee, error) {
-	employees := []TimeCardEmployee{}
+func (e *EpilogueConnection) UpdateTimecardHeader(timecard TimeCardHeader) error {
+	_, err := e.DB.NamedExec(`
+		UPDATE time_card_headers
+		SET 
+			job = :job,
+			workdate = :workdate,
+			wedate = :wedate,
+			tcstatus = :tcstatus,
+			lastmodified = :lastmodified
+		WHERE id = :id
+	`, timecard)
 
-	err := e.DB.Select(&employees, `
-		SELECT *
-		FROM time_card_employees
-		WHERE tchid = ?`, timeCardHeaderID)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return employees, nil
+	return nil
 }
 
-func (e *EpilogueConnection) LoadTimecard(timeCardHeaderID int) (TimeCardHeader, []TimeCardEmployee, error) {
+func (e *EpilogueConnection) LoadTimecard(timeCardHeaderID string, logger *slog.Logger) (TimeCardHeader, error) {
 	header, err := e.GetTimecardByID(timeCardHeaderID)
 	if err != nil {
-		return header, nil, err
+		logger.Error("failed to load time card", "id", timeCardHeaderID)
+		return header, err
 	}
-	employees, err := e.GetTimecardEmployees(timeCardHeaderID)
+	err = header.GetEmployeesFromDB(e.DB, logger)
 	if err != nil {
-		return header, employees, err
+		return header, err
 	}
-	return header, employees, nil
+	return header, nil
 }
 
 func (e *EpilogueConnection) NewTimecard(userid int) (int64, error) {

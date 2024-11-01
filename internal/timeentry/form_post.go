@@ -51,7 +51,7 @@ func TimeCardFormFromPostForm(id int, postForm map[string][]string, epilogue *db
 				return nil, err
 			}
 		} else {
-			fmt.Printf("key: %s value: %s\n", key, value)
+			continue
 		}
 	}
 
@@ -59,7 +59,13 @@ func TimeCardFormFromPostForm(id int, postForm map[string][]string, epilogue *db
 }
 
 func hasValue(value []string) bool {
-	return len(value) == 1
+	if len(value) != 1 {
+		return false
+	}
+	if value[0] == "" {
+		return false
+	}
+	return true
 }
 
 func getStringValue(value []string) string {
@@ -114,6 +120,10 @@ func (f *TimeCardForm) parsePhaseCount(value []string) error {
 }
 
 func (f *TimeCardForm) parsePhase(key string, value []string) error {
+	if !hasValue(value) {
+		return nil
+	}
+
 	phaseSlice := strings.Split(key, "-")
 	if len(phaseSlice) != 2 {
 		return fmt.Errorf("failed to parse phase key: %s", key)
@@ -122,7 +132,18 @@ func (f *TimeCardForm) parsePhase(key string, value []string) error {
 	if err != nil {
 		return fmt.Errorf("invalid number in phase key: %s error: %s", key, err)
 	}
-	f.Phases[num] = getStringValue(value)
+
+	phaseString := getStringValue(value)
+	if phaseString == "" {
+		return nil
+	}
+
+	phaseNum, _, err := utils.Split(phaseString)
+	if err != nil {
+		return fmt.Errorf("could not parse phase number phase: %s error: %s", phaseString, err)
+	}
+
+	f.Phases[num] = phaseNum
 	return nil
 }
 

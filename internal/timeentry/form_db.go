@@ -83,10 +83,19 @@ func getPhaseKey(p string, phases map[int]string) (int, error) {
 }
 
 func (f *TimeCardForm) ToDB(epilogue *db.EpilogueConnection, status string, userID int) (*db.TimeCardHeader, error) {
+
+	var j sql.NullString
+
+	if f.Job != nil {
+		j = sql.NullString{String: f.Job.Job, Valid: true}
+	} else {
+		j = sql.NullString{Valid: false}
+	}
+
 	tcHeader := &db.TimeCardHeader{
 		ID:           f.ID,
-		Date:         sql.NullTime{Time: f.WorkDate},
-		Job:          sql.NullString{String: f.Job.Job},
+		Date:         utils.MakeSQLNullTime(f.WorkDate),
+		Job:          j,
 		Status:       status,
 		LastModified: time.Now(),
 		ModifiedBy:   userID,
@@ -130,12 +139,12 @@ func (e *TimeCardEmployeeForm) toDBEmployeeRow(id int, date time.Time, job strin
 					TCHID:    id,
 					Employee: empNum,
 					Name:     empName,
-					Date:     sql.NullTime{Time: date},
-					Job:      sql.NullString{String: job},
-					Phase:    sql.NullString{String: phases[k]},
-					Class:    sql.NullString{String: e.Class},
-					PayCode:  sql.NullString{String: e.Earn},
-					Hours:    sql.NullFloat64{Float64: hours},
+					Date:     utils.MakeSQLNullTime(date),
+					Job:      utils.MakeSQLNullString(job),
+					Phase:    utils.MakeSQLNullString(phases[k]),
+					Class:    utils.MakeSQLNullString(e.Class),
+					PayCode:  utils.MakeSQLNullString(e.Earn),
+					Hours:    utils.MakeSQLNullFloat64(hours),
 				}
 				empRows = append(empRows, row)
 			}

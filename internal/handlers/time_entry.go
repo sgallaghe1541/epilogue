@@ -100,8 +100,12 @@ func HandlePutTimeCard(logger *slog.Logger, epilogue *db.EpilogueConnection, ses
 				utils.ServerError(w, r, logger, err)
 				return
 			}
-			//validate form
-
+			//validate model
+			err = dbModel.UpdateTimeCard(epilogue, logger)
+			if err != nil {
+				utils.ServerError(w, r, logger, err)
+				return
+			}
 		})
 }
 

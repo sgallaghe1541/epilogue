@@ -81,35 +81,52 @@ func (tc TimeCardHeader) GetPhases() map[int]string {
 	return phaseMap
 }
 
-func (tc TimeCardHeader) UpdateTimecardEmployee(data *sqlx.DB, logger *slog.Logger) error {
-	stmt := `
-	UPDATE time_card_employees
-	SET 
-		employee = :employee,
-		fullname = :fullname,
-		workdate = :workdate,
-		job = :job,
-		phase = :phase,
-		class = :class,
-		paycode = :paycode,
-		tcehours = :tcehours
-	WHERE id = :tceid
+func (tc TimeCardHeader) UpdateTimeCard(epilogue *EpilogueConnection, logger *slog.Logger) error {
+	updateHeaderStmt := `
+		UPDATE time_card_headers
+		SET 
+			job = :job,
+			workdate = :workdate,
+			lastmodified = :lastmodified,
+			modifiedby = :modifiedby,
+			tcstatus = 'draft'
+		WHERE id = :id
 	`
-	tx, err := data.Beginx()
+	deleteEmployeeStmt := `DELETE FROM time_card_employees WHERE tchid = ?`
+	insertEmployeeStmt := `
+		INSERT INTO time_card_employees (tchid, employee, fullname, workdate, job, phase, class, paycode, tcehours)
+		VALUES (:tchid, :employee, :fullname, :workdate, :job, :phase, :class, :paycode, :tcehours)
+	`
+
+	tx, err := epilogue.DB.Beginx()
 	if err != nil {
 		return err
 	}
 
-	for _, emp := range tc.Employees {
-		_, err := tx.NamedExec(stmt, emp)
-		if err != nil {
-			logger.Error("failed to update employee record", "tceid", emp.ID, "name", emp.Name, "error", err.Error())
-			err := tx.Rollback()
-			if err != nil {
-				logger.Error("failed to rollback transaction", "error", err.Error())
-			}
-			return err
+	_, err = tx.NamedExec(updateHeaderStmt, tc)
+	if err != nil {
+		rollErr := tx.Rollback()
+		if rollErr != nil {
+			logger.Error("failed to rollback update timecard employees after delete error", "err", rollErr.Error())
 		}
+		return err
+	}
+	_, err = tx.Exec(deleteEmployeeStmt, fmt.Sprintf("%d", tc.ID))
+	if err != nil {
+		rollErr := tx.Rollback()
+		if rollErr != nil {
+			logger.Error("failed to rollback update timecard employees after delete error", "err", rollErr.Error())
+		}
+		return err
+	}
+
+	_, err = tx.NamedExec(insertEmployeeStmt, tc.Employees)
+	if err != nil {
+		rollErr := tx.Rollback()
+		if rollErr != nil {
+			logger.Error("failed to rollback update timecard employees after insert error", "err", rollErr.Error())
+		}
+		return err
 	}
 
 	err = tx.Commit()

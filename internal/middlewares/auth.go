@@ -7,13 +7,8 @@ import (
 
 	"github.com/alexedwards/scs/v2"
 	"github.com/sgallaghe1541/epilogue/internal/db"
+	"github.com/sgallaghe1541/epilogue/internal/epicontext"
 	"github.com/sgallaghe1541/epilogue/internal/utils"
-)
-
-type contextKey string
-
-const (
-	IsAuthenticatedContextKey = contextKey("authenticatedUserID")
 )
 
 func RequireAuthentication(next http.Handler) http.Handler {
@@ -40,7 +35,7 @@ func NewAuthMiddleware(epilogue *db.EpilogueConnection, sessionManager *scs.Sess
 				return
 			}
 			if active {
-				ctx := context.WithValue(r.Context(), IsAuthenticatedContextKey, id)
+				ctx := context.WithValue(r.Context(), epicontext.IsAuthenticatedContextKey, id)
 				r = r.WithContext(ctx)
 			}
 			next.ServeHTTP(w, r)

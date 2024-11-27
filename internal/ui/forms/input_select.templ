@@ -1,0 +1,14 @@
+package forms
+
+type SelectOption interface {
+	SelectValue() string
+	SelectString() string
+}
+
+templ SelectList(item SelectOption) {
+    <option value={ item.SelectValue() }>{ item.SelectString() }</option>
+}
+
+templ BlankOption() {
+    <option value=""></option>
+}

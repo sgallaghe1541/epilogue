@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/sgallaghe1541/epilogue/internal/timeentry"
+	"github.com/sgallaghe1541/epilogue/internal/ui/forms"
 	"github.com/sgallaghe1541/epilogue/internal/utils"
 )
 
@@ -28,6 +28,6 @@ func HandleWeekDay(logger *slog.Logger) http.Handler {
 			}
 
 			w.Header().Set("Content-Type", "text/html")
-			timeentry.DayofWeek(date).Render(context.Background(), w)
+			forms.DayofWeek(date).Render(context.Background(), w)
 		})
 }

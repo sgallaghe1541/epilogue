@@ -11,16 +11,18 @@ import (
 
 	"github.com/alexedwards/scs/v2"
 	"github.com/sgallaghe1541/epilogue/internal/db"
-	"github.com/sgallaghe1541/epilogue/internal/middlewares"
+	"github.com/sgallaghe1541/epilogue/internal/epicontext"
 	"github.com/sgallaghe1541/epilogue/internal/timeentry"
+	"github.com/sgallaghe1541/epilogue/internal/ui/components"
+	"github.com/sgallaghe1541/epilogue/internal/ui/forms"
+	"github.com/sgallaghe1541/epilogue/internal/ui/layouts"
 	"github.com/sgallaghe1541/epilogue/internal/utils"
-	"github.com/sgallaghe1541/epilogue/views/messages"
 )
 
 func HandleTimeEntry(logger *slog.Logger, epilogue *db.EpilogueConnection, sessionManager *scs.SessionManager) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
-			uid := r.Context().Value(middlewares.IsAuthenticatedContextKey).(int)
+			uid := r.Context().Value(epicontext.IsAuthenticatedContextKey).(int)
 			ids, err := epilogue.GetTimecardIDsByUser(uid, "draft")
 			if err != nil {
 				utils.ServerError(w, r, logger, err)
@@ -28,14 +30,14 @@ func HandleTimeEntry(logger *slog.Logger, epilogue *db.EpilogueConnection, sessi
 			}
 			w.Header().Set("Content-Type", "text/html")
 			w.Header().Set("HX-Replace-Url", r.URL.Path)
-			timeentry.TimeCardLanding(ids).Render(context.Background(), w)
+			layouts.TimeCardLanding(ids).Render(context.Background(), w)
 		})
 }
 
 func HandleNewTimeCard(logger *slog.Logger, epilogue *db.EpilogueConnection, sessionManager *scs.SessionManager) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
-			uid := r.Context().Value(middlewares.IsAuthenticatedContextKey).(int)
+			uid := r.Context().Value(epicontext.IsAuthenticatedContextKey).(int)
 			tcid, err := epilogue.NewTimecard(uid)
 			if err != nil {
 				utils.ServerError(w, r, logger, err)
@@ -63,7 +65,7 @@ func HandleGetTimeCard(logger *slog.Logger, epilogue *db.EpilogueConnection, ses
 
 			if timecard.Status == "new" {
 				w.Header().Set("Content-Type", "text/html")
-				timeentry.ViewNewTimeCard().Render(context.Background(), w)
+				forms.ViewNewTimeCard().Render(context.Background(), w)
 			} else {
 				form, err := timeentry.TimeCardFormFromDB(timecard, epilogue)
 				if err != nil {
@@ -72,7 +74,7 @@ func HandleGetTimeCard(logger *slog.Logger, epilogue *db.EpilogueConnection, ses
 					return
 				}
 				w.Header().Set("Content-Type", "text/html")
-				timeentry.ViewTimeCard(form).Render(context.Background(), w)
+				forms.ViewTimeCard(form).Render(context.Background(), w)
 			}
 		})
 }
@@ -108,7 +110,7 @@ func HandlePutTimeCard(logger *slog.Logger, epilogue *db.EpilogueConnection, ses
 				utils.ServerError(w, r, logger, err)
 				return
 			}
-			messages.Success("Successfully saved time card!").Render(context.Background(), w)
+			components.Success("Successfully saved time card!").Render(context.Background(), w)
 		})
 }
 
@@ -150,7 +152,7 @@ func HandleDeleteTimeCard(logger *slog.Logger, epilogue *db.EpilogueConnection, 
 
 func HandleClearPhases(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	timeentry.Phases(nil).Render(context.Background(), w)
+	forms.Phases(nil).Render(context.Background(), w)
 }
 
 func HandleJobsSelect(logger *slog.Logger, epilogue *db.EpilogueConnection) http.Handler {
@@ -162,7 +164,7 @@ func HandleJobsSelect(logger *slog.Logger, epilogue *db.EpilogueConnection) http
 			}
 			w.Header().Set("Content-Type", "text/html")
 			for _, job := range jobs {
-				timeentry.SelectList(job).Render(context.Background(), w)
+				forms.SelectList(job).Render(context.Background(), w)
 			}
 		})
 }
@@ -175,7 +177,7 @@ func HandleJobInfo(logger *slog.Logger, epilogue *db.EpilogueConnection) http.Ha
 			if jobNum == "" || jobDescription == "" {
 				fmt.Println("failed to get job number")
 				w.Header().Set("Content-Type", "text/html")
-				timeentry.JobStateCertified(nil).Render(context.Background(), w)
+				forms.JobStateCertified(nil).Render(context.Background(), w)
 				return
 			}
 
@@ -183,11 +185,11 @@ func HandleJobInfo(logger *slog.Logger, epilogue *db.EpilogueConnection) http.Ha
 			if err != nil {
 				fmt.Println(err.Error())
 				w.Header().Set("Content-Type", "text/html")
-				timeentry.JobStateCertified(nil).Render(context.Background(), w)
+				forms.JobStateCertified(nil).Render(context.Background(), w)
 				return
 			}
 			w.Header().Set("Content-Type", "text/html")
-			timeentry.JobStateCertified(&job).Render(context.Background(), w)
+			forms.JobStateCertified(&job).Render(context.Background(), w)
 		})
 }
 
@@ -208,7 +210,7 @@ func HandlePhaseSelect(logger *slog.Logger, epilogue *db.EpilogueConnection) htt
 
 			w.Header().Set("Content-Type", "text/html")
 			for _, phase := range phases {
-				timeentry.SelectList(phase).Render(context.Background(), w)
+				forms.SelectList(phase).Render(context.Background(), w)
 			}
 		})
 }
@@ -224,7 +226,7 @@ func HandleEmployeeSelect(logger *slog.Logger, epilogue *db.EpilogueConnection) 
 
 			w.Header().Set("Content-Type", "text/html")
 			for _, emp := range emps {
-				timeentry.SelectList(emp).Render(context.Background(), w)
+				forms.SelectList(emp).Render(context.Background(), w)
 			}
 		})
 }
@@ -259,7 +261,7 @@ func HandleAddEmployeeRow(logger *slog.Logger) http.Handler {
 			}
 			w.Header().Set("Content-Type", "text/html")
 			w.Header().Set("HX-Trigger", "employeeAdded")
-			timeentry.EmployeeRow(&timeentry.TimeCardEmployeeForm{}, empCount+1, phaseCount, nil, certified).Render(context.Background(), w)
+			forms.EmployeeRow(&timeentry.TimeCardEmployeeForm{}, empCount+1, phaseCount, nil, certified).Render(context.Background(), w)
 		})
 }
 
@@ -273,7 +275,7 @@ func HandleEquipmentSelect(logger *slog.Logger, epilogue *db.EpilogueConnection)
 			}
 			w.Header().Set("Content-Type", "text/html")
 			for _, equip := range equipments {
-				timeentry.SelectList(equip).Render(context.Background(), w)
+				forms.SelectList(equip).Render(context.Background(), w)
 			}
 		})
 }
@@ -304,7 +306,7 @@ func HandleAddEquipmentRow(logger *slog.Logger) http.Handler {
 			}
 			w.Header().Set("Content-Type", "text/html")
 			w.Header().Set("HX-Trigger", "equipmentAdded")
-			timeentry.EquipmentRow([]string{}, equipCount+1, phaseCount).Render(context.Background(), w)
+			forms.EquipmentRow([]string{}, equipCount+1, phaseCount).Render(context.Background(), w)
 		})
 }
 
@@ -327,9 +329,9 @@ func HandleClassesSelect(logger *slog.Logger, epilogue *db.EpilogueConnection) h
 				fmt.Println(err.Error())
 			}
 			w.Header().Set("Content-Type", "text/html")
-			timeentry.BlankOption().Render(context.Background(), w)
+			forms.BlankOption().Render(context.Background(), w)
 			for _, class := range classes {
-				timeentry.SelectList(class).Render(context.Background(), w)
+				forms.SelectList(class).Render(context.Background(), w)
 			}
 		})
 }
@@ -342,9 +344,9 @@ func HandleEarnCodeSelect(logger *slog.Logger, epilogue *db.EpilogueConnection) 
 				logger.Error("could not get earncodes...", "err", err)
 			}
 			w.Header().Set("Content-Type", "text/html")
-			timeentry.BlankOption().Render(context.Background(), w)
+			forms.BlankOption().Render(context.Background(), w)
 			for _, ec := range earnCodes {
-				timeentry.SelectList(ec).Render(context.Background(), w)
+				forms.SelectList(ec).Render(context.Background(), w)
 			}
 		})
 }

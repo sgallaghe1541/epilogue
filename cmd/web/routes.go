@@ -24,7 +24,7 @@ func (a *app) routes() http.Handler {
 	protectedMiddle := sessionMiddle.Append(authenticate, middlewares.RequireAuthentication)
 	htmxMiddle := protectedMiddle.Append(middlewares.HtmxOnly)
 
-	mux.Handle("GET /{$}", protectedMiddle.Then(handlers.HandleHome(a.sessionManager)))
+	mux.Handle("GET /{$}", protectedMiddle.Then(handlers.HandleHome(a.epilogue, a.sessionManager)))
 
 	mux.Handle("/signin", handlers.HandleSignIn(a.logger, a.epilogue))
 	mux.Handle("GET /auth/microsoft", sessionMiddle.Then(handlers.HandleMicrosoftLogin(a.auth)))

@@ -6,11 +6,11 @@ import (
 
 type Permission struct {
 	Department string `db:"department" json:"department"`
-	Role       string `db:"roleid" json:"roleid"`
+	Role       int    `db:"roleid" json:"roleid"`
 }
 
 func (p Permission) Stringify() string {
-	return fmt.Sprintf("%s|%s,", p.Department, p.Role)
+	return fmt.Sprintf("%s|%s,", p.Department, fmt.Sprintf("%d", p.Role))
 }
 
 type User struct {
@@ -19,6 +19,14 @@ type User struct {
 	Email       string       `db:"email"`
 	Active      int          `db:"active"`
 	Permissions []Permission `json:"permissions"`
+}
+
+func (u *User) GetRoles() []int {
+	roles := make([]int, len(u.Permissions))
+	for i, perm := range u.Permissions {
+		roles[i] = perm.Role
+	}
+	return roles
 }
 
 func (e *EpilogueConnection) ValidEmail(email string) bool {
@@ -62,4 +70,14 @@ func (e *EpilogueConnection) GetUser(email string) (*User, error) {
 	user.Permissions = permissions
 
 	return &user, nil
+}
+
+func (e *EpilogueConnection) GetRoleByUserID(id int) (int, error) {
+	var role int
+
+	err := e.DB.Get(&role, "SELECT MAX(roleid) FROM user_permissions WHERE userid=?", id)
+	if err != nil {
+		return role, err
+	}
+	return role, nil
 }

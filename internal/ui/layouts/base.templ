@@ -1,0 +1,49 @@
+package layouts
+
+import (
+  "github.com/sgallaghe1541/epilogue/internal/db"
+)
+
+templ Base(name string, icons []*db.Icon) {
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8"></meta>
+      <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0"></meta>
+      <script src="/static/js/htmx.min.js"></script>
+      <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
+      <link href="/static/css/styles.css" rel="stylesheet"/>
+    </head>
+    <body>
+      <div class="grid grid-cols-main grid-rows-main w-screen h-screen max-w-screen max-h-screen overflow-hidden">
+        @Header(name)
+        @SideBar(icons)
+        @Contents()
+        @Footer()
+      </div>
+    </body>
+    </html>
+}
+
+templ Header(name string) {
+    <div class="col-start-2 col-span-1 row-start-1 row-span-1 flex flex-row items-center">
+      <a href="/" class="flex h-20"><img src="/static/images/logo.jpg" /></a>
+      <div id="messages" class="flex self-stretch grow"></div>
+      <div class="flex flex-row-reverse justify-self-end items-center mr-1 pr-6">
+        <p>{ name }</p>
+        //<a href="/logout">Log Out</a>
+      </div>
+    </div>
+}
+
+templ Footer() {
+    <div class="col-start-1 col-span-2 row-start-3 row-span-1 flex items-center justify-center bg-yellow-300">
+      <p class="text-stone-50">Testing</p>
+    </div>
+}
+
+templ Contents() {
+    <div id="contents" class="col-start-2 col-span-1 row-start-2 row-span-1 grid max-h-[calc(100vh - theme(space.8) - theme(space.20))] h-[calc(100vh - theme(space.8) - theme(space.20))] w-[clac(100vw - theme(space.24))] max-w-[clac(100vw - theme(space.24))]">
+      { children... }
+    </div>
+}

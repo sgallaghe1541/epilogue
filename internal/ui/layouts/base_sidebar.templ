@@ -1,4 +1,16 @@
-package components
+package layouts
+
+import (
+  "github.com/sgallaghe1541/epilogue/internal/db"
+)
+
+templ SideBar(icons []*db.Icon) {
+    <div class="col-start-1 col-span-1 row-start-1 row-span-3 bg-stone-900 shadow-sm z-10 p-2">
+      for _, icon := range icons {
+        @SideBarIcon(icon.URL, icon.ToolTip, IconSVG(icon.Paths))
+      }
+    </div>
+}
 
 templ SideBarIcon(link, tooltip string, svg templ.Component) {
     <div hx-get={ link } hx-target="#contents" hx-push-url="true" class="relative flex items-center justify-center 

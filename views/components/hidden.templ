@@ -1,5 +1,0 @@
-package components
-
-templ HiddenDisplay(name, value string) {
-    <input type="hidden" id={ name } name={ name } value={ value } hx-trigger="load" hx-get="/vp/hours/" hx-include="#params" hx-target="#report" />
-}

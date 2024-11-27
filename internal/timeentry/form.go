@@ -6,11 +6,6 @@ import (
 	"github.com/sgallaghe1541/epilogue/internal/db"
 )
 
-type SelectOption interface {
-	SelectValue() string
-	SelectString() string
-}
-
 type TimeCardForm struct {
 	ID             int
 	WorkDate       time.Time

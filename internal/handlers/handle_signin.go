@@ -9,8 +9,8 @@ import (
 
 	"github.com/alexedwards/scs/v2"
 	"github.com/sgallaghe1541/epilogue/internal/db"
+	"github.com/sgallaghe1541/epilogue/internal/ui/layouts"
 	"github.com/sgallaghe1541/epilogue/internal/utils"
-	"github.com/sgallaghe1541/epilogue/views/layouts"
 	"golang.org/x/oauth2"
 )
 

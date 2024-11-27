@@ -159,44 +159,45 @@ func (f *TimeCardForm) parseEmployeeCount(value []string) error {
 }
 
 func (f *TimeCardForm) parseEmployees(key string, value []string) error {
-	employeeSlice := strings.Split(key, "-")
-	if len(employeeSlice) == 2 {
-		num, err := strconv.Atoi(employeeSlice[1])
-		if err != nil {
-			return fmt.Errorf("invalid number in employee key: %s error: %s", key, err)
-		}
-		if tcEmployee, ok := f.Employees[num]; ok {
-			tcEmployee.EmpNameString = getStringValue(value)
-		} else {
-			tcEmployee := &TimeCardEmployeeForm{
-				EmpNameString: getStringValue(value),
-				Hours:         map[int]float64{},
+	if hasValue(value) {
+		employeeSlice := strings.Split(key, "-")
+		if len(employeeSlice) == 2 {
+			num, err := strconv.Atoi(employeeSlice[1])
+			if err != nil {
+				return fmt.Errorf("invalid number in employee key: %s error: %s", key, err)
 			}
-			f.Employees[num] = tcEmployee
-		}
+			if tcEmployee, ok := f.Employees[num]; ok {
+				tcEmployee.EmpNameString = getStringValue(value)
+			} else {
+				tcEmployee := &TimeCardEmployeeForm{
+					EmpNameString: getStringValue(value),
+					Hours:         map[int]float64{},
+				}
+				f.Employees[num] = tcEmployee
+			}
 
-	} else if len(employeeSlice) == 3 {
-		if employeeSlice[2] == "class" {
-			err := f.parseEmployeeClass(employeeSlice, value)
+		} else if len(employeeSlice) == 3 {
+			if employeeSlice[2] == "class" {
+				err := f.parseEmployeeClass(employeeSlice, value)
+				if err != nil {
+					return err
+				}
+			} else if employeeSlice[2] == "earn" {
+				err := f.parseEmployeeEarn(employeeSlice, value)
+				if err != nil {
+					return err
+				}
+			} else {
+				return fmt.Errorf("unknown employee key: %s", key)
+			}
+
+		} else if len(employeeSlice) == 4 {
+			err := f.parseEmployeeHours(employeeSlice, value)
 			if err != nil {
 				return err
 			}
-		} else if employeeSlice[2] == "earn" {
-			err := f.parseEmployeeEarn(employeeSlice, value)
-			if err != nil {
-				return err
-			}
-		} else {
-			return fmt.Errorf("unknown employee key: %s", key)
-		}
-
-	} else if len(employeeSlice) == 4 {
-		err := f.parseEmployeeHours(employeeSlice, value)
-		if err != nil {
-			return err
 		}
 	}
-
 	return nil
 }
 

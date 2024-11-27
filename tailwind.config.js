@@ -5,7 +5,8 @@ module.exports = {
     extend: {
       gridTemplateColumns: {
         'main': 'theme(space.24) 1fr',
-        'timeEntry': 'theme(space.60) repeat(2, minmax(theme(space.20), theme(space.20))) repeat(5, minmax(theme(space.24), 1fr)) theme(space.20)'
+        'timeEntry': 'theme(space.60) repeat(2, minmax(theme(space.20), theme(space.20))) repeat(5, minmax(theme(space.24), 1fr)) theme(space.20)',
+        'messages': 'minmax(min-content, 1fr) theme(space.8)'
       },
       gridTemplateRows: {
         'main': 'theme(space.20) calc(100vh - theme(space.8) - theme(space.20)) theme(space.8)',

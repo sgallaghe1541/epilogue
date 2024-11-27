@@ -9,7 +9,7 @@ import (
 
 const (
 	phaseScript = `
-		on change 
+		on change or load
 			if my value is not empty send phase%dActive to #hours 
 				if next <select/> within #phases != null remove @disabled from next <select/> end
 			else send phase%dInactive to #hours
@@ -288,14 +288,23 @@ templ EmployeeRow(employee *TimeCardEmployeeForm, count, phaseCount int, phases 
         }
         for i := 1; i < 6; i++ {
           if i <= phaseCount {
-            <input id={ fmt.Sprintf("employee-%d-hours-%d", count, i) } name={ fmt.Sprintf("employee-%d-hours-%d", count, i) } 
+            if employee.Hours[i] != 0.00 {
+              <input id={ fmt.Sprintf("employee-%d-hours-%d", count, i) } name={ fmt.Sprintf("employee-%d-hours-%d", count, i) } 
               _={ fmt.Sprintf(employeeHoursScript, i, i) }
               class="rounded-md border-2 border-stone-300 text-lg text-center p-1 hover:border-stone-500 disabled:bg-red-100/75 invalid:border-red-600"
               type="number" max="14" step=".5"
-              disabled="disabled"
               employee-selected="y"
               phase-selected="y"
               value={ fmt.Sprintf("%.2f", employee.Hours[i]) }>
+            } else {
+              <input id={ fmt.Sprintf("employee-%d-hours-%d", count, i) } name={ fmt.Sprintf("employee-%d-hours-%d", count, i) } 
+                _={ fmt.Sprintf(employeeHoursScript, i, i) }
+                class="rounded-md border-2 border-stone-300 text-lg text-center p-1 hover:border-stone-500 disabled:bg-red-100/75 invalid:border-red-600"
+                type="number" max="14" step=".5"
+                employee-selected="y"
+                phase-selected="y"
+                value="">
+            }
           } else {
             <input id={ fmt.Sprintf("employee-%d-hours-%d", count, i) } name={ fmt.Sprintf("employee-%d-hours-%d", count, i) } 
               _={ fmt.Sprintf(employeeHoursScript, i, i) }
@@ -519,9 +528,10 @@ templ ViewTimeCard(form *TimeCardForm) {
           </div>
           <div class="col-start-1 col-span-9 row-start-4 grid grid-cols-3 gap-x-20 min-h-0 pl-16 pr-16">
             <button type="button" class="col-start-1 hover:bg-sky-600 hover:text-stone-50 bg-sky-100 text-stone-400 rounded-md p-2 w-full text-lg font-semibold text-center"
-              hx-put="">Save</button>
+              hx-put="" hx-swap="none">Save</button>
             <button type="button" class="col-start-2 bg-green-100 text-stone-400 hover:bg-green-600 hover:text-stone-50 rounded-md p-2 w-full text-lg font-semibold text-center">Submit</button>
-            <button type="button" class="col-start-3 bg-red-100 text-stone-400 hover:bg-red-600 hover:text-stone-50 rounded-md p-2 w-full text-lg font-semibold text-center">Delete</button>
+            <button type="button" class="col-start-3 bg-red-100 text-stone-400 hover:bg-red-600 hover:text-stone-50 rounded-md p-2 w-full text-lg font-semibold text-center"
+              hx-delete="" hx-target="#contents" hx-swap="innerHTML">Delete</button>
           </div>
         </div>
       </div>
@@ -693,9 +703,10 @@ templ ViewNewTimeCard() {
           </div>
           <div class="col-start-1 col-span-9 row-start-4 grid grid-cols-3 gap-x-20 min-h-0 pl-16 pr-16">
             <button type="button" class="col-start-1 hover:bg-sky-600 hover:text-stone-50 bg-sky-100 text-stone-400 rounded-md p-2 w-full text-lg font-semibold text-center"
-              hx-put="">Save</button>
+              hx-put="" hx-swap="none">Save</button>
             <button type="button" class="col-start-2 bg-green-100 text-stone-400 hover:bg-green-600 hover:text-stone-50 rounded-md p-2 w-full text-lg font-semibold text-center">Submit</button>
-            <button type="button" class="col-start-3 bg-red-100 text-stone-400 hover:bg-red-600 hover:text-stone-50 rounded-md p-2 w-full text-lg font-semibold text-center">Delete</button>
+            <button type="button" class="col-start-3 bg-red-100 text-stone-400 hover:bg-red-600 hover:text-stone-50 rounded-md p-2 w-full text-lg font-semibold text-center"
+              hx-delete="" hx-swap="none">Delete</button>
           </div>
         </div>
       </div>

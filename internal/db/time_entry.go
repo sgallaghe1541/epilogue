@@ -120,11 +120,46 @@ func (tc TimeCardHeader) UpdateTimeCard(epilogue *EpilogueConnection, logger *sl
 		return err
 	}
 
-	_, err = tx.NamedExec(insertEmployeeStmt, tc.Employees)
+	if len(tc.Employees) != 0 {
+		_, err = tx.NamedExec(insertEmployeeStmt, tc.Employees)
+		if err != nil {
+			rollErr := tx.Rollback()
+			if rollErr != nil {
+				logger.Error("failed to rollback update timecard employees after insert error", "err", rollErr.Error())
+			}
+			return err
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (tc TimeCardHeader) DeleteTimeCard(epilogue *EpilogueConnection, logger *slog.Logger) error {
+	deleteHeaderStmt := `DELETE FROM time_card_headers WHERE id = :id`
+	deleteEmployeeStmt := `DELETE FROM time_card_employees WHERE tchid = :id`
+
+	tx, err := epilogue.DB.Beginx()
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.NamedExec(deleteEmployeeStmt, tc)
 	if err != nil {
 		rollErr := tx.Rollback()
 		if rollErr != nil {
-			logger.Error("failed to rollback update timecard employees after insert error", "err", rollErr.Error())
+			logger.Error("failed to rollback update timecard employees after delete error", "err", rollErr.Error())
+		}
+		return err
+	}
+	_, err = tx.NamedExec(deleteHeaderStmt, tc)
+	if err != nil {
+		rollErr := tx.Rollback()
+		if rollErr != nil {
+			logger.Error("failed to rollback update timecard employees after delete error", "err", rollErr.Error())
 		}
 		return err
 	}

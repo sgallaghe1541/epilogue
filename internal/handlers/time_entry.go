@@ -14,6 +14,7 @@ import (
 	"github.com/sgallaghe1541/epilogue/internal/middlewares"
 	"github.com/sgallaghe1541/epilogue/internal/timeentry"
 	"github.com/sgallaghe1541/epilogue/internal/utils"
+	"github.com/sgallaghe1541/epilogue/views/messages"
 )
 
 func HandleTimeEntry(logger *slog.Logger, epilogue *db.EpilogueConnection, sessionManager *scs.SessionManager) http.Handler {
@@ -26,6 +27,7 @@ func HandleTimeEntry(logger *slog.Logger, epilogue *db.EpilogueConnection, sessi
 				return
 			}
 			w.Header().Set("Content-Type", "text/html")
+			w.Header().Set("HX-Replace-Url", r.URL.Path)
 			timeentry.TimeCardLanding(ids).Render(context.Background(), w)
 		})
 }
@@ -106,6 +108,43 @@ func HandlePutTimeCard(logger *slog.Logger, epilogue *db.EpilogueConnection, ses
 				utils.ServerError(w, r, logger, err)
 				return
 			}
+			messages.Success("Successfully saved time card!").Render(context.Background(), w)
+		})
+}
+
+func HandleDeleteTimeCard(logger *slog.Logger, epilogue *db.EpilogueConnection, sessionManager *scs.SessionManager) http.Handler {
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			tcid := r.PathValue("id")
+			if tcid == "" {
+				utils.ServerError(w, r, logger, errors.New("no timecard id found"))
+				return
+			}
+			id, err := strconv.Atoi(tcid)
+			if err != nil {
+				utils.ServerError(w, r, logger, errors.New("invalid timecard id found"))
+				return
+			}
+			r.ParseForm()
+			tc, err := timeentry.TimeCardFormFromPostForm(id, r.Form, epilogue)
+			if err != nil {
+				fmt.Println(err.Error())
+			}
+
+			//validate form
+			dbModel, err := tc.ToDB(epilogue, "draft", sessionManager.GetInt(r.Context(), "authenticatedUserID"))
+			if err != nil {
+				utils.ServerError(w, r, logger, err)
+				return
+			}
+			//validate model
+			err = dbModel.DeleteTimeCard(epilogue, logger)
+			if err != nil {
+				utils.ServerError(w, r, logger, err)
+				return
+			}
+			// messages.Success("Successfully deleted time card!").Render(context.Background(), w)
+			http.Redirect(w, r, "/timeentry", http.StatusSeeOther)
 		})
 }
 

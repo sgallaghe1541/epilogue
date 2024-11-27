@@ -28,7 +28,7 @@ templ Base(name string) {
 templ Header(name string) {
     <div class="col-start-2 col-span-1 row-start-1 row-span-1 flex flex-row items-center">
       <a href="/" class="flex h-20"><img src="/static/images/logo.jpg" /></a>
-      <div class="flex self-stretch grow"></div>
+      <div id="messages" class="flex self-stretch grow"></div>
       <div class="flex flex-row-reverse justify-self-end items-center mr-1 pr-6">
         <p>{ name }</p>
         //<a href="/logout">Log Out</a>

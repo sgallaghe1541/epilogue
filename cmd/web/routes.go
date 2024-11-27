@@ -40,6 +40,7 @@ func (a *app) routes() http.Handler {
 	// mux.Handle("POST /timeentry/newtime", htmxMiddle.Then(handlers.HandlePostNewTimeHeader(a.logger, a.epilogue, a.viewpoint, a.sessionManager)))
 	mux.Handle("GET /timeentry/timecard/{id}", htmxMiddle.Then(handlers.HandleGetTimeCard(a.logger, a.epilogue, a.sessionManager)))
 	mux.Handle("PUT /timeentry/timecard/{id}", htmxMiddle.Then(handlers.HandlePutTimeCard(a.logger, a.epilogue, a.sessionManager)))
+	mux.Handle("DELETE /timeentry/timecard/{id}", htmxMiddle.Then(handlers.HandleDeleteTimeCard(a.logger, a.epilogue, a.sessionManager)))
 	// mux.Handle("GET /vp/alljobhours", htmxMiddle.ThenFunc(app.handleAllJobHours))
 	mux.Handle("GET /tc/jobselect", htmxMiddle.Then(handlers.HandleJobsSelect(a.logger, a.epilogue)))
 	mux.Handle("GET /tc/jobinfo", htmxMiddle.Then(handlers.HandleJobInfo(a.logger, a.epilogue)))

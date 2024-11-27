@@ -1,0 +1,11 @@
+package messages
+
+templ Success(msg string) {
+    <div id="messages" hx-swap-oob="innerHTML" hx-target="#messages">
+        <div class="flex w-full flex-row border-sky-600 border-2 rounded-md m-2 ml-8 mr-8 p-2 text-sky-600 bg-sky-100 font-semibold items-center">
+            <div class="flex self-stretch grow items-center justify-center">{ msg }</div>
+            // <div class="flex self-stretch grow"></div>
+            <div _="on click remove the closest parent <div/>" class=" mr-4 pr-4 hover:font-extrabold hover:cursor-pointer font-semibold font-mono">X</div>
+        </div>
+    </div>
+}
